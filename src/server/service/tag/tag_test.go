@@ -1,4 +1,4 @@
-package service
+package tag
 
 import (
 	"context"
@@ -19,21 +19,17 @@ import (
 func TestTagService_Delete(t *testing.T) {
 	var errunknown = errors.New(`unknown`)
 	tests := []struct {
-		name                  string
-		TagGetByIdReturns     func() (model.Tag, error)
-		TagDeleteByIdReturns  error
-		TxBeginTxReturns      func(tx transaction.Transaction) (transaction.Transaction, error)
-		TxRollbackReturns     error
-		TxCommitReturns       error
-		RelationDeleteReturns error
-		err                   error
+		name              string
+		TagGetByIdReturns func() (model.Tag, error)
+		TxBeginTxReturns  func() (transaction.Transaction, error)
+		err               error
 	}{
 		{
 			name: `not found tag error`,
 			TagGetByIdReturns: func() (model.Tag, error) {
 				return model.Tag{}, repository.ErrNotFound
 			},
-			TxBeginTxReturns: func(tx transaction.Transaction) (transaction.Transaction, error) { return nil, nil },
+			TxBeginTxReturns: func() (transaction.Transaction, error) { return nil, nil },
 			err:              ErrTagNotFound,
 		},
 		{
@@ -41,16 +37,16 @@ func TestTagService_Delete(t *testing.T) {
 			TagGetByIdReturns: func() (model.Tag, error) {
 				return model.Tag{}, errunknown
 			},
-			TxBeginTxReturns: func(tx transaction.Transaction) (transaction.Transaction, error) { return nil, nil },
+			TxBeginTxReturns: func() (transaction.Transaction, error) { return nil, nil },
 			err:              errunknown,
 		},
 		{
-			name: `error to start transaction`,
+			name: `error to start Transaction`,
 			TagGetByIdReturns: func() (model.Tag, error) {
 				return model.Tag{}, nil
 			},
-			TxBeginTxReturns: func(tx transaction.Transaction) (transaction.Transaction, error) {
-				return tx, errunknown
+			TxBeginTxReturns: func() (transaction.Transaction, error) {
+				return nil, errunknown
 			},
 			err: errunknown,
 		},
@@ -59,76 +55,118 @@ func TestTagService_Delete(t *testing.T) {
 			TagGetByIdReturns: func() (model.Tag, error) {
 				return model.Tag{}, nil
 			},
-			TxBeginTxReturns: func(tx transaction.Transaction) (transaction.Transaction, error) {
+			TxBeginTxReturns: func() (transaction.Transaction, error) {
+				var tx = mocks.NewTransaction(t)
+
+				var rel = mockrepository.NewRelation(t)
+				rel.On(`Delete`, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errunknown)
+				tx.On(`Relation`).Return(rel)
+				tx.On(`Rollback`, mock.Anything).Return(nil)
+
 				return tx, nil
 			},
-			RelationDeleteReturns: errunknown,
-			TxRollbackReturns:     nil,
-			err:                   errunknown,
+			err: errunknown,
 		},
 		{
 			name: `error rollback remove relation`,
 			TagGetByIdReturns: func() (model.Tag, error) {
 				return model.Tag{}, nil
 			},
-			TxBeginTxReturns: func(tx transaction.Transaction) (transaction.Transaction, error) {
+			TxBeginTxReturns: func() (transaction.Transaction, error) {
+				var tx = mocks.NewTransaction(t)
+
+				var rel = mockrepository.NewRelation(t)
+				rel.On(`Delete`, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(``))
+				tx.On(`Relation`).Return(rel)
+
+				tx.On(`Rollback`, mock.Anything).Return(errunknown)
 				return tx, nil
 			},
-			RelationDeleteReturns: errors.New(`anything`),
-			TxRollbackReturns:     errunknown,
-			err:                   errunknown,
+			err: errunknown,
 		},
 		{
 			name: `error remove tag`,
 			TagGetByIdReturns: func() (model.Tag, error) {
 				return model.Tag{}, nil
 			},
-			TxBeginTxReturns: func(tx transaction.Transaction) (transaction.Transaction, error) {
+			TxBeginTxReturns: func() (transaction.Transaction, error) {
+				var tx = mocks.NewTransaction(t)
+
+				var rel = mockrepository.NewRelation(t)
+				rel.On(`Delete`, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				tx.On(`Relation`).Return(rel)
+
+				var tag = mockrepository.NewTag(t)
+				tag.On(`DeleteById`, mock.Anything, mock.Anything).Return(errunknown)
+				tx.On(`Tag`).Return(tag)
+
+				tx.On(`Rollback`, mock.Anything).Return(nil)
 				return tx, nil
 			},
-			RelationDeleteReturns: nil,
-			TagDeleteByIdReturns:  errunknown,
-			TxRollbackReturns:     nil,
-			err:                   errunknown,
+			err: errunknown,
 		},
 		{
 			name: `error rollback remove tag`,
 			TagGetByIdReturns: func() (model.Tag, error) {
 				return model.Tag{}, nil
 			},
-			TxBeginTxReturns: func(tx transaction.Transaction) (transaction.Transaction, error) {
+			TxBeginTxReturns: func() (transaction.Transaction, error) {
+				var tx = mocks.NewTransaction(t)
+
+				var rel = mockrepository.NewRelation(t)
+				rel.On(`Delete`, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				tx.On(`Relation`).Return(rel)
+
+				var tag = mockrepository.NewTag(t)
+				tag.On(`DeleteById`, mock.Anything, mock.Anything).Return(errors.New(``))
+				tx.On(`Tag`).Return(tag)
+
+				tx.On(`Rollback`, mock.Anything).Return(errunknown)
 				return tx, nil
 			},
-			RelationDeleteReturns: nil,
-			TagDeleteByIdReturns:  errors.New(`anything`),
-			TxRollbackReturns:     errunknown,
-			err:                   errunknown,
+			err: errunknown,
 		},
 		{
 			name: `error commit`,
 			TagGetByIdReturns: func() (model.Tag, error) {
 				return model.Tag{}, nil
 			},
-			TxBeginTxReturns: func(tx transaction.Transaction) (transaction.Transaction, error) {
+			TxBeginTxReturns: func() (transaction.Transaction, error) {
+				var tx = mocks.NewTransaction(t)
+
+				var rel = mockrepository.NewRelation(t)
+				rel.On(`Delete`, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				tx.On(`Relation`).Return(rel)
+
+				var tag = mockrepository.NewTag(t)
+				tag.On(`DeleteById`, mock.Anything, mock.Anything).Return(nil)
+				tx.On(`Tag`).Return(tag)
+
+				tx.On(`Commit`, mock.Anything).Return(errunknown)
 				return tx, nil
 			},
-			RelationDeleteReturns: nil,
-			TagDeleteByIdReturns:  nil,
-			TxCommitReturns:       errunknown,
-			err:                   errunknown,
+			err: errunknown,
 		},
 		{
 			name: `no error`,
 			TagGetByIdReturns: func() (model.Tag, error) {
 				return model.Tag{}, nil
 			},
-			TxBeginTxReturns: func(tx transaction.Transaction) (transaction.Transaction, error) {
+			TxBeginTxReturns: func() (transaction.Transaction, error) {
+				var tx = mocks.NewTransaction(t)
+
+				var rel = mockrepository.NewRelation(t)
+				rel.On(`Delete`, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				tx.On(`Relation`).Return(rel)
+
+				var tag = mockrepository.NewTag(t)
+				tag.On(`DeleteById`, mock.Anything, mock.Anything).Return(nil)
+				tx.On(`Tag`).Return(tag)
+
+				tx.On(`Commit`, mock.Anything).Return(nil)
 				return tx, nil
 			},
-			RelationDeleteReturns: nil,
-			TagDeleteByIdReturns:  nil,
-			TxCommitReturns:       nil,
-			err:                   nil,
+			err: nil,
 		},
 	}
 
@@ -137,24 +175,16 @@ func TestTagService_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Initialize service
 			var s = func() server.Tag {
-				var tx = mocks.NewTransaction(t)
-				tx.On(`BeginTx`, mock.Anything, mock.Anything).Return(tt.TxBeginTxReturns(tx)).Maybe()
-				tx.On(`Rollback`, mock.Anything).Return(tt.TxRollbackReturns).Maybe()
-				tx.On(`Commit`, mock.Anything).Return(tt.TxCommitReturns).Maybe()
+				var tx = mocks.NewTransactioner(t)
+				tx.On(`BeginTx`, mock.Anything, mock.Anything).Return(tt.TxBeginTxReturns()).Maybe()
 
 				var tagrepo = mockrepository.NewTag(t)
 				tagrepo.On(`GetById`, mock.Anything, mock.Anything).
 					Return(tt.TagGetByIdReturns()).Maybe()
-				tagrepo.On(`DeleteById`, mock.Anything, mock.Anything).
-					Return(tt.TagDeleteByIdReturns).Maybe()
-
-				var relationRepo = mockrepository.NewRelation(t)
-				relationRepo.On(`Delete`, mock.Anything, mock.Anything).
-					Return(tt.RelationDeleteReturns).Maybe()
 
 				return &TagService{
 					tagRepository:      tagrepo,
-					relationRepository: relationRepo,
+					relationRepository: mockrepository.NewRelation(t),
 					transaction:        tx,
 					log:                logger,
 				}
@@ -175,7 +205,7 @@ func TestTagService_GetRelationEntities(t1 *testing.T) {
 
 	tests := []struct {
 		name                      string
-		tagGroups                 [][]uint64
+		tagGroups                 [][]uint
 		RelationGetReturns        func() ([]model.Relation, error)
 		NamespaceGetByNameReturns func() (model.Namespace, error)
 		want                      func(t assert.TestingT, relations []model.Relation)
@@ -183,7 +213,7 @@ func TestTagService_GetRelationEntities(t1 *testing.T) {
 	}{
 		{
 			name:      `no relations`,
-			tagGroups: [][]uint64{{34}, {92, 96}},
+			tagGroups: [][]uint{{34}, {92, 96}},
 			NamespaceGetByNameReturns: func() (model.Namespace, error) {
 				return model.Namespace{Id: 11}, nil
 			},
@@ -199,7 +229,7 @@ func TestTagService_GetRelationEntities(t1 *testing.T) {
 		},
 		{
 			name:      `namespace not found`,
-			tagGroups: [][]uint64{{34}, {92, 96}},
+			tagGroups: [][]uint{{34}, {92, 96}},
 			NamespaceGetByNameReturns: func() (model.Namespace, error) {
 				return model.Namespace{Id: 11}, errors.New(``)
 			},
@@ -215,7 +245,7 @@ func TestTagService_GetRelationEntities(t1 *testing.T) {
 		},
 		{
 			name:      `duplicates removed`,
-			tagGroups: [][]uint64{{34}, {92, 96}, {33}},
+			tagGroups: [][]uint{{34}, {92, 96}, {33}},
 			NamespaceGetByNameReturns: func() (model.Namespace, error) {
 				return model.Namespace{Id: 11}, nil
 			},
@@ -238,7 +268,7 @@ func TestTagService_GetRelationEntities(t1 *testing.T) {
 			NamespaceGetByNameReturns: func() (model.Namespace, error) {
 				return model.Namespace{Id: 11}, nil
 			},
-			tagGroups: [][]uint64{{}, {}, {}},
+			tagGroups: [][]uint{{}, {}, {}},
 			RelationGetReturns: func() ([]model.Relation, error) {
 				return []model.Relation{
 					{EntityId: 93},

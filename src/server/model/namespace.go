@@ -1,6 +1,6 @@
 package model
 
 type Namespace struct {
-	Id   uint64
+	Id   uint
 	Name string
 }

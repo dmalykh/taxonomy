@@ -7,8 +7,8 @@ import (
 
 type Category interface {
 	Create(ctx context.Context, data *model.CategoryData) (model.Category, error)
-	Update(ctx context.Context, id uint64, data *model.CategoryData) (model.Category, error)
-	DeleteById(ctx context.Context, id uint64) error
-	GetById(ctx context.Context, id uint64) (model.Category, error)
-	GetList(ctx context.Context, limit, offset uint64) ([]model.Category, error)
+	Update(ctx context.Context, id uint, data *model.CategoryData) (model.Category, error)
+	DeleteById(ctx context.Context, id uint) error
+	GetById(ctx context.Context, id uint) (model.Category, error)
+	GetList(ctx context.Context, limit, offset uint) ([]model.Category, error)
 }

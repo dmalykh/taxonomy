@@ -1,4 +1,4 @@
-package service
+package category
 
 import (
 	"context"
@@ -9,6 +9,20 @@ import (
 	"tagservice/server/model"
 	"tagservice/server/repository"
 )
+
+type Config struct {
+	CategoryRepository repository.Category
+	TagService         server.Tag
+	Logger             *zap.Logger
+}
+
+func New(config *Config) server.Category {
+	return &CategoryService{
+		tagService:         config.TagService,
+		categoryRepository: config.CategoryRepository,
+		log:                config.Logger,
+	}
+}
 
 type CategoryService struct {
 	tagService         server.Tag
@@ -34,8 +48,8 @@ func (c *CategoryService) Create(ctx context.Context, data *model.CategoryData) 
 	return category, nil
 }
 
-func (c *CategoryService) Update(ctx context.Context, id uint64, data *model.CategoryData) (model.Category, error) {
-	var logger = c.log.With(zap.String(`method`, `Update`), zap.Uint64("id", id))
+func (c *CategoryService) Update(ctx context.Context, id uint, data *model.CategoryData) (model.Category, error) {
+	var logger = c.log.With(zap.String(`method`, `Update`), zap.Uint("id", id))
 	category, err := c.categoryRepository.GetById(ctx, id)
 	if err != nil {
 		logger.Error(`get category by id`, zap.Error(err))
@@ -53,15 +67,15 @@ func (c *CategoryService) Update(ctx context.Context, id uint64, data *model.Cat
 }
 
 // Delete category and it's dependencies
-func (c *CategoryService) Delete(ctx context.Context, id uint64) error {
-	var logger = c.log.With(zap.String(`method`, `Delete`), zap.Uint64("id", id))
+func (c *CategoryService) Delete(ctx context.Context, id uint) error {
+	var logger = c.log.With(zap.String(`method`, `Delete`), zap.Uint("id", id))
 	// Check category exists
 	if _, err := c.GetById(ctx, id); err != nil {
 		return err
 	}
 
 	// Check tags. Category should be empty before deletion
-	tags, err := c.tagService.GetList(ctx, nil, id, 1, 0)
+	tags, err := c.tagService.GetList(ctx, id, 1, 0)
 	logger.Debug(`get tags of category`, zap.Error(err))
 	if err != nil {
 		return fmt.Errorf(`unknown error %w`, err)
@@ -71,15 +85,15 @@ func (c *CategoryService) Delete(ctx context.Context, id uint64) error {
 	}
 
 	// Delete category
-	logger.Debug(`delete category`, zap.Uint64(`id`, id))
+	logger.Debug(`delete category`, zap.Uint(`id`, id))
 	if err := c.categoryRepository.DeleteById(ctx, id); err != nil {
 		return fmt.Errorf(`can't remove category %w`, err)
 	}
 	return nil
 }
 
-func (c *CategoryService) GetList(ctx context.Context, limit, offset uint64) ([]model.Category, error) {
-	var logger = c.log.With(zap.String(`method`, `GetList`), zap.Uint64(`limit`, limit), zap.Uint64(`offset`, offset))
+func (c *CategoryService) GetList(ctx context.Context, limit, offset uint) ([]model.Category, error) {
+	var logger = c.log.With(zap.String(`method`, `GetList`), zap.Uint(`limit`, limit), zap.Uint(`offset`, offset))
 	list, err := c.categoryRepository.GetList(ctx, limit, offset)
 	logger.Debug(`get list`, zap.Error(err))
 	if err != nil {
@@ -88,8 +102,8 @@ func (c *CategoryService) GetList(ctx context.Context, limit, offset uint64) ([]
 	return list, nil
 }
 
-func (c *CategoryService) GetById(ctx context.Context, id uint64) (model.Category, error) {
-	var logger = c.log.With(zap.String(`method`, `GetById`), zap.Uint64("id", id))
+func (c *CategoryService) GetById(ctx context.Context, id uint) (model.Category, error) {
+	var logger = c.log.With(zap.String(`method`, `GetById`), zap.Uint("id", id))
 	category, err := c.categoryRepository.GetById(ctx, id)
 	if err != nil {
 		logger.Error(`get category by id`, zap.Error(err))

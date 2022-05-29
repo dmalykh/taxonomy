@@ -1,4 +1,4 @@
-package service
+package namespace
 
 import (
 	"context"
@@ -44,9 +44,7 @@ func TestNamespaceService_Delete(t *testing.T) {
 		name                       string
 		NamespaceGetByIdReturns    func() (model.Namespace, error)
 		NamespaceDeleteByIdReturns error
-		TxBeginTxReturns           func(tx transaction.Transaction) (transaction.Transaction, error)
-		TxRollbackReturns          error
-		TxCommitReturns            error
+		TxBeginTxReturns           func() (transaction.Transaction, error)
 		RelationDeleteReturns      error
 		err                        error
 	}{
@@ -55,7 +53,7 @@ func TestNamespaceService_Delete(t *testing.T) {
 			NamespaceGetByIdReturns: func() (model.Namespace, error) {
 				return model.Namespace{}, repository.ErrNotFound
 			},
-			TxBeginTxReturns: func(tx transaction.Transaction) (transaction.Transaction, error) { return nil, nil },
+			TxBeginTxReturns: func() (transaction.Transaction, error) { return nil, nil },
 			err:              ErrNamespaceNotFound,
 		},
 		{
@@ -63,7 +61,7 @@ func TestNamespaceService_Delete(t *testing.T) {
 			NamespaceGetByIdReturns: func() (model.Namespace, error) {
 				return model.Namespace{}, errunknown
 			},
-			TxBeginTxReturns: func(tx transaction.Transaction) (transaction.Transaction, error) { return nil, nil },
+			TxBeginTxReturns: func() (transaction.Transaction, error) { return nil, nil },
 			err:              errunknown,
 		},
 		{
@@ -71,8 +69,8 @@ func TestNamespaceService_Delete(t *testing.T) {
 			NamespaceGetByIdReturns: func() (model.Namespace, error) {
 				return model.Namespace{}, nil
 			},
-			TxBeginTxReturns: func(tx transaction.Transaction) (transaction.Transaction, error) {
-				return tx, errunknown
+			TxBeginTxReturns: func() (transaction.Transaction, error) {
+				return mocks.NewTransaction(t), errunknown
 			},
 			err: errunknown,
 		},
@@ -81,11 +79,17 @@ func TestNamespaceService_Delete(t *testing.T) {
 			NamespaceGetByIdReturns: func() (model.Namespace, error) {
 				return model.Namespace{}, nil
 			},
-			TxBeginTxReturns: func(tx transaction.Transaction) (transaction.Transaction, error) {
+			TxBeginTxReturns: func() (transaction.Transaction, error) {
+				var tx = mocks.NewTransaction(t)
+
+				var rel = mockrepository.NewRelation(t)
+				rel.On(`Delete`, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errunknown)
+				tx.On(`Relation`).Return(rel)
+				tx.On(`Rollback`, mock.Anything).Return(nil)
+
 				return tx, nil
 			},
 			RelationDeleteReturns: errunknown,
-			TxRollbackReturns:     nil,
 			err:                   errunknown,
 		},
 		{
@@ -93,11 +97,17 @@ func TestNamespaceService_Delete(t *testing.T) {
 			NamespaceGetByIdReturns: func() (model.Namespace, error) {
 				return model.Namespace{}, nil
 			},
-			TxBeginTxReturns: func(tx transaction.Transaction) (transaction.Transaction, error) {
+			TxBeginTxReturns: func() (transaction.Transaction, error) {
+				var tx = mocks.NewTransaction(t)
+
+				var rel = mockrepository.NewRelation(t)
+				rel.On(`Delete`, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(``))
+				tx.On(`Relation`).Return(rel)
+
+				tx.On(`Rollback`, mock.Anything).Return(errunknown)
 				return tx, nil
 			},
 			RelationDeleteReturns: errors.New(`anything`),
-			TxRollbackReturns:     errunknown,
 			err:                   errunknown,
 		},
 		{
@@ -105,12 +115,22 @@ func TestNamespaceService_Delete(t *testing.T) {
 			NamespaceGetByIdReturns: func() (model.Namespace, error) {
 				return model.Namespace{}, nil
 			},
-			TxBeginTxReturns: func(tx transaction.Transaction) (transaction.Transaction, error) {
+			TxBeginTxReturns: func() (transaction.Transaction, error) {
+				var tx = mocks.NewTransaction(t)
+
+				var rel = mockrepository.NewRelation(t)
+				rel.On(`Delete`, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				tx.On(`Relation`).Return(rel)
+
+				var ns = mockrepository.NewNamespace(t)
+				ns.On(`DeleteById`, mock.Anything, mock.Anything).Return(errunknown)
+				tx.On(`Namespace`).Return(ns)
+
+				tx.On(`Rollback`, mock.Anything).Return(nil)
 				return tx, nil
 			},
 			RelationDeleteReturns:      nil,
 			NamespaceDeleteByIdReturns: errunknown,
-			TxRollbackReturns:          nil,
 			err:                        errunknown,
 		},
 		{
@@ -118,12 +138,22 @@ func TestNamespaceService_Delete(t *testing.T) {
 			NamespaceGetByIdReturns: func() (model.Namespace, error) {
 				return model.Namespace{}, nil
 			},
-			TxBeginTxReturns: func(tx transaction.Transaction) (transaction.Transaction, error) {
+			TxBeginTxReturns: func() (transaction.Transaction, error) {
+				var tx = mocks.NewTransaction(t)
+
+				var rel = mockrepository.NewRelation(t)
+				rel.On(`Delete`, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				tx.On(`Relation`).Return(rel)
+
+				var ns = mockrepository.NewNamespace(t)
+				ns.On(`DeleteById`, mock.Anything, mock.Anything).Return(errunknown)
+				tx.On(`Namespace`).Return(ns)
+
+				tx.On(`Rollback`, mock.Anything).Return(errunknown)
 				return tx, nil
 			},
 			RelationDeleteReturns:      nil,
 			NamespaceDeleteByIdReturns: errors.New(`anything`),
-			TxRollbackReturns:          errunknown,
 			err:                        errunknown,
 		},
 		{
@@ -131,12 +161,22 @@ func TestNamespaceService_Delete(t *testing.T) {
 			NamespaceGetByIdReturns: func() (model.Namespace, error) {
 				return model.Namespace{}, nil
 			},
-			TxBeginTxReturns: func(tx transaction.Transaction) (transaction.Transaction, error) {
+			TxBeginTxReturns: func() (transaction.Transaction, error) {
+				var tx = mocks.NewTransaction(t)
+
+				var rel = mockrepository.NewRelation(t)
+				rel.On(`Delete`, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				tx.On(`Relation`).Return(rel)
+
+				var ns = mockrepository.NewNamespace(t)
+				ns.On(`DeleteById`, mock.Anything, mock.Anything).Return(nil)
+				tx.On(`Namespace`).Return(ns)
+
+				tx.On(`Commit`, mock.Anything).Return(errunknown)
 				return tx, nil
 			},
 			RelationDeleteReturns:      nil,
 			NamespaceDeleteByIdReturns: nil,
-			TxCommitReturns:            errunknown,
 			err:                        errunknown,
 		},
 		{
@@ -144,12 +184,22 @@ func TestNamespaceService_Delete(t *testing.T) {
 			NamespaceGetByIdReturns: func() (model.Namespace, error) {
 				return model.Namespace{}, nil
 			},
-			TxBeginTxReturns: func(tx transaction.Transaction) (transaction.Transaction, error) {
+			TxBeginTxReturns: func() (transaction.Transaction, error) {
+				var tx = mocks.NewTransaction(t)
+
+				var rel = mockrepository.NewRelation(t)
+				rel.On(`Delete`, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				tx.On(`Relation`).Return(rel)
+
+				var ns = mockrepository.NewNamespace(t)
+				ns.On(`DeleteById`, mock.Anything, mock.Anything).Return(nil)
+				tx.On(`Namespace`).Return(ns)
+
+				tx.On(`Commit`, mock.Anything).Return(nil)
 				return tx, nil
 			},
 			RelationDeleteReturns:      nil,
 			NamespaceDeleteByIdReturns: nil,
-			TxCommitReturns:            nil,
 			err:                        nil,
 		},
 	}
@@ -159,16 +209,12 @@ func TestNamespaceService_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Initialize service
 			var s = func() server.Namespace {
-				var tx = mocks.NewTransaction(t)
-				tx.On(`BeginTx`, mock.Anything, mock.Anything).Return(tt.TxBeginTxReturns(tx)).Maybe()
-				tx.On(`Rollback`, mock.Anything).Return(tt.TxRollbackReturns).Maybe()
-				tx.On(`Commit`, mock.Anything).Return(tt.TxCommitReturns).Maybe()
+				var tx = mocks.NewTransactioner(t)
+				tx.On(`BeginTx`, mock.Anything, mock.Anything).Return(tt.TxBeginTxReturns()).Maybe()
 
 				var namespacerepo = mockrepository.NewNamespace(t)
 				namespacerepo.On(`GetById`, mock.Anything, mock.Anything).
 					Return(tt.NamespaceGetByIdReturns()).Maybe()
-				namespacerepo.On(`DeleteById`, mock.Anything, mock.Anything).
-					Return(tt.NamespaceDeleteByIdReturns).Maybe()
 
 				var relationRepo = mockrepository.NewRelation(t)
 				relationRepo.On(`Delete`, mock.Anything, mock.Anything).

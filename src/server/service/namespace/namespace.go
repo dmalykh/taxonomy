@@ -1,25 +1,42 @@
-package service
+package namespace
 
 import (
 	"context"
 	"errors"
 	"fmt"
 	"go.uber.org/zap"
+	"tagservice/server"
 	"tagservice/server/model"
 	"tagservice/server/repository"
 	"tagservice/server/repository/transaction"
 )
 
+var ErrNamespaceNotFound = errors.New(`namespace not found`)
+var ErrNamespaceNotCreated = errors.New(`namespace have not created`)
+var ErrNamespaceNotUpdated = errors.New(`namespace have not updated`)
+
+type Config struct {
+	Transaction         transaction.Transactioner
+	NamespaceRepository repository.Namespace
+	RelationRepository  repository.Relation
+	Logger              *zap.Logger
+}
+
+func New(config *Config) server.Namespace {
+	return &NamespaceService{
+		transaction:         config.Transaction,
+		namespaceRepository: config.NamespaceRepository,
+		relationRepository:  config.RelationRepository,
+		log:                 config.Logger,
+	}
+}
+
 type NamespaceService struct {
-	transaction         transaction.Transaction
+	transaction         transaction.Transactioner
 	namespaceRepository repository.Namespace
 	relationRepository  repository.Relation
 	log                 *zap.Logger
 }
-
-var ErrNamespaceNotFound = errors.New(`namespace not found`)
-var ErrNamespaceNotCreated = errors.New(`namespace have not created`)
-var ErrNamespaceNotUpdated = errors.New(`namespace have not updated`)
 
 func (n *NamespaceService) Create(ctx context.Context, name string) (model.Namespace, error) {
 	var logger = n.log.With(zap.String(`method`, `Create`), zap.String(`name`, name))
@@ -36,8 +53,8 @@ func (n *NamespaceService) Create(ctx context.Context, name string) (model.Names
 	return namespace, nil
 }
 
-func (n *NamespaceService) Update(ctx context.Context, id uint64, name string) (model.Namespace, error) {
-	var logger = n.log.With(zap.String(`method`, `Update`), zap.Uint64("id", id))
+func (n *NamespaceService) Update(ctx context.Context, id uint, name string) (model.Namespace, error) {
+	var logger = n.log.With(zap.String(`method`, `Update`), zap.Uint("id", id))
 	defer func(logger *zap.Logger) {
 		_ = logger.Sync()
 	}(logger)
@@ -58,8 +75,8 @@ func (n *NamespaceService) Update(ctx context.Context, id uint64, name string) (
 }
 
 // Delete namespace and it's dependencies
-func (n *NamespaceService) Delete(ctx context.Context, id uint64) error {
-	var logger = n.log.With(zap.String(`method`, `Delete`), zap.Uint64("id", id))
+func (n *NamespaceService) Delete(ctx context.Context, id uint) error {
+	var logger = n.log.With(zap.String(`method`, `Delete`), zap.Uint("id", id))
 	defer func(logger *zap.Logger) {
 		_ = logger.Sync()
 	}(logger)
@@ -79,8 +96,8 @@ func (n *NamespaceService) Delete(ctx context.Context, id uint64) error {
 	}
 
 	// Delete dependencies
-	logger.Debug(`delete namespace by id`, zap.Uint64(`id`, namespace.Id))
-	if err := n.relationRepository.Delete(ctx, &model.Relation{NamespaceId: namespace.Id}); err != nil {
+	logger.Debug(`delete namespace by id`, zap.Uint(`id`, namespace.Id))
+	if err := tx.Relation().Delete(ctx, nil, []uint{namespace.Id}, nil); err != nil {
 		logger.Error(`rollback`, zap.Error(err))
 		if err := tx.Rollback(ctx); err != nil {
 			return fmt.Errorf(`rollback error %w`, err)
@@ -89,8 +106,8 @@ func (n *NamespaceService) Delete(ctx context.Context, id uint64) error {
 	}
 
 	// Delete namespace
-	logger.Debug(`delete namespace by id`, zap.Uint64(`id`, namespace.Id))
-	if err := n.namespaceRepository.DeleteById(ctx, namespace.Id); err != nil {
+	logger.Debug(`delete namespace by id`, zap.Uint(`id`, namespace.Id))
+	if err := tx.Namespace().DeleteById(ctx, namespace.Id); err != nil {
 		logger.Error(`rollback`, zap.Error(err))
 		if err := tx.Rollback(ctx); err != nil {
 			return fmt.Errorf(`rollback error %w`, err)
@@ -106,8 +123,8 @@ func (n *NamespaceService) Delete(ctx context.Context, id uint64) error {
 	return nil
 }
 
-func (n *NamespaceService) GetList(ctx context.Context, limit, offset uint64) ([]model.Namespace, error) {
-	var logger = n.log.With(zap.String(`method`, `GetList`), zap.Uint64(`limit`, limit), zap.Uint64(`offset`, offset))
+func (n *NamespaceService) GetList(ctx context.Context, limit, offset uint) ([]model.Namespace, error) {
+	var logger = n.log.With(zap.String(`method`, `GetList`), zap.Uint(`limit`, limit), zap.Uint(`offset`, offset))
 	defer func(logger *zap.Logger) {
 		_ = logger.Sync()
 	}(logger)

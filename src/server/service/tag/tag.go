@@ -1,4 +1,4 @@
-package service
+package tag
 
 import (
 	"context"
@@ -11,8 +11,26 @@ import (
 	"tagservice/server/repository/transaction"
 )
 
+type Config struct {
+	Transaction        transaction.Transactioner
+	TagRepository      repository.Tag
+	RelationRepository repository.Relation
+	NamespaceService   server.Namespace
+	Logger             *zap.Logger
+}
+
+func New(config *Config) server.Tag {
+	return &TagService{
+		transaction:        config.Transaction,
+		relationRepository: config.RelationRepository,
+		namespaceService:   config.NamespaceService,
+		tagRepository:      config.TagRepository,
+		log:                config.Logger,
+	}
+}
+
 type TagService struct {
-	transaction        transaction.Transaction
+	transaction        transaction.Transactioner
 	relationRepository repository.Relation
 	namespaceService   server.Namespace
 	tagRepository      repository.Tag
@@ -38,8 +56,8 @@ func (t *TagService) Create(ctx context.Context, data *model.TagData) (model.Tag
 	return tag, nil
 }
 
-func (t *TagService) Update(ctx context.Context, id uint64, data *model.TagData) (model.Tag, error) {
-	var logger = t.log.With(zap.String(`method`, `Update`), zap.Uint64("id", id), zap.Any(`data`, *data))
+func (t *TagService) Update(ctx context.Context, id uint, data *model.TagData) (model.Tag, error) {
+	var logger = t.log.With(zap.String(`method`, `Update`), zap.Uint("id", id), zap.Any(`data`, *data))
 	defer func(logger *zap.Logger) {
 		_ = logger.Sync()
 	}(logger)
@@ -61,8 +79,8 @@ func (t *TagService) Update(ctx context.Context, id uint64, data *model.TagData)
 	return updated, nil
 }
 
-func (t *TagService) Delete(ctx context.Context, id uint64) error {
-	var logger = t.log.With(zap.String(`method`, `Delete`), zap.Uint64("id", id))
+func (t *TagService) Delete(ctx context.Context, id uint) error {
+	var logger = t.log.With(zap.String(`method`, `Delete`), zap.Uint("id", id))
 	defer func(logger *zap.Logger) {
 		_ = logger.Sync()
 	}(logger)
@@ -77,14 +95,14 @@ func (t *TagService) Delete(ctx context.Context, id uint64) error {
 	}
 
 	tx, err := t.transaction.BeginTx(ctx)
-	logger.Debug(`start transaction`, zap.Error(err))
+	logger.Debug(`start Transaction`, zap.Error(err))
 	if err != nil {
 		return fmt.Errorf(`transaction error %w`, err)
 	}
 
 	// Delete relations with this tag
-	logger.Debug(`delete relations by tag id`, zap.Uint64(`id`, tag.Id))
-	if err := t.relationRepository.Delete(ctx, &model.Relation{TagId: tag.Id}); err != nil {
+	logger.Debug(`delete relations by tag id`, zap.Uint(`id`, tag.Id))
+	if err := tx.Relation().Delete(ctx, []uint{tag.Id}, nil, nil); err != nil {
 		logger.Error(`rollback`, zap.Error(err))
 		if err := tx.Rollback(ctx); err != nil {
 			return fmt.Errorf(`rollback error %w`, err)
@@ -92,8 +110,8 @@ func (t *TagService) Delete(ctx context.Context, id uint64) error {
 		return fmt.Errorf(`can't remove relations %w`, err)
 	}
 	// Delete tag
-	logger.Debug(`delete tag by id`, zap.Uint64(`id`, tag.Id))
-	if err := t.tagRepository.DeleteById(ctx, tag.Id); err != nil {
+	logger.Debug(`delete tag by id`, zap.Uint(`id`, tag.Id))
+	if err := tx.Tag().DeleteById(ctx, tag.Id); err != nil {
 		logger.Error(`rollback`, zap.Error(err))
 		if err := tx.Rollback(ctx); err != nil {
 			return fmt.Errorf(`rollback error %w`, err)
@@ -109,8 +127,8 @@ func (t *TagService) Delete(ctx context.Context, id uint64) error {
 	return nil
 }
 
-func (t *TagService) GetById(ctx context.Context, id uint64) (model.Tag, error) {
-	var logger = t.log.With(zap.String(`method`, `GetById`), zap.Uint64("id", id))
+func (t *TagService) GetById(ctx context.Context, id uint) (model.Tag, error) {
+	var logger = t.log.With(zap.String(`method`, `GetById`), zap.Uint("id", id))
 	defer func(logger *zap.Logger) {
 		_ = logger.Sync()
 	}(logger)
@@ -141,7 +159,7 @@ func (t *TagService) GetByName(ctx context.Context, name string) (model.Tag, err
 	return tag, nil
 }
 
-func (t *TagService) SetRelation(ctx context.Context, tagId uint64, entitiesNamespace string, entitiesId ...uint64) error {
+func (t *TagService) SetRelation(ctx context.Context, tagId uint, entitiesNamespace string, entitiesId ...uint) error {
 	namespace, err := t.namespaceService.GetByName(ctx, entitiesNamespace)
 	if err != nil {
 		return fmt.Errorf(`%w %s`, ErrTagNamespaceNotFound, err.Error())
@@ -160,12 +178,12 @@ func (t *TagService) SetRelation(ctx context.Context, tagId uint64, entitiesName
 	return nil
 }
 
-func (t *TagService) GetList(ctx context.Context, active *bool, categoryId, limit, offset uint64) ([]model.Tag, error) {
-	var logger = t.log.With(zap.String(`method`, `GetList`), zap.Boolp(`active`, active), zap.Uint64(`categoryId`, categoryId), zap.Uint64(`limit`, limit), zap.Uint64(`offset`, offset))
+func (t *TagService) GetList(ctx context.Context, categoryId uint, limit, offset uint) ([]model.Tag, error) {
+	var logger = t.log.With(zap.String(`method`, `GetList`), zap.Uint(`categoryId`, categoryId), zap.Uint(`limit`, limit), zap.Uint(`offset`, offset))
 	defer func(logger *zap.Logger) {
 		_ = logger.Sync()
 	}(logger)
-	tags, err := t.tagRepository.GetByFilter(ctx, model.TagFilter{Active: active, CategoryId: []uint64{categoryId}}, limit, offset)
+	tags, err := t.tagRepository.GetByFilter(ctx, model.TagFilter{CategoryId: []uint{categoryId}}, limit, offset)
 	logger.Debug(`got tags`, zap.Any(`tags`, tags), zap.Error(err))
 	if err != nil {
 		return nil, fmt.Errorf(`unknown error %w`, err)
@@ -173,7 +191,7 @@ func (t *TagService) GetList(ctx context.Context, active *bool, categoryId, limi
 	return tags, nil
 }
 
-func (t *TagService) GetRelationEntities(ctx context.Context, namespaceName string, tagGroups [][]uint64) ([]model.Relation, error) {
+func (t *TagService) GetRelationEntities(ctx context.Context, namespaceName string, tagGroups [][]uint) ([]model.Relation, error) {
 	var logger = t.log.With(zap.String(`method`, `GetRelationEntities`), zap.String(`namespaceName`, namespaceName), zap.Any(`tagGroups`, tagGroups))
 	defer func(logger *zap.Logger) {
 		_ = logger.Sync()
@@ -184,10 +202,10 @@ func (t *TagService) GetRelationEntities(ctx context.Context, namespaceName stri
 		return nil, ErrTagNamespaceNotFound
 	}
 
-	var unique = make(map[uint64]model.Relation)
+	var unique = make(map[uint]model.Relation)
 	for _, tagIds := range tagGroups {
-		rels, err := t.relationRepository.Get(ctx, tagIds, []uint64{namespace.Id}, nil)
-		logger.Debug(`got relations`, zap.Uint64s(`tagIds`, tagIds), zap.Any(`rels`, rels), zap.Error(err))
+		rels, err := t.relationRepository.Get(ctx, tagIds, []uint{namespace.Id}, nil)
+		logger.Debug(`got relations`, zap.Uints(`tagIds`, tagIds), zap.Any(`rels`, rels), zap.Error(err))
 		if err != nil {
 			return nil, fmt.Errorf(`unknown error %w`, err)
 		}
@@ -204,8 +222,8 @@ func (t *TagService) GetRelationEntities(ctx context.Context, namespaceName stri
 	return relations, nil
 }
 
-func (t *TagService) GetTagsByEntities(ctx context.Context, namespaceName string, entities ...uint64) ([]model.Tag, error) {
-	var logger = t.log.With(zap.String(`method`, `GetTagsByEntities`), zap.String(`namespaceName`, namespaceName), zap.Uint64s(`entities`, entities))
+func (t *TagService) GetTagsByEntities(ctx context.Context, namespaceName string, entities ...uint) ([]model.Tag, error) {
+	var logger = t.log.With(zap.String(`method`, `GetTagsByEntities`), zap.String(`namespaceName`, namespaceName), zap.Uints(`entities`, entities))
 	defer func(logger *zap.Logger) {
 		_ = logger.Sync()
 	}(logger)
@@ -215,7 +233,7 @@ func (t *TagService) GetTagsByEntities(ctx context.Context, namespaceName string
 		return nil, ErrTagNamespaceNotFound
 	}
 
-	relations, err := t.relationRepository.Get(ctx, nil, []uint64{namespace.Id}, entities)
+	relations, err := t.relationRepository.Get(ctx, nil, []uint{namespace.Id}, entities)
 	logger.Debug(`got relations`, zap.Any(`relations`, relations), zap.Error(err))
 	if err != nil {
 		return nil, fmt.Errorf(`unknown error %w`, err)
@@ -225,7 +243,7 @@ func (t *TagService) GetTagsByEntities(ctx context.Context, namespaceName string
 	for _, relation := range relations {
 		// Change for one request if there is a lot of relation will be found
 		tag, err := t.tagRepository.GetById(ctx, relation.TagId)
-		logger.Debug(`got tag`, zap.Uint64(`id`, relation.TagId), zap.Any(`tag`, tag), zap.Error(err))
+		logger.Debug(`got tag`, zap.Uint(`id`, relation.TagId), zap.Any(`tag`, tag), zap.Error(err))
 		if err != nil {
 			logger.DPanic(`unknown tag in relation`, zap.Error(err))
 			continue
