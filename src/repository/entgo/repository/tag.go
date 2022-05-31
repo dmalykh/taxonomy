@@ -3,19 +3,11 @@ package repository
 import (
 	"context"
 	"entgo.io/ent/dialect/sql"
-	"errors"
 	"fmt"
 	"tagservice/repository/entgo/ent"
 	"tagservice/repository/entgo/ent/tag"
 	"tagservice/server/model"
 	"tagservice/server/repository"
-)
-
-var (
-	ErrCreateTag = errors.New(`failed to create tag`)
-	ErrUpdateTag = errors.New(`failed to update tag`)
-	ErrFindTag   = errors.New(`failed to find tag`)
-	ErrDeleteTag = errors.New(`failed to delete tag`)
 )
 
 type Tag struct {
@@ -37,7 +29,7 @@ func (t *Tag) Create(ctx context.Context, data *model.TagData) (model.Tag, error
 		Save(ctx)
 
 	if err != nil {
-		return model.Tag{}, fmt.Errorf("%w: %s", ErrCreateTag, err.Error())
+		return model.Tag{}, fmt.Errorf("%w: %s", repository.ErrCreateTag, err.Error())
 	}
 	return t.ent2model(ns), nil
 }
@@ -50,14 +42,14 @@ func (t *Tag) Update(ctx context.Context, id uint, data *model.TagData) (model.T
 		SetCategoryID(int(data.CategoryId)).
 		Save(ctx)
 	if err != nil {
-		return model.Tag{}, fmt.Errorf("%w: %s", ErrUpdateTag, err.Error())
+		return model.Tag{}, fmt.Errorf("%w: %s", repository.ErrUpdateTag, err.Error())
 	}
 	return t.ent2model(tag), err
 }
 
 func (t *Tag) DeleteById(ctx context.Context, id uint) error {
 	if err := t.client.DeleteOneID(int(id)).Exec(ctx); err != nil {
-		return fmt.Errorf("%w (%d): %s", ErrDeleteTag, id, err.Error())
+		return fmt.Errorf("%w (%d): %s", repository.ErrDeleteTag, id, err.Error())
 	}
 	return nil
 }
@@ -65,7 +57,7 @@ func (t *Tag) DeleteById(ctx context.Context, id uint) error {
 func (t *Tag) GetById(ctx context.Context, id uint) (model.Tag, error) {
 	ns, err := t.client.Get(ctx, int(id))
 	if err != nil {
-		return model.Tag{}, fmt.Errorf("%w (%d): %s", ErrFindTag, id, err.Error())
+		return model.Tag{}, fmt.Errorf("%w (%d): %s", repository.ErrFindTag, id, err.Error())
 	}
 	return t.ent2model(ns), err
 }
@@ -73,7 +65,7 @@ func (t *Tag) GetById(ctx context.Context, id uint) (model.Tag, error) {
 func (t *Tag) GetList(ctx context.Context, limit, offset uint) ([]model.Tag, error) {
 	enttags, err := t.client.Query().Offset(int(offset)).Limit(int(limit)).All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrFindTag, err.Error())
+		return nil, fmt.Errorf("%w: %s", repository.ErrFindTag, err.Error())
 	}
 	var tags = make([]model.Tag, 0, len(enttags))
 	for _, enttag := range enttags {
@@ -97,7 +89,7 @@ func (t *Tag) ent2model(tag *ent.Tag) model.Tag {
 func (t *Tag) GetByName(ctx context.Context, name string) (model.Tag, error) {
 	enttag, err := t.client.Query().Where(tag.Name(name)).Only(ctx)
 	if err != nil {
-		return model.Tag{}, fmt.Errorf("%w (%s): %s", ErrFindTag, name, err.Error())
+		return model.Tag{}, fmt.Errorf("%w (%s): %s", repository.ErrFindTag, name, err.Error())
 	}
 	return t.ent2model(enttag), err
 }
@@ -116,7 +108,7 @@ func (t *Tag) GetByFilter(ctx context.Context, filter model.TagFilter, limit, of
 		}
 	}).Limit(int(limit)).Offset(int(offset)).All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrFindTag, err.Error())
+		return nil, fmt.Errorf("%w: %s", repository.ErrFindTag, err.Error())
 	}
 	var tags = make([]model.Tag, 0, len(enttags))
 	for _, enttag := range enttags {

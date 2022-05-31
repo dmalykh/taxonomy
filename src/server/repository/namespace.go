@@ -2,7 +2,15 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"tagservice/server/model"
+)
+
+var (
+	ErrCreateNamespace = errors.New(`failed to create namespace`)
+	ErrUpdateNamespace = errors.New(`failed to update namespace`)
+	ErrFindNamespace   = errors.New(`failed to find namespace`)
+	ErrDeleteNamespace = errors.New(`failed to delete namespace`)
 )
 
 type Namespace interface {

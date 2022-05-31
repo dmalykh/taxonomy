@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"entgo.io/ent/dialect/sql"
-	"errors"
 	"fmt"
 	"tagservice/repository/entgo/ent"
 	"tagservice/repository/entgo/ent/relation"
@@ -21,12 +20,6 @@ func NewRelation(client *ent.RelationClient) repository.Relation {
 	}
 }
 
-var (
-	ErrCreateRelation         = errors.New(`failed to create relation`)
-	ErrEntityWithoutNamespace = errors.New(`namespace required when requiring entity`)
-	ErrDeleteRelations        = errors.New(`failed to delete relation`)
-)
-
 func (r *Relation) Create(ctx context.Context, relation ...*model.Relation) error {
 	added, err := r.client.CreateBulk(func() []*ent.RelationCreate {
 		var create = make([]*ent.RelationCreate, 0, len(relation))
@@ -39,17 +32,17 @@ func (r *Relation) Create(ctx context.Context, relation ...*model.Relation) erro
 		return create
 	}()...).Save(ctx)
 	if err != nil {
-		return fmt.Errorf(`%w: %s`, ErrCreateRelation, err.Error())
+		return fmt.Errorf(`%w: %s`, repository.ErrCreateRelation, err.Error())
 	}
 	if len(added) != len(relation) {
-		return fmt.Errorf(`%w: internal error`, ErrCreateRelation)
+		return fmt.Errorf(`%w: internal error`, repository.ErrCreateRelation)
 	}
 	return nil
 }
 
 func (r *Relation) Delete(ctx context.Context, tagIds []uint, namespaceIds []uint, entityIds []uint) error {
 	if len(entityIds) > 0 && len(namespaceIds) == 0 {
-		return ErrEntityWithoutNamespace
+		return repository.ErrEntityWithoutNamespace
 	}
 	if _, err := r.client.Delete().Where(
 		relation.And(
@@ -90,14 +83,14 @@ func (r *Relation) Delete(ctx context.Context, tagIds []uint, namespaceIds []uin
 				}
 			},
 		)).Exec(ctx); err != nil {
-		return fmt.Errorf("%w (%+v, %+vx, %+v): %s", ErrDeleteRelations, tagIds, namespaceIds, err, err.Error())
+		return fmt.Errorf("%w (%+v, %+vx, %+v): %s", repository.ErrDeleteRelations, tagIds, namespaceIds, err, err.Error())
 	}
 	return nil
 }
 
 func (r *Relation) Get(ctx context.Context, tagIds []uint, namespaceIds []uint, entityIds []uint) ([]model.Relation, error) {
 	if len(entityIds) > 0 && len(namespaceIds) == 0 {
-		return nil, ErrEntityWithoutNamespace
+		return nil, repository.ErrEntityWithoutNamespace
 	}
 	entrelations, err := r.client.Query().Where(
 		relation.And(

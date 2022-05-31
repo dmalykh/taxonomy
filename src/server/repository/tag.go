@@ -2,7 +2,15 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"tagservice/server/model"
+)
+
+var (
+	ErrCreateTag = errors.New(`failed to create tag`)
+	ErrUpdateTag = errors.New(`failed to update tag`)
+	ErrFindTag   = errors.New(`failed to find tag`)
+	ErrDeleteTag = errors.New(`failed to delete tag`)
 )
 
 type Tag interface {

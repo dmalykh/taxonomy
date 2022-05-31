@@ -67,7 +67,7 @@ func TestCategory_Create(t *testing.T) {
 				assert.EqualValues(t, tt.data.Name, got.Data.Name)
 				assert.EqualValues(t, tt.data.Title, got.Data.Title)
 				assert.EqualValues(t, tt.data.Description, got.Data.Description)
-				assert.EqualValues(t, tt.data.PatentId, got.Data.PatentId)
+				assert.EqualValues(t, tt.data.ParentId, got.Data.ParentId)
 			}
 		})
 	}

@@ -2,7 +2,16 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"tagservice/server/model"
+)
+
+var (
+	ErrCreateCategory = errors.New(`failed to create category`)
+	ErrUpdateCategory = errors.New(`failed to update category`)
+	ErrNotUniqueName  = errors.New(`category's name and parent must be unique`)
+	ErrFindCategory   = errors.New(`failed to find category`)
+	ErrDeleteCategory = errors.New(`failed to delete category`)
 )
 
 type Category interface {

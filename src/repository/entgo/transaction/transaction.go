@@ -17,6 +17,12 @@ type Transactioner struct {
 	client *ent.Client
 }
 
+func New(client *ent.Client) transaction.Transactioner {
+	return &Transactioner{
+		client: client,
+	}
+}
+
 //@TODO panic, recovery, ctx.Done
 func (t *Transactioner) BeginTx(ctx context.Context, opts ...*transaction.TxOptions) (transaction.Transaction, error) {
 	tx, err := t.client.Tx(ctx)

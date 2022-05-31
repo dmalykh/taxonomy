@@ -2,7 +2,14 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"tagservice/server/model"
+)
+
+var (
+	ErrCreateRelation         = errors.New(`failed to create relation`)
+	ErrEntityWithoutNamespace = errors.New(`namespace required when requiring entity`)
+	ErrDeleteRelations        = errors.New(`failed to delete relation`)
 )
 
 type Relation interface {
