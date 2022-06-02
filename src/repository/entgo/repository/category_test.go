@@ -3,12 +3,14 @@ package repository
 import (
 	"context"
 	"fmt"
+	"github.com/AlekSi/pointer"
 	"github.com/jaswdr/faker"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"tagservice/repository/entgo/ent"
 	"tagservice/repository/entgo/ent/enttest"
 	"tagservice/server/model"
+	"tagservice/server/repository"
 	"testing"
 )
 
@@ -17,7 +19,9 @@ func TestCategory_Create(t *testing.T) {
 	tests := []struct {
 		name    string
 		data    model.CategoryData
+		prepare func(c *ent.Client)
 		wantErr assert.ErrorAssertionFunc //returns continue
+		check   func(t assert.TestingT, c *ent.Client)
 	}{
 		{
 			`ok`,
@@ -25,33 +29,90 @@ func TestCategory_Create(t *testing.T) {
 				Name:  faker.Beer().Name(),
 				Title: faker.Beer().Name(),
 			},
+			func(c *ent.Client) {},
 			func(t assert.TestingT, err error, i ...interface{}) bool {
 				return assert.NoError(t, err)
 			},
+			func(t assert.TestingT, c *ent.Client) {},
 		},
 		{
 			`name empty, error`,
 			model.CategoryData{
 				Title: faker.Beer().Name(),
 			},
+			func(c *ent.Client) {},
 			func(t assert.TestingT, err error, i ...interface{}) bool {
-				assert.ErrorIs(t, err, ErrCreateCategory)
+				assert.ErrorIs(t, err, repository.ErrCreateCategory)
 				return false
 			},
+			func(t assert.TestingT, c *ent.Client) {},
+		},
+		{
+			`name duplicated, parentid unique, no error`,
+			model.CategoryData{
+				Name:  `gogolek`,
+				Title: `kkk`,
+				ParentId: func() *uint {
+					var p uint = 2
+					return &p
+				}(),
+			},
+			func(c *ent.Client) {
+				// https://www.sqlite.org/nulls.html
+				c.Category.Create().SetName(`https://www.sqlite.org/nulls.html`).SetTitle(`NULL in SQL can't be UNIQ`).SaveX(context.TODO())
+				c.Category.Create().SetName(`gogolek`).SetTitle(`kkk`).SetParentID(1).SaveX(context.TODO())
+			},
+			func(t assert.TestingT, err error, i ...interface{}) bool {
+				assert.NoError(t, err)
+				return true
+			},
+			func(t assert.TestingT, c *ent.Client) {
+				// Additional check. It was a bug when parent was updated too
+				var category = c.Category.GetX(context.TODO(), 1)
+				assert.Empty(t, category.ParentID)
+			},
+		},
+		{
+			`name and parentid duplicated, error`,
+			model.CategoryData{
+				Name:  `gogolek`,
+				Title: `kkk`,
+				ParentId: func() *uint {
+					var p uint = 1
+					return &p
+				}(),
+			},
+			func(c *ent.Client) {
+				// https://www.sqlite.org/nulls.html
+				c.Category.Create().SetName(`https://www.sqlite.org/nulls.html`).SetTitle(`NULL in SQL can't be UNIQ`).SaveX(context.TODO())
+				c.Category.Create().SetName(`gogolek`).SetTitle(`kkk`).SetParentID(1).SaveX(context.TODO())
+			},
+			func(t assert.TestingT, err error, i ...interface{}) bool {
+				assert.NotNil(t, err)
+				assert.ErrorIs(t, err, repository.ErrNotUniqueName)
+				return false
+			},
+			func(t assert.TestingT, c *ent.Client) {},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var ctx = context.TODO()
+			var client *ent.Client
+			defer func() {
+				tt.check(t, client)
+			}()
+
 			c := &Category{
 				client: func(t *testing.T) *ent.CategoryClient {
-					var client = enttest.Open(t, "sqlite3", ":memory:?_fk=1", []enttest.Option{
+					client = enttest.Open(t, "sqlite3", ":memory:?_fk=1", []enttest.Option{
 						enttest.WithOptions(ent.Log(t.Log)),
 					}...).Debug()
 
 					t.Cleanup(func() {
 						require.NoError(t, client.Close())
 					})
+					tt.prepare(client)
 					return client.Category
 				}(t),
 			}
@@ -59,15 +120,21 @@ func TestCategory_Create(t *testing.T) {
 			if !tt.wantErr(t, err) {
 				return
 			}
-			assert.EqualValues(t, tt.data, returned.Data)
+
+			{
+				assert.Equal(t, tt.data.Name, returned.Data.Name)
+				assert.Equal(t, tt.data.Title, returned.Data.Title)
+				assert.Equal(t, pointer.GetString(tt.data.Description), *returned.Data.Description)
+				assert.Equal(t, tt.data.ParentId, returned.Data.ParentId)
+			}
 
 			{
 				got, err := c.GetById(ctx, returned.Id)
 				require.NoError(t, err)
-				assert.EqualValues(t, tt.data.Name, got.Data.Name)
-				assert.EqualValues(t, tt.data.Title, got.Data.Title)
-				assert.EqualValues(t, tt.data.Description, got.Data.Description)
-				assert.EqualValues(t, tt.data.ParentId, got.Data.ParentId)
+				assert.Equal(t, tt.data.Name, got.Data.Name)
+				assert.Equal(t, tt.data.Title, got.Data.Title)
+				assert.Equal(t, pointer.GetString(tt.data.Description), *got.Data.Description)
+				assert.Equal(t, tt.data.ParentId, got.Data.ParentId)
 			}
 		})
 	}

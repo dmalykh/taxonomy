@@ -37,9 +37,17 @@ var ErrCategoryNotUpdated = errors.New(`category has not updated`)
 
 func (c *CategoryService) Create(ctx context.Context, data *model.CategoryData) (model.Category, error) {
 	var logger = c.log.With(zap.String(`method`, `Create`), zap.Any(`data`, *data))
-	defer func(logger *zap.Logger) {
-		_ = logger.Sync()
-	}(logger)
+	// Check parent's category exists
+	if data.ParentId != nil {
+		if _, err := c.categoryRepository.GetById(ctx, *data.ParentId); err != nil {
+			logger.Error(`get parent category by id`, zap.Error(err), zap.Uintp(`parentId`, data.ParentId))
+			if errors.Is(err, repository.ErrFindCategory) {
+				return model.Category{}, fmt.Errorf(`parent id error: %w %d`, ErrCategoryNotFound, *data.ParentId)
+			}
+			return model.Category{}, fmt.Errorf(`unknown parent id error %w`, err)
+		}
+	}
+	// Create category
 	category, err := c.categoryRepository.Create(ctx, data)
 	logger.Debug(`category created`, zap.Error(err))
 	if err != nil {
@@ -53,10 +61,33 @@ func (c *CategoryService) Update(ctx context.Context, id uint, data *model.Categ
 	category, err := c.categoryRepository.GetById(ctx, id)
 	if err != nil {
 		logger.Error(`get category by id`, zap.Error(err))
-		if errors.Is(err, repository.ErrNotFound) {
+		if errors.Is(err, repository.ErrFindCategory) {
 			return model.Category{}, fmt.Errorf(`%w %d`, ErrCategoryNotFound, id)
 		}
 		return model.Category{}, fmt.Errorf(`unknown error %w`, err)
+	}
+	// Check parent's category exists
+	if data.ParentId != nil {
+		if _, err := c.categoryRepository.GetById(ctx, *data.ParentId); err != nil {
+			logger.Error(`get parent category by id`, zap.Error(err), zap.Uintp(`parentId`, data.ParentId))
+			if errors.Is(err, repository.ErrFindCategory) {
+				return model.Category{}, fmt.Errorf(`parent id error: %w %d`, ErrCategoryNotFound, *data.ParentId)
+			}
+			return model.Category{}, fmt.Errorf(`unknown parent id error %w`, err)
+		}
+	}
+	// Avoid empty values
+	if data.Name == `` {
+		data.Name = category.Data.Name
+	}
+	if data.Title == `` {
+		data.Title = category.Data.Title
+	}
+	if data.Description == nil {
+		data.Description = category.Data.Description
+	}
+	if data.ParentId == nil {
+		data.ParentId = category.Data.ParentId
 	}
 	category, err = c.categoryRepository.Update(ctx, category.Id, data)
 	logger.Debug(`category updated`, zap.Error(err))
@@ -107,7 +138,7 @@ func (c *CategoryService) GetById(ctx context.Context, id uint) (model.Category,
 	category, err := c.categoryRepository.GetById(ctx, id)
 	if err != nil {
 		logger.Error(`get category by id`, zap.Error(err))
-		if errors.Is(err, repository.ErrNotFound) {
+		if errors.Is(err, repository.ErrFindCategory) {
 			return category, fmt.Errorf(`%w %d`, ErrCategoryNotFound, id)
 		}
 		return category, fmt.Errorf(`unknown error %w`, err)

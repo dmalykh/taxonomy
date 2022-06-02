@@ -65,7 +65,7 @@ func (t *TagService) Update(ctx context.Context, id uint, data *model.TagData) (
 	tag, err := t.tagRepository.GetById(ctx, id)
 	if err != nil {
 		logger.Error(`get tag by id`, zap.Error(err))
-		if errors.Is(err, repository.ErrNotFound) {
+		if errors.Is(err, repository.ErrFindTag) {
 			return model.Tag{}, fmt.Errorf(`%w %d`, ErrTagNotFound, id)
 		}
 		return model.Tag{}, fmt.Errorf(`unknown error %w`, err)
@@ -88,7 +88,7 @@ func (t *TagService) Delete(ctx context.Context, id uint) error {
 	tag, err := t.tagRepository.GetById(ctx, id)
 	if err != nil {
 		logger.Error(`get tag by id`, zap.Error(err))
-		if errors.Is(err, repository.ErrNotFound) {
+		if errors.Is(err, repository.ErrFindTag) {
 			return fmt.Errorf(`%w %d`, ErrTagNotFound, id)
 		}
 		return fmt.Errorf(`unknown error %w`, err)
@@ -135,7 +135,7 @@ func (t *TagService) GetById(ctx context.Context, id uint) (model.Tag, error) {
 	tag, err := t.tagRepository.GetById(ctx, id)
 	if err != nil {
 		logger.Error(`get tag by id`, zap.Error(err))
-		if errors.Is(err, repository.ErrNotFound) {
+		if errors.Is(err, repository.ErrFindTag) {
 			return tag, fmt.Errorf(`%w %d`, ErrTagNotFound, id)
 		}
 		return tag, fmt.Errorf(`unknown error %w`, err)
@@ -151,7 +151,7 @@ func (t *TagService) GetByName(ctx context.Context, name string) (model.Tag, err
 	tag, err := t.tagRepository.GetByName(ctx, name)
 	if err != nil {
 		logger.Error(`get tag by name`, zap.Error(err))
-		if errors.Is(err, repository.ErrNotFound) {
+		if errors.Is(err, repository.ErrFindTag) {
 			return tag, fmt.Errorf(`%w %s`, ErrTagNotFound, name)
 		}
 		return tag, fmt.Errorf(`unknown error %w`, err)

@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"tagservice/repository/entgo/ent"
 	"tagservice/repository/entgo/ent/enttest"
+	"tagservice/server/repository"
 	"testing"
 )
 
@@ -29,7 +30,7 @@ func TestNamespace_Create(t *testing.T) {
 			`name empty, error`,
 			``,
 			func(t assert.TestingT, err error, i ...interface{}) bool {
-				assert.ErrorIs(t, err, ErrCreateNamespace)
+				assert.ErrorIs(t, err, repository.ErrCreateNamespace)
 				return false
 			},
 		},

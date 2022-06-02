@@ -10,6 +10,7 @@ import (
 	"tagservice/repository/entgo/ent"
 	"tagservice/repository/entgo/ent/enttest"
 	"tagservice/server/model"
+	"tagservice/server/repository"
 	"testing"
 )
 
@@ -89,7 +90,7 @@ func (suite *RelationTestSuite) TestCreate() {
 					{},
 				}
 			},
-			err:  ErrCreateRelation,
+			err:  repository.ErrCreateRelation,
 			want: 0,
 		},
 		{
@@ -129,7 +130,7 @@ func (suite *RelationTestSuite) TestCreate() {
 					},
 				}
 			},
-			err:  ErrCreateRelation,
+			err:  repository.ErrCreateRelation,
 			want: 0,
 		},
 		{
@@ -215,7 +216,7 @@ func (suite *RelationTestSuite) TestDelete() {
 			func(t assert.TestingT) {
 			},
 			func(t assert.TestingT, err error, i ...interface{}) bool {
-				return assert.ErrorIs(t, err, ErrEntityWithoutNamespace)
+				return assert.ErrorIs(t, err, repository.ErrEntityWithoutNamespace)
 			},
 		},
 		{
@@ -304,7 +305,7 @@ func (suite *RelationTestSuite) TestGet() {
 				assert.Empty(t, relations)
 			},
 			func(t assert.TestingT, err error, i ...interface{}) bool {
-				return assert.ErrorIs(t, err, ErrEntityWithoutNamespace)
+				return assert.ErrorIs(t, err, repository.ErrEntityWithoutNamespace)
 			},
 		},
 		{

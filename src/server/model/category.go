@@ -8,6 +8,6 @@ type Category struct {
 type CategoryData struct {
 	Name        string
 	Title       string
-	Description string
-	PatentId    *uint
+	Description *string
+	ParentId    *uint
 }

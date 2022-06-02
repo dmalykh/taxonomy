@@ -61,7 +61,7 @@ func (n *NamespaceService) Update(ctx context.Context, id uint, name string) (mo
 	namespace, err := n.namespaceRepository.GetById(ctx, id)
 	if err != nil {
 		logger.Error(`get namespace by id`, zap.Error(err))
-		if errors.Is(err, repository.ErrNotFound) {
+		if errors.Is(err, repository.ErrFindNamespace) {
 			return model.Namespace{}, fmt.Errorf(`%w %d`, ErrNamespaceNotFound, id)
 		}
 		return model.Namespace{}, fmt.Errorf(`unknown error %w`, err)
@@ -83,7 +83,7 @@ func (n *NamespaceService) Delete(ctx context.Context, id uint) error {
 	namespace, err := n.namespaceRepository.GetById(ctx, id)
 	if err != nil {
 		logger.Error(`get namespace by id`, zap.Error(err))
-		if errors.Is(err, repository.ErrNotFound) {
+		if errors.Is(err, repository.ErrFindNamespace) {
 			return fmt.Errorf(`%w %d`, ErrNamespaceNotFound, id)
 		}
 		return fmt.Errorf(`unknown error %w`, err)
@@ -144,7 +144,7 @@ func (n *NamespaceService) GetByName(ctx context.Context, name string) (model.Na
 	namespace, err := n.namespaceRepository.GetByName(ctx, name)
 	if err != nil {
 		logger.Error(`get namespace by name`, zap.Error(err))
-		if errors.Is(err, repository.ErrNotFound) {
+		if errors.Is(err, repository.ErrFindNamespace) {
 			return namespace, fmt.Errorf(`%w %s`, ErrNamespaceNotFound, name)
 		}
 		return namespace, fmt.Errorf(`unknown error %w`, err)
