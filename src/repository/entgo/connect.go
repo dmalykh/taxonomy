@@ -12,7 +12,7 @@ import (
 	"tagservice/server/repository/transaction"
 )
 
-func Connect(ctx context.Context, dsn string) (*ent.Client, error) {
+func Connect(ctx context.Context, dsn string, debug bool) (*ent.Client, error) {
 	u, err := dburl.Parse(dsn)
 	if err != nil {
 		return nil, fmt.Errorf(`wrong dsn %w`, err)
@@ -30,11 +30,14 @@ func Connect(ctx context.Context, dsn string) (*ent.Client, error) {
 			log.Fatal(err)
 		}
 	}()
+	if debug {
+		client = client.Debug()
+	}
 	return client, nil
 }
 
 func Init(ctx context.Context, dsn string) error {
-	client, err := Connect(ctx, dsn)
+	client, err := Connect(ctx, dsn, true)
 	if err != nil {
 		return err
 	}
