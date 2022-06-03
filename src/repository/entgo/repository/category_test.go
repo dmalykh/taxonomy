@@ -98,24 +98,11 @@ func TestCategory_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var ctx = context.TODO()
-			var client *ent.Client
+			c, client := categoryClient(t)
 			defer func() {
 				tt.check(t, client)
 			}()
 
-			c := &Category{
-				client: func(t *testing.T) *ent.CategoryClient {
-					client = enttest.Open(t, "sqlite3", ":memory:?_fk=1", []enttest.Option{
-						enttest.WithOptions(ent.Log(t.Log)),
-					}...).Debug()
-
-					t.Cleanup(func() {
-						require.NoError(t, client.Close())
-					})
-					tt.prepare(client)
-					return client.Category
-				}(t),
-			}
 			returned, err := c.Create(ctx, &tt.data)
 			if !tt.wantErr(t, err) {
 				return
@@ -164,4 +151,90 @@ func TestCategory_DeleteById(t *testing.T) {
 			tt.wantErr(t, c.DeleteById(tt.args.ctx, tt.args.id), fmt.Sprintf("DeleteById(%v, %v)", tt.args.ctx, tt.args.id))
 		})
 	}
+}
+
+func TestCategory_Update(t *testing.T) {
+
+	tests := []struct {
+		name   string
+		create func(t *testing.T, category *Category)
+		update func(t *testing.T, category *Category)
+		check  func(t *testing.T, client *ent.Client)
+	}{
+		{
+			`ok`,
+			func(t *testing.T, category *Category) {
+				_, err := category.Create(context.TODO(), &model.CategoryData{
+					Name: `Jamaica`,
+				})
+				require.NoError(t, err)
+			},
+			func(t *testing.T, category *Category) {
+				_, err := category.Update(context.TODO(), 1, &model.CategoryData{
+					Name: `Aruba`,
+				})
+				require.NoError(t, err)
+			},
+			func(t *testing.T, client *ent.Client) {
+				var row = client.Category.GetX(context.TODO(), 1)
+				assert.Equal(t, `Aruba`, row.Name)
+			},
+		},
+		{
+			`set parentid nil`,
+			func(t *testing.T, category *Category) {
+				{
+					_, err := category.Create(context.TODO(), &model.CategoryData{
+						Name: `Bermuda`,
+					})
+					require.NoError(t, err)
+				}
+				{
+					_, err := category.Create(context.TODO(), &model.CategoryData{
+						Name:     `Bahama`,
+						ParentId: pointer.ToUint(1),
+					})
+					require.NoError(t, err)
+				}
+			},
+			func(t *testing.T, category *Category) {
+				_, err := category.Update(context.TODO(), 2, &model.CategoryData{
+					Name:     `Bahama`,
+					ParentId: nil,
+				})
+				require.NoError(t, err)
+			},
+			func(t *testing.T, client *ent.Client) {
+				var row = client.Category.GetX(context.TODO(), 1)
+				assert.Equal(t, pointer.ToIntOrNil(0), row.ParentID)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c, client := categoryClient(t)
+			tt.create(t, c)
+			tt.update(t, c)
+			tt.check(t, client)
+		})
+	}
+}
+
+func categoryClient(t *testing.T) (*Category, *ent.Client) {
+	var client *ent.Client
+
+	c := Category{
+		client: func(t *testing.T) *ent.CategoryClient {
+			client = enttest.Open(t, "sqlite3", ":memory:?_fk=1", []enttest.Option{
+				enttest.WithOptions(ent.Log(t.Log)),
+			}...) //.Debug()
+
+			t.Cleanup(func() {
+				require.NoError(t, client.Close())
+			})
+			return client.Category
+		}(t),
+	}
+	return &c, client
 }

@@ -41,6 +41,7 @@ func (c *Category) Update(ctx context.Context, id uint, data *model.CategoryData
 		SetName(data.Name).
 		SetTitle(data.Title).
 		SetNillableDescription(data.Description).
+		ClearParentID().
 		SetNillableParentID(func() *int { return (*int)(unsafe.Pointer(data.ParentId)) }()).
 		Save(ctx)
 	if err != nil {
