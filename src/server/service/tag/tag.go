@@ -15,6 +15,7 @@ type Config struct {
 	Transaction        transaction.Transactioner
 	TagRepository      repository.Tag
 	RelationRepository repository.Relation
+	CategoryRepository repository.Category
 	NamespaceService   server.Namespace
 	Logger             *zap.Logger
 }
@@ -23,6 +24,7 @@ func New(config *Config) server.Tag {
 	return &TagService{
 		transaction:        config.Transaction,
 		relationRepository: config.RelationRepository,
+		categoryRepository: config.CategoryRepository,
 		namespaceService:   config.NamespaceService,
 		tagRepository:      config.TagRepository,
 		log:                config.Logger,
@@ -32,6 +34,7 @@ func New(config *Config) server.Tag {
 type TagService struct {
 	transaction        transaction.Transactioner
 	relationRepository repository.Relation
+	categoryRepository repository.Category
 	namespaceService   server.Namespace
 	tagRepository      repository.Tag
 	log                *zap.Logger
@@ -39,15 +42,22 @@ type TagService struct {
 
 var ErrTagNotFound = errors.New(`tag not found`)
 var ErrTagNamespaceNotFound = errors.New(`tag's namespace not found`)
-var ErrTagNotCreated = errors.New(`tag has not created`)
-var ErrTagRelationNotCreated = errors.New(`tag's relation has not created`)
+var ErrTagNotCreated = errors.New(`tag had not created`)
+var ErrTagRelationNotCreated = errors.New(`tag's relation had not created`)
 var ErrTagNotUpdated = errors.New(`tag have not updated`)
 
 func (t *TagService) Create(ctx context.Context, data *model.TagData) (model.Tag, error) {
 	var logger = t.log.With(zap.String(`method`, `Create`), zap.Any(`data`, *data))
-	defer func(logger *zap.Logger) {
-		_ = logger.Sync()
-	}(logger)
+
+	// Check category exists
+	if _, err := t.categoryRepository.GetById(ctx, data.CategoryId); err != nil {
+		logger.Error(`get category by id`, zap.Error(err), zap.Uint(`categoryId`, data.CategoryId))
+		if errors.Is(err, repository.ErrFindCategory) {
+			return model.Tag{}, fmt.Errorf(`%w %d`, server.ErrCategoryNotFound, data.CategoryId)
+		}
+		return model.Tag{}, fmt.Errorf(`unknown category error %w`, err)
+	}
+
 	tag, err := t.tagRepository.Create(ctx, data)
 	logger.Debug(`tag created`, zap.Any(`tag`, tag), zap.Error(err))
 	if err != nil {
