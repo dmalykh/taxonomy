@@ -30,11 +30,6 @@ type CategoryService struct {
 	log                *zap.Logger
 }
 
-var ErrCategoryNotFound = errors.New(`category not found`)
-var ErrCategoryNotCreated = errors.New(`category has not created`)
-var ErrCategoryHasTags = errors.New(`category has tags, but should be empty`)
-var ErrCategoryNotUpdated = errors.New(`category has not updated`)
-
 func (c *CategoryService) Create(ctx context.Context, data *model.CategoryData) (model.Category, error) {
 	var logger = c.log.With(zap.String(`method`, `Create`), zap.Any(`data`, *data))
 	// Check parent's category exists
@@ -42,7 +37,7 @@ func (c *CategoryService) Create(ctx context.Context, data *model.CategoryData) 
 		if _, err := c.categoryRepository.GetById(ctx, *data.ParentId); err != nil {
 			logger.Error(`get parent category by id`, zap.Error(err), zap.Uintp(`parentId`, data.ParentId))
 			if errors.Is(err, repository.ErrFindCategory) {
-				return model.Category{}, fmt.Errorf(`parent id error: %w %d`, ErrCategoryNotFound, *data.ParentId)
+				return model.Category{}, fmt.Errorf(`parent id error: %w %d`, server.ErrCategoryNotFound, *data.ParentId)
 			}
 			return model.Category{}, fmt.Errorf(`unknown parent id error %w`, err)
 		}
@@ -51,7 +46,7 @@ func (c *CategoryService) Create(ctx context.Context, data *model.CategoryData) 
 	category, err := c.categoryRepository.Create(ctx, data)
 	logger.Debug(`category created`, zap.Error(err))
 	if err != nil {
-		return model.Category{}, fmt.Errorf(`%w %s`, ErrCategoryNotCreated, err.Error())
+		return model.Category{}, fmt.Errorf(`%w %s`, server.ErrCategoryNotCreated, err.Error())
 	}
 	return category, nil
 }
@@ -62,16 +57,16 @@ func (c *CategoryService) Update(ctx context.Context, id uint, data *model.Categ
 	if err != nil {
 		logger.Error(`get category by id`, zap.Error(err))
 		if errors.Is(err, repository.ErrFindCategory) {
-			return model.Category{}, fmt.Errorf(`%w %d`, ErrCategoryNotFound, id)
+			return model.Category{}, fmt.Errorf(`%w %d`, server.ErrCategoryNotFound, id)
 		}
 		return model.Category{}, fmt.Errorf(`unknown error %w`, err)
 	}
 	// Check parent's category exists
-	if data.ParentId != nil {
+	if data.ParentId != nil && *data.ParentId != 0 {
 		if _, err := c.categoryRepository.GetById(ctx, *data.ParentId); err != nil {
 			logger.Error(`get parent category by id`, zap.Error(err), zap.Uintp(`parentId`, data.ParentId))
 			if errors.Is(err, repository.ErrFindCategory) {
-				return model.Category{}, fmt.Errorf(`parent id error: %w %d`, ErrCategoryNotFound, *data.ParentId)
+				return model.Category{}, fmt.Errorf(`parent id error: %w %d`, server.ErrCategoryNotFound, *data.ParentId)
 			}
 			return model.Category{}, fmt.Errorf(`unknown parent id error %w`, err)
 		}
@@ -88,11 +83,14 @@ func (c *CategoryService) Update(ctx context.Context, id uint, data *model.Categ
 	}
 	if data.ParentId == nil {
 		data.ParentId = category.Data.ParentId
+	} else if *data.ParentId == 0 {
+		data.ParentId = nil
 	}
+	// @TODO Avoid loops with ParentId!
 	category, err = c.categoryRepository.Update(ctx, category.Id, data)
 	logger.Debug(`category updated`, zap.Error(err))
 	if err != nil {
-		return model.Category{}, fmt.Errorf(`%w %s`, ErrCategoryNotUpdated, err.Error())
+		return model.Category{}, fmt.Errorf(`%w %s`, server.ErrCategoryNotUpdated, err.Error())
 	}
 	return category, nil
 }
@@ -112,7 +110,7 @@ func (c *CategoryService) Delete(ctx context.Context, id uint) error {
 		return fmt.Errorf(`unknown error %w`, err)
 	}
 	if len(tags) > 0 {
-		return ErrCategoryHasTags
+		return server.ErrCategoryHasTags
 	}
 
 	// Delete category
@@ -139,7 +137,7 @@ func (c *CategoryService) GetById(ctx context.Context, id uint) (model.Category,
 	if err != nil {
 		logger.Error(`get category by id`, zap.Error(err))
 		if errors.Is(err, repository.ErrFindCategory) {
-			return category, fmt.Errorf(`%w %d`, ErrCategoryNotFound, id)
+			return category, fmt.Errorf(`%w %d`, server.ErrCategoryNotFound, id)
 		}
 		return category, fmt.Errorf(`unknown error %w`, err)
 	}

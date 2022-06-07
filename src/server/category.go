@@ -2,8 +2,14 @@ package server
 
 import (
 	"context"
+	"errors"
 	"tagservice/server/model"
 )
+
+var ErrCategoryNotFound = errors.New(`category not found`)
+var ErrCategoryNotCreated = errors.New(`category had not created`)
+var ErrCategoryHasTags = errors.New(`category has tags, but should be empty`)
+var ErrCategoryNotUpdated = errors.New(`category had not updated`)
 
 type Category interface {
 	Create(ctx context.Context, data *model.CategoryData) (model.Category, error)
