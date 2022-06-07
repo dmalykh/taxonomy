@@ -36,6 +36,17 @@ func TestCategory_Create(t *testing.T) {
 			func(t assert.TestingT, c *ent.Client) {},
 		},
 		{
+			`title empty, no error`,
+			model.CategoryData{
+				Name: faker.Beer().Name(),
+			},
+			func(c *ent.Client) {},
+			func(t assert.TestingT, err error, i ...interface{}) bool {
+				return assert.NoError(t, err)
+			},
+			func(t assert.TestingT, c *ent.Client) {},
+		},
+		{
 			`name empty, error`,
 			model.CategoryData{
 				Title: faker.Beer().Name(),
@@ -59,8 +70,8 @@ func TestCategory_Create(t *testing.T) {
 			},
 			func(c *ent.Client) {
 				// https://www.sqlite.org/nulls.html
-				c.Category.Create().SetName(`https://www.sqlite.org/nulls.html`).SetTitle(`NULL in SQL can't be UNIQ`).SaveX(context.TODO())
-				c.Category.Create().SetName(`gogolek`).SetTitle(`kkk`).SetParentID(1).SaveX(context.TODO())
+				c.Category.Create().SetName(`https://www.sqlite.org/nulls.html`).SetTitle(`NULL in SQL can't be UNIQ`).SaveX(context.TODO()) //id: 1
+				c.Category.Create().SetName(`gogolek`).SetTitle(`kkk`).SetParentID(1).SaveX(context.TODO())                                  //id: 2
 			},
 			func(t assert.TestingT, err error, i ...interface{}) bool {
 				assert.NoError(t, err)
@@ -102,6 +113,7 @@ func TestCategory_Create(t *testing.T) {
 			defer func() {
 				tt.check(t, client)
 			}()
+			tt.prepare(client)
 
 			returned, err := c.Create(ctx, &tt.data)
 			if !tt.wantErr(t, err) {
@@ -228,7 +240,7 @@ func categoryClient(t *testing.T) (*Category, *ent.Client) {
 		client: func(t *testing.T) *ent.CategoryClient {
 			client = enttest.Open(t, "sqlite3", ":memory:?_fk=1", []enttest.Option{
 				enttest.WithOptions(ent.Log(t.Log)),
-			}...) //.Debug()
+			}...).Debug()
 
 			t.Cleanup(func() {
 				require.NoError(t, client.Close())
