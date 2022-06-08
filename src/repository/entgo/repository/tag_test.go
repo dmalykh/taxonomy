@@ -22,6 +22,10 @@ func (suite *TestTagOperations) SetupTest() {
 	}...) //.Debug()
 }
 
+func (suite *TestTagOperations) TearDownTest() {
+	suite.client.Close()
+}
+
 func (suite *TestTagOperations) TestTag_Create() {
 	var faker = faker.New()
 
@@ -83,7 +87,22 @@ func (suite *TestTagOperations) TestTag_Create() {
 			},
 		},
 		{
-			`duplicated names error`,
+			`duplicated names, unique categories`,
+			func() {
+				suite.client.Category.Create().SetName(faker.Beer().Name()).SetTitle(``).SaveX(context.TODO())
+				suite.client.Category.Create().SetName(faker.Company().Name()).SetTitle(``).SaveX(context.TODO())
+				suite.client.Tag.Create().SetName(`sowa`).SetCategoryID(1).SaveX(context.TODO())
+			},
+			model.TagData{
+				Name:       `sowa`,
+				CategoryId: 2,
+			},
+			func(err error, i ...interface{}) {
+				suite.NoError(err)
+			},
+		},
+		{
+			`duplicated names and categories`,
 			func() {
 				suite.client.Category.Create().SetName(faker.Beer().Name()).SetTitle(``).SaveX(context.TODO())
 				suite.client.Tag.Create().SetName(`sowa`).SetCategoryID(1).SaveX(context.TODO())
@@ -99,6 +118,8 @@ func (suite *TestTagOperations) TestTag_Create() {
 	}
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
+			suite.TearDownTest()
+			suite.SetupTest()
 			var ctx = context.TODO()
 			var tagClient = NewTag(suite.client.Tag)
 

@@ -36,8 +36,8 @@ func Connect(ctx context.Context, dsn string, debug bool) (*ent.Client, error) {
 	return client, nil
 }
 
-func Init(ctx context.Context, dsn string) error {
-	client, err := Connect(ctx, dsn, true)
+func Init(ctx context.Context, dsn string, verbose bool) error {
+	client, err := Connect(ctx, dsn, verbose)
 	if err != nil {
 		return err
 	}

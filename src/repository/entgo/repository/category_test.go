@@ -240,7 +240,7 @@ func categoryClient(t *testing.T) (*Category, *ent.Client) {
 		client: func(t *testing.T) *ent.CategoryClient {
 			client = enttest.Open(t, "sqlite3", ":memory:?_fk=1", []enttest.Option{
 				enttest.WithOptions(ent.Log(t.Log)),
-			}...).Debug()
+			}...) //.Debug()
 
 			t.Cleanup(func() {
 				require.NoError(t, client.Close())

@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
-	mockrepository "tagservice/mocks/server/repository"
-	mocks "tagservice/mocks/server/repository/transaction"
+	mockrepository "tagservice/mocks/repository"
+	mocks "tagservice/mocks/repository/transaction"
 	"tagservice/server"
 	"tagservice/server/model"
 	"tagservice/server/repository"
@@ -51,7 +51,7 @@ func TestNamespaceService_Delete(t *testing.T) {
 		{
 			name: `not found namespace error`,
 			NamespaceGetByIdReturns: func() (model.Namespace, error) {
-				return model.Namespace{}, repository.ErrNotFound
+				return model.Namespace{}, repository.ErrFindNamespace
 			},
 			TxBeginTxReturns: func() (transaction.Transaction, error) { return nil, nil },
 			err:              ErrNamespaceNotFound,
