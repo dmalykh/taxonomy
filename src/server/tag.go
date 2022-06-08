@@ -2,7 +2,17 @@ package server
 
 import (
 	"context"
+	"errors"
 	"tagservice/server/model"
+)
+
+var (
+	ErrTagNotFound           = errors.New(`tag not found`)
+	ErrTagNamespaceNotFound  = errors.New(`tag's namespace not found`)
+	ErrTagNotCreated         = errors.New(`tag had not created`)
+	ErrTagRelationNotCreated = errors.New(`tag's relation had not created`)
+	ErrTagRelationNotRemoved = errors.New(`tag's relation had not removed`)
+	ErrTagNotUpdated         = errors.New(`tag have not updated`)
 )
 
 type Tag interface {
@@ -16,9 +26,11 @@ type Tag interface {
 	GetList(ctx context.Context, categoryId uint, limit, offset uint) ([]model.Tag, error)
 
 	// SetRelation create relation between specified tag, namespace and all entities. Return error if any of relation didn't create.
+	// If relation already exists, it will be rewriting.
 	SetRelation(ctx context.Context, tagId uint, namespace string, entitiesId ...uint) error
+	UnsetRelation(ctx context.Context, tagId uint, namespace string, entitiesId ...uint) error
 
-	// GetRelationEntities return all entities with specified namespace and which has all specified tags in tagGroups. All tags
+	// GetRelationEntities returns all entities with specified namespace and which have all specified tags in tagGroups. All tags
 	// specified in one tagGroup use "OR" operand, between tagGroups "AND" operand used.
 	// For example:
 	// 		Created categories for laptops "RAM", "Matrix type", "Display size".

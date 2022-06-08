@@ -40,12 +40,6 @@ type TagService struct {
 	log                *zap.Logger
 }
 
-var ErrTagNotFound = errors.New(`tag not found`)
-var ErrTagNamespaceNotFound = errors.New(`tag's namespace not found`)
-var ErrTagNotCreated = errors.New(`tag had not created`)
-var ErrTagRelationNotCreated = errors.New(`tag's relation had not created`)
-var ErrTagNotUpdated = errors.New(`tag have not updated`)
-
 func (t *TagService) Create(ctx context.Context, data *model.TagData) (model.Tag, error) {
 	var logger = t.log.With(zap.String(`method`, `Create`), zap.Any(`data`, *data))
 
@@ -61,7 +55,7 @@ func (t *TagService) Create(ctx context.Context, data *model.TagData) (model.Tag
 	tag, err := t.tagRepository.Create(ctx, data)
 	logger.Debug(`tag created`, zap.Any(`tag`, tag), zap.Error(err))
 	if err != nil {
-		return model.Tag{}, fmt.Errorf(`%w %s`, ErrTagNotCreated, err.Error())
+		return model.Tag{}, fmt.Errorf(`%w %s`, server.ErrTagNotCreated, err.Error())
 	}
 	return tag, nil
 }
@@ -74,7 +68,7 @@ func (t *TagService) Update(ctx context.Context, id uint, data *model.TagData) (
 	if err != nil {
 		logger.Error(`get tag by id`, zap.Error(err))
 		if errors.Is(err, repository.ErrFindTag) {
-			return model.Tag{}, fmt.Errorf(`%w %d`, ErrTagNotFound, id)
+			return model.Tag{}, fmt.Errorf(`%w %d`, server.ErrTagNotFound, id)
 		}
 		return model.Tag{}, fmt.Errorf(`unknown error %w`, err)
 	}
@@ -103,7 +97,7 @@ func (t *TagService) Update(ctx context.Context, id uint, data *model.TagData) (
 	updated, err := t.tagRepository.Update(ctx, tag.Id, data)
 	logger.Debug(`tag updated`, zap.Any(`tag`, updated), zap.Error(err))
 	if err != nil {
-		return model.Tag{}, fmt.Errorf(`%w %s`, ErrTagNotUpdated, err.Error())
+		return model.Tag{}, fmt.Errorf(`%w %s`, server.ErrTagNotUpdated, err.Error())
 	}
 	return updated, nil
 }
@@ -116,7 +110,7 @@ func (t *TagService) Delete(ctx context.Context, id uint) error {
 	if err != nil {
 		logger.Error(`get tag by id`, zap.Error(err))
 		if errors.Is(err, repository.ErrFindTag) {
-			return fmt.Errorf(`%w %d`, ErrTagNotFound, id)
+			return fmt.Errorf(`%w %d`, server.ErrTagNotFound, id)
 		}
 		return fmt.Errorf(`unknown error %w`, err)
 	}
@@ -161,7 +155,7 @@ func (t *TagService) GetById(ctx context.Context, id uint) (model.Tag, error) {
 	if err != nil {
 		logger.Error(`get tag by id`, zap.Error(err))
 		if errors.Is(err, repository.ErrFindTag) {
-			return tag, fmt.Errorf(`%w %d`, ErrTagNotFound, id)
+			return tag, fmt.Errorf(`%w %d`, server.ErrTagNotFound, id)
 		}
 		return tag, fmt.Errorf(`unknown error %w`, err)
 	}
@@ -184,7 +178,7 @@ func (t *TagService) GetByName(ctx context.Context, name string, categoryId uint
 	if err != nil {
 		logger.Error(`get tag by name`, zap.Error(err))
 		if errors.Is(err, repository.ErrFindTag) {
-			return model.Tag{}, fmt.Errorf(`%w %s`, ErrTagNotFound, name)
+			return model.Tag{}, fmt.Errorf(`%w %s`, server.ErrTagNotFound, name)
 		}
 		return model.Tag{}, fmt.Errorf(`unknown error %w`, err)
 	}
@@ -193,25 +187,87 @@ func (t *TagService) GetByName(ctx context.Context, name string, categoryId uint
 			return tag, nil
 		}
 	}
-	return model.Tag{}, fmt.Errorf(`%w with %q, %d`, ErrTagNotFound, name, categoryId)
+	return model.Tag{}, fmt.Errorf(`%w with %q, %d`, server.ErrTagNotFound, name, categoryId)
 }
 
 func (t *TagService) SetRelation(ctx context.Context, tagId uint, entitiesNamespace string, entitiesId ...uint) error {
+	var logger = t.log.With(zap.String(`method`, `SetRelation`), zap.Uint(`tagId`, tagId), zap.String("entitiesNamespace", entitiesNamespace), zap.Uints(`entitiesId`, entitiesId))
+
 	namespace, err := t.namespaceService.GetByName(ctx, entitiesNamespace)
 	if err != nil {
-		return fmt.Errorf(`%w %s`, ErrTagNamespaceNotFound, err.Error())
+		return fmt.Errorf(`%w %s`, server.ErrTagNamespaceNotFound, err.Error())
 	}
+
+	// Check tag exists
+	if _, err := t.tagRepository.GetById(ctx, tagId); err != nil {
+		logger.Error(`get tag by id`, zap.Error(err), zap.Uint(`tagId`, tagId))
+		if errors.Is(err, repository.ErrFindTag) {
+			return fmt.Errorf(`%w %d`, server.ErrTagNotFound, tagId)
+		}
+		return fmt.Errorf(`unknown tag error %w`, err)
+	}
+
+	// Prepare relations without duplicates
 	var relations = make([]*model.Relation, 0, len(entitiesId))
+	var seen = make(map[uint]struct{})
 	for _, entityId := range entitiesId {
+		if _, exists := seen[entityId]; exists {
+			continue
+		}
 		relations = append(relations, &model.Relation{
 			TagId:       tagId,
 			NamespaceId: namespace.Id,
 			EntityId:    entityId,
 		})
+		seen[entityId] = struct{}{}
 	}
-	if err := t.relationRepository.Create(ctx, relations...); err != nil {
-		return fmt.Errorf(`%w %s`, ErrTagRelationNotCreated, err.Error())
+
+	// Delete exists and insert prepared
+	tx, err := t.transaction.BeginTx(ctx)
+	if err != nil {
+		return fmt.Errorf(`transaction error %w`, err)
 	}
+
+	if err := tx.Relation().Delete(ctx, []uint{tagId}, []uint{namespace.Id}, entitiesId); err != nil {
+		if err := tx.Rollback(ctx); err != nil {
+			return fmt.Errorf(`rollback error %w`, err)
+		}
+		return fmt.Errorf(`can't remove relation %w: %s`, server.ErrTagRelationNotRemoved, err.Error())
+	}
+
+	if err := tx.Relation().Create(ctx, relations...); err != nil {
+		if err := tx.Rollback(ctx); err != nil {
+			return fmt.Errorf(`rollback error %w`, err)
+		}
+		return fmt.Errorf(`can't create relation %w: %s`, server.ErrTagRelationNotCreated, err.Error())
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf(`commit error %w`, err)
+	}
+	return nil
+}
+
+func (t *TagService) UnsetRelation(ctx context.Context, tagId uint, entitiesNamespace string, entitiesId ...uint) error {
+	var logger = t.log.With(zap.String(`method`, `UnsetRelation`), zap.Uint(`tagId`, tagId), zap.String("entitiesNamespace", entitiesNamespace), zap.Uints(`entitiesId`, entitiesId))
+
+	namespace, err := t.namespaceService.GetByName(ctx, entitiesNamespace)
+	if err != nil {
+		return fmt.Errorf(`%w %s`, server.ErrTagNamespaceNotFound, err.Error())
+	}
+
+	// Check tag exists
+	if _, err := t.tagRepository.GetById(ctx, tagId); err != nil {
+		logger.Error(`get tag by id`, zap.Error(err), zap.Uint(`tagId`, tagId))
+		if errors.Is(err, repository.ErrFindTag) {
+			return fmt.Errorf(`%w %d`, server.ErrTagNotFound, tagId)
+		}
+		return fmt.Errorf(`unknown tag error %w`, err)
+	}
+	// Remove relations
+	if err := t.relationRepository.Delete(ctx, []uint{tagId}, []uint{namespace.Id}, entitiesId); err != nil {
+		return fmt.Errorf(`can't remove relation %w: %s`, server.ErrTagRelationNotRemoved, err.Error())
+	}
+
 	return nil
 }
 
@@ -232,7 +288,7 @@ func (t *TagService) GetRelationEntities(ctx context.Context, namespaceName stri
 	namespace, err := t.namespaceService.GetByName(ctx, namespaceName)
 	logger.Debug(`got namespace`, zap.Any(`namespace`, namespace), zap.Error(err))
 	if err != nil {
-		return nil, ErrTagNamespaceNotFound
+		return nil, server.ErrTagNamespaceNotFound
 	}
 
 	var unique = make(map[uint]model.Relation)
@@ -261,7 +317,7 @@ func (t *TagService) GetTagsByEntities(ctx context.Context, namespaceName string
 	namespace, err := t.namespaceService.GetByName(ctx, namespaceName)
 	logger.Debug(`got namespace`, zap.Any(`namespace`, namespace), zap.Error(err))
 	if err != nil {
-		return nil, ErrTagNamespaceNotFound
+		return nil, server.ErrTagNamespaceNotFound
 	}
 
 	relations, err := t.relationRepository.Get(ctx, nil, []uint{namespace.Id}, entities)

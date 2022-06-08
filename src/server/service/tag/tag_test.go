@@ -6,9 +6,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
-	mockservice "tagservice/mocks/server"
-	mockrepository "tagservice/mocks/server/repository"
-	mocks "tagservice/mocks/server/repository/transaction"
+	mockservice "tagservice/mocks"
+	mockrepository "tagservice/mocks/repository"
+	mocks "tagservice/mocks/repository/transaction"
 	"tagservice/server"
 	"tagservice/server/model"
 	"tagservice/server/repository"
@@ -27,10 +27,10 @@ func TestTagService_Delete(t *testing.T) {
 		{
 			name: `not found tag error`,
 			TagGetByIdReturns: func() (model.Tag, error) {
-				return model.Tag{}, repository.ErrNotFound
+				return model.Tag{}, repository.ErrFindTag
 			},
 			TxBeginTxReturns: func() (transaction.Transaction, error) { return nil, nil },
-			err:              ErrTagNotFound,
+			err:              server.ErrTagNotFound,
 		},
 		{
 			name: `unknown err when getting tag`,
@@ -240,7 +240,7 @@ func TestTagService_GetRelationEntities(t1 *testing.T) {
 				assert.Len(t, relations, 0)
 			},
 			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
-				return assert.ErrorIs(t, err, ErrTagNamespaceNotFound)
+				return assert.ErrorIs(t, err, server.ErrTagNamespaceNotFound)
 			},
 		},
 		{
