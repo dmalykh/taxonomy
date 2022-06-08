@@ -68,9 +68,7 @@ func (t *TagService) Create(ctx context.Context, data *model.TagData) (model.Tag
 
 func (t *TagService) Update(ctx context.Context, id uint, data *model.TagData) (model.Tag, error) {
 	var logger = t.log.With(zap.String(`method`, `Update`), zap.Uint("id", id), zap.Any(`data`, *data))
-	defer func(logger *zap.Logger) {
-		_ = logger.Sync()
-	}(logger)
+
 	// Check tag exists
 	tag, err := t.tagRepository.GetById(ctx, id)
 	if err != nil {
@@ -79,6 +77,27 @@ func (t *TagService) Update(ctx context.Context, id uint, data *model.TagData) (
 			return model.Tag{}, fmt.Errorf(`%w %d`, ErrTagNotFound, id)
 		}
 		return model.Tag{}, fmt.Errorf(`unknown error %w`, err)
+	}
+	// Avoid empty values
+	if data.Name == `` {
+		data.Name = tag.Data.Name
+	}
+	if data.Title == `` {
+		data.Title = tag.Data.Title
+	}
+	if data.Description == `` {
+		data.Description = tag.Data.Description
+	}
+	if data.CategoryId == 0 {
+		data.CategoryId = tag.Data.CategoryId
+	}
+	// Check category exists
+	if _, err := t.categoryRepository.GetById(ctx, data.CategoryId); err != nil {
+		logger.Error(`get category by id`, zap.Error(err), zap.Uint(`categoryId`, data.CategoryId))
+		if errors.Is(err, repository.ErrFindCategory) {
+			return model.Tag{}, fmt.Errorf(`%w %d`, server.ErrCategoryNotFound, data.CategoryId)
+		}
+		return model.Tag{}, fmt.Errorf(`unknown category error %w`, err)
 	}
 	// Update tag
 	updated, err := t.tagRepository.Update(ctx, tag.Id, data)
@@ -91,9 +110,7 @@ func (t *TagService) Update(ctx context.Context, id uint, data *model.TagData) (
 
 func (t *TagService) Delete(ctx context.Context, id uint) error {
 	var logger = t.log.With(zap.String(`method`, `Delete`), zap.Uint("id", id))
-	defer func(logger *zap.Logger) {
-		_ = logger.Sync()
-	}(logger)
+
 	// Check tag exists
 	tag, err := t.tagRepository.GetById(ctx, id)
 	if err != nil {
@@ -139,9 +156,7 @@ func (t *TagService) Delete(ctx context.Context, id uint) error {
 
 func (t *TagService) GetById(ctx context.Context, id uint) (model.Tag, error) {
 	var logger = t.log.With(zap.String(`method`, `GetById`), zap.Uint("id", id))
-	defer func(logger *zap.Logger) {
-		_ = logger.Sync()
-	}(logger)
+
 	tag, err := t.tagRepository.GetById(ctx, id)
 	if err != nil {
 		logger.Error(`get tag by id`, zap.Error(err))
@@ -155,9 +170,7 @@ func (t *TagService) GetById(ctx context.Context, id uint) (model.Tag, error) {
 
 func (t *TagService) GetByName(ctx context.Context, name string) (model.Tag, error) {
 	var logger = t.log.With(zap.String(`method`, `GetByName`), zap.String("name", name))
-	defer func(logger *zap.Logger) {
-		_ = logger.Sync()
-	}(logger)
+
 	tag, err := t.tagRepository.GetByName(ctx, name)
 	if err != nil {
 		logger.Error(`get tag by name`, zap.Error(err))
@@ -190,9 +203,7 @@ func (t *TagService) SetRelation(ctx context.Context, tagId uint, entitiesNamesp
 
 func (t *TagService) GetList(ctx context.Context, categoryId uint, limit, offset uint) ([]model.Tag, error) {
 	var logger = t.log.With(zap.String(`method`, `GetList`), zap.Uint(`categoryId`, categoryId), zap.Uint(`limit`, limit), zap.Uint(`offset`, offset))
-	defer func(logger *zap.Logger) {
-		_ = logger.Sync()
-	}(logger)
+
 	tags, err := t.tagRepository.GetByFilter(ctx, model.TagFilter{CategoryId: []uint{categoryId}}, limit, offset)
 	logger.Debug(`got tags`, zap.Any(`tags`, tags), zap.Error(err))
 	if err != nil {
@@ -203,9 +214,7 @@ func (t *TagService) GetList(ctx context.Context, categoryId uint, limit, offset
 
 func (t *TagService) GetRelationEntities(ctx context.Context, namespaceName string, tagGroups [][]uint) ([]model.Relation, error) {
 	var logger = t.log.With(zap.String(`method`, `GetRelationEntities`), zap.String(`namespaceName`, namespaceName), zap.Any(`tagGroups`, tagGroups))
-	defer func(logger *zap.Logger) {
-		_ = logger.Sync()
-	}(logger)
+
 	namespace, err := t.namespaceService.GetByName(ctx, namespaceName)
 	logger.Debug(`got namespace`, zap.Any(`namespace`, namespace), zap.Error(err))
 	if err != nil {
@@ -234,9 +243,7 @@ func (t *TagService) GetRelationEntities(ctx context.Context, namespaceName stri
 
 func (t *TagService) GetTagsByEntities(ctx context.Context, namespaceName string, entities ...uint) ([]model.Tag, error) {
 	var logger = t.log.With(zap.String(`method`, `GetTagsByEntities`), zap.String(`namespaceName`, namespaceName), zap.Uints(`entities`, entities))
-	defer func(logger *zap.Logger) {
-		_ = logger.Sync()
-	}(logger)
+
 	namespace, err := t.namespaceService.GetByName(ctx, namespaceName)
 	logger.Debug(`got namespace`, zap.Any(`namespace`, namespace), zap.Error(err))
 	if err != nil {

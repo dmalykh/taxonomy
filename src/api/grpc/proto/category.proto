@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+import "common.proto";
+import "tag.proto";
+import "google/protobuf/wrappers.proto";
+
+
+message Category {
+  int64 id = 1;
+  string name = 2;
+  string title = 3;
+  optional string description = 4;
+}
+
+message CategoryCreateRequest {
+  string name = 2;
+  string title = 3;
+  optional string description = 4;
+}
+
+message CategoryUpdateRequest {
+  optional string name = 2;
+  optional string title = 3;
+  optional string description = 4;
+}
+
+
+
+service CategoryService {
+  rpc Create(CategoryCreateRequest) returns (Category);
+  rpc Update(CategoryUpdateRequest) returns (Category);
+  rpc Delete(IdRequest) returns (Category);
+  rpc GetById(IdRequest) returns (Category);
+  rpc GetList(Pagination) returns
+}
