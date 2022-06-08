@@ -32,7 +32,7 @@ func New() *cobra.Command {
 	CheckErr(c.MarkPersistentFlagRequired("dsn"))
 
 	// Add subcommands
-	c.AddCommand(initCommand(), categoryCommand(), tagCommand(), namespaceCommand(), serveCommand())
+	c.AddCommand(initCommand(), categoryCommand(), tagCommand(), namespaceCommand(), relCommand(), serveCommand())
 
 	return c
 }

@@ -46,6 +46,7 @@ func tagCommand() *cobra.Command {
 	createCmd.Flags().StringP(`title`, `t`, ``, `title of the tag`)
 	createCmd.Flags().Uint(`category`, 0, `id of category for the tag`)
 	createCmd.Flags().String(`description`, ``, `description for the tag`)
+	CheckErr(createCmd.MarkFlagRequired(`category`))
 
 	var updateCmd = &cobra.Command{
 		Use:   `update [id]`,
