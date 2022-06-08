@@ -168,18 +168,32 @@ func (t *TagService) GetById(ctx context.Context, id uint) (model.Tag, error) {
 	return tag, nil
 }
 
-func (t *TagService) GetByName(ctx context.Context, name string) (model.Tag, error) {
+func (t *TagService) GetByName(ctx context.Context, name string, categoryId uint) (model.Tag, error) {
 	var logger = t.log.With(zap.String(`method`, `GetByName`), zap.String("name", name))
 
-	tag, err := t.tagRepository.GetByName(ctx, name)
+	// Check category exists
+	if _, err := t.categoryRepository.GetById(ctx, categoryId); err != nil {
+		logger.Error(`get category by id`, zap.Error(err), zap.Uint(`categoryId`, categoryId))
+		if errors.Is(err, repository.ErrFindCategory) {
+			return model.Tag{}, fmt.Errorf(`%w %d`, server.ErrCategoryNotFound, categoryId)
+		}
+		return model.Tag{}, fmt.Errorf(`unknown category error %w`, err)
+	}
+
+	tags, err := t.tagRepository.GetByName(ctx, name)
 	if err != nil {
 		logger.Error(`get tag by name`, zap.Error(err))
 		if errors.Is(err, repository.ErrFindTag) {
-			return tag, fmt.Errorf(`%w %s`, ErrTagNotFound, name)
+			return model.Tag{}, fmt.Errorf(`%w %s`, ErrTagNotFound, name)
 		}
-		return tag, fmt.Errorf(`unknown error %w`, err)
+		return model.Tag{}, fmt.Errorf(`unknown error %w`, err)
 	}
-	return tag, nil
+	for _, tag := range tags {
+		if tag.Data.CategoryId == categoryId {
+			return tag, nil
+		}
+	}
+	return model.Tag{}, fmt.Errorf(`%w with %q, %d`, ErrTagNotFound, name, categoryId)
 }
 
 func (t *TagService) SetRelation(ctx context.Context, tagId uint, entitiesNamespace string, entitiesId ...uint) error {

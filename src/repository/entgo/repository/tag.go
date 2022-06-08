@@ -86,12 +86,16 @@ func (t *Tag) ent2model(tag *ent.Tag) model.Tag {
 	}
 }
 
-func (t *Tag) GetByName(ctx context.Context, name string) (model.Tag, error) {
-	enttag, err := t.client.Query().Where(tag.Name(name)).Only(ctx)
+func (t *Tag) GetByName(ctx context.Context, name string) ([]model.Tag, error) {
+	enttags, err := t.client.Query().Where(tag.Name(name)).All(ctx)
 	if err != nil {
-		return model.Tag{}, fmt.Errorf("%w (%s): %s", repository.ErrFindTag, name, err.Error())
+		return nil, fmt.Errorf("%w (%s): %s", repository.ErrFindTag, name, err.Error())
 	}
-	return t.ent2model(enttag), err
+	var tags = make([]model.Tag, 0, len(enttags))
+	for _, enttag := range enttags {
+		tags = append(tags, t.ent2model(enttag))
+	}
+	return tags, nil
 }
 
 func (t *Tag) GetByFilter(ctx context.Context, filter model.TagFilter, limit, offset uint) ([]model.Tag, error) {

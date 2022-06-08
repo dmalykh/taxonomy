@@ -10,7 +10,7 @@ type Tag interface {
 	Update(ctx context.Context, id uint, data *model.TagData) (model.Tag, error)
 	Delete(ctx context.Context, id uint) error
 	GetById(ctx context.Context, id uint) (model.Tag, error)
-	GetByName(ctx context.Context, name string) (model.Tag, error)
+	GetByName(ctx context.Context, name string, categoryId uint) (model.Tag, error)
 
 	// GetList returns slice with tags that proper for conditions. Set nil category_id to receive tags from all categories.
 	GetList(ctx context.Context, categoryId uint, limit, offset uint) ([]model.Tag, error)
