@@ -3,15 +3,15 @@ package namespace
 import (
 	"context"
 	"errors"
+	mockrepository "github.com/dmalykh/tagservice/mocks/repository"
+	mocks "github.com/dmalykh/tagservice/mocks/repository/transaction"
+	"github.com/dmalykh/tagservice/tagservice"
+	"github.com/dmalykh/tagservice/tagservice/model"
+	"github.com/dmalykh/tagservice/tagservice/repository"
+	"github.com/dmalykh/tagservice/tagservice/repository/transaction"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
-	mockrepository "tagservice/mocks/repository"
-	mocks "tagservice/mocks/repository/transaction"
-	"tagservice/server"
-	"tagservice/server/model"
-	"tagservice/server/repository"
-	"tagservice/server/repository/transaction"
 	"testing"
 )
 
@@ -208,7 +208,7 @@ func TestNamespaceService_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Initialize service
-			var s = func() server.Namespace {
+			var s = func() tagservice.Namespace {
 				var tx = mocks.NewTransactioner(t)
 				tx.On(`BeginTx`, mock.Anything, mock.Anything).Return(tt.TxBeginTxReturns()).Maybe()
 

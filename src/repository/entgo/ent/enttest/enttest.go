@@ -4,9 +4,9 @@ package enttest
 
 import (
 	"context"
-	"tagservice/repository/entgo/ent"
+	"github.com/dmalykh/tagservice/repository/entgo/ent"
 	// required by schema hooks.
-	_ "tagservice/repository/entgo/ent/runtime"
+	_ "github.com/dmalykh/tagservice/repository/entgo/ent/runtime"
 
 	"entgo.io/ent/dialect/sql/schema"
 )

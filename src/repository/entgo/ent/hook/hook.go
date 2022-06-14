@@ -5,7 +5,7 @@ package hook
 import (
 	"context"
 	"fmt"
-	"tagservice/repository/entgo/ent"
+	"github.com/dmalykh/tagservice/repository/entgo/ent"
 )
 
 // The CategoryFunc type is an adapter to allow the use of ordinary

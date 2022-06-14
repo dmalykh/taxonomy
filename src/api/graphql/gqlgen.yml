@@ -2,7 +2,7 @@
 schema:
   - schema/*.graphql
 
-# Where should the generated server code go?
+# Where should the generated github.com/dmalykh/tagservice code go?
 exec:
   filename: generated/generated.go
   package: generated
@@ -43,7 +43,7 @@ omit_slice_element_pointers: true
 # gqlgen will search for any type names in the schema in these go packages
 # if they match it will use them, otherwise it will generate them.
 autobind:
-#  - "tagservice/api/graphql/graph/model"
+#  - "github.com/dmalykh/tagservice/api/graphql/graph/model"
 
 # This section declares type mapping between the GraphQL and go type systems
 #

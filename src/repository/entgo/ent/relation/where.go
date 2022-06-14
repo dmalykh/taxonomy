@@ -3,7 +3,7 @@
 package relation
 
 import (
-	"tagservice/repository/entgo/ent/predicate"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/predicate"
 	"time"
 
 	"entgo.io/ent/dialect/sql"

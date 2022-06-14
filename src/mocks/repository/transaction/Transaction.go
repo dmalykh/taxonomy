@@ -4,7 +4,7 @@ package mocks
 
 import (
 	context "context"
-	repository "tagservice/server/repository"
+	repository "github.com/dmalykh/tagservice/tagservice/repository"
 
 	mock "github.com/stretchr/testify/mock"
 

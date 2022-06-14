@@ -4,19 +4,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/dmalykh/tagservice/tagservice"
+	"github.com/dmalykh/tagservice/tagservice/model"
+	"github.com/dmalykh/tagservice/tagservice/repository"
 	"go.uber.org/zap"
-	"tagservice/server"
-	"tagservice/server/model"
-	"tagservice/server/repository"
 )
 
 type Config struct {
 	CategoryRepository repository.Category
-	TagService         server.Tag
+	TagService         tagservice.Tag
 	Logger             *zap.Logger
 }
 
-func New(config *Config) server.Category {
+func New(config *Config) tagservice.Category {
 	return &CategoryService{
 		tagService:         config.TagService,
 		categoryRepository: config.CategoryRepository,
@@ -25,7 +25,7 @@ func New(config *Config) server.Category {
 }
 
 type CategoryService struct {
-	tagService         server.Tag
+	tagService         tagservice.Tag
 	categoryRepository repository.Category
 	log                *zap.Logger
 }
@@ -37,7 +37,7 @@ func (c *CategoryService) Create(ctx context.Context, data *model.CategoryData) 
 		if _, err := c.categoryRepository.GetById(ctx, *data.ParentId); err != nil {
 			logger.Error(`get parent category by id`, zap.Error(err), zap.Uintp(`parentId`, data.ParentId))
 			if errors.Is(err, repository.ErrFindCategory) {
-				return model.Category{}, fmt.Errorf(`parent id error: %w %d`, server.ErrCategoryNotFound, *data.ParentId)
+				return model.Category{}, fmt.Errorf(`parent id error: %w %d`, tagservice.ErrCategoryNotFound, *data.ParentId)
 			}
 			return model.Category{}, fmt.Errorf(`unknown parent id error %w`, err)
 		}
@@ -46,7 +46,7 @@ func (c *CategoryService) Create(ctx context.Context, data *model.CategoryData) 
 	category, err := c.categoryRepository.Create(ctx, data)
 	logger.Debug(`category created`, zap.Error(err))
 	if err != nil {
-		return model.Category{}, fmt.Errorf(`%w %s`, server.ErrCategoryNotCreated, err.Error())
+		return model.Category{}, fmt.Errorf(`%w %s`, tagservice.ErrCategoryNotCreated, err.Error())
 	}
 	return category, nil
 }
@@ -57,7 +57,7 @@ func (c *CategoryService) Update(ctx context.Context, id uint, data *model.Categ
 	if err != nil {
 		logger.Error(`get category by id`, zap.Error(err))
 		if errors.Is(err, repository.ErrFindCategory) {
-			return model.Category{}, fmt.Errorf(`%w %d`, server.ErrCategoryNotFound, id)
+			return model.Category{}, fmt.Errorf(`%w %d`, tagservice.ErrCategoryNotFound, id)
 		}
 		return model.Category{}, fmt.Errorf(`unknown error %w`, err)
 	}
@@ -66,7 +66,7 @@ func (c *CategoryService) Update(ctx context.Context, id uint, data *model.Categ
 		if _, err := c.categoryRepository.GetById(ctx, *data.ParentId); err != nil {
 			logger.Error(`get parent category by id`, zap.Error(err), zap.Uintp(`parentId`, data.ParentId))
 			if errors.Is(err, repository.ErrFindCategory) {
-				return model.Category{}, fmt.Errorf(`parent id error: %w %d`, server.ErrCategoryNotFound, *data.ParentId)
+				return model.Category{}, fmt.Errorf(`parent id error: %w %d`, tagservice.ErrCategoryNotFound, *data.ParentId)
 			}
 			return model.Category{}, fmt.Errorf(`unknown parent id error %w`, err)
 		}
@@ -90,7 +90,7 @@ func (c *CategoryService) Update(ctx context.Context, id uint, data *model.Categ
 	category, err = c.categoryRepository.Update(ctx, category.Id, data)
 	logger.Debug(`category updated`, zap.Error(err))
 	if err != nil {
-		return model.Category{}, fmt.Errorf(`%w %s`, server.ErrCategoryNotUpdated, err.Error())
+		return model.Category{}, fmt.Errorf(`%w %s`, tagservice.ErrCategoryNotUpdated, err.Error())
 	}
 	return category, nil
 }
@@ -110,7 +110,7 @@ func (c *CategoryService) Delete(ctx context.Context, id uint) error {
 		return fmt.Errorf(`unknown error %w`, err)
 	}
 	if len(tags) > 0 {
-		return server.ErrCategoryHasTags
+		return tagservice.ErrCategoryHasTags
 	}
 
 	// Delete category
@@ -137,7 +137,7 @@ func (c *CategoryService) GetById(ctx context.Context, id uint) (model.Category,
 	if err != nil {
 		logger.Error(`get category by id`, zap.Error(err))
 		if errors.Is(err, repository.ErrFindCategory) {
-			return category, fmt.Errorf(`%w %d`, server.ErrCategoryNotFound, id)
+			return category, fmt.Errorf(`%w %d`, tagservice.ErrCategoryNotFound, id)
 		}
 		return category, fmt.Errorf(`unknown error %w`, err)
 	}

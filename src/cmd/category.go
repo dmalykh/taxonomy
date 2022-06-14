@@ -5,11 +5,11 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS> @TODO
 package cmd
 
 import (
+	"github.com/dmalykh/tagservice/tagservice/model"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"math"
 	"strconv"
-	"tagservice/server/model"
 	"unsafe"
 )
 

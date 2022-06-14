@@ -3,13 +3,13 @@ package entgo
 import (
 	"context"
 	"fmt"
+	"github.com/dmalykh/tagservice/repository/entgo/ent"
+	tx "github.com/dmalykh/tagservice/repository/entgo/transaction"
+	"github.com/dmalykh/tagservice/tagservice/repository/transaction"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/xo/dburl"
 	"log"
-	"tagservice/repository/entgo/ent"
-	tx "tagservice/repository/entgo/transaction"
-	"tagservice/server/repository/transaction"
 )
 
 func Connect(ctx context.Context, dsn string, debug bool) (*ent.Client, error) {

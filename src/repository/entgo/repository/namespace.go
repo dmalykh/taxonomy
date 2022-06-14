@@ -3,10 +3,10 @@ package repository
 import (
 	"context"
 	"fmt"
-	"tagservice/repository/entgo/ent"
-	entnamespace "tagservice/repository/entgo/ent/namespace"
-	"tagservice/server/model"
-	"tagservice/server/repository"
+	"github.com/dmalykh/tagservice/repository/entgo/ent"
+	entnamespace "github.com/dmalykh/tagservice/repository/entgo/ent/namespace"
+	"github.com/dmalykh/tagservice/tagservice/model"
+	"github.com/dmalykh/tagservice/tagservice/repository"
 )
 
 func NewNamespace(client *ent.NamespaceClient) repository.Namespace {

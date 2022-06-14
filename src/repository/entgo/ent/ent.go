@@ -5,10 +5,10 @@ package ent
 import (
 	"errors"
 	"fmt"
-	"tagservice/repository/entgo/ent/category"
-	"tagservice/repository/entgo/ent/namespace"
-	"tagservice/repository/entgo/ent/relation"
-	"tagservice/repository/entgo/ent/tag"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/category"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/namespace"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/relation"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/tag"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"

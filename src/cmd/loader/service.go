@@ -2,19 +2,19 @@ package loader
 
 import (
 	"context"
+	"github.com/dmalykh/tagservice/repository/entgo"
+	"github.com/dmalykh/tagservice/repository/entgo/repository"
+	"github.com/dmalykh/tagservice/tagservice"
+	"github.com/dmalykh/tagservice/tagservice/service/category"
+	"github.com/dmalykh/tagservice/tagservice/service/namespace"
+	"github.com/dmalykh/tagservice/tagservice/service/tag"
 	"go.uber.org/zap"
-	"tagservice/repository/entgo"
-	"tagservice/repository/entgo/repository"
-	"tagservice/server"
-	"tagservice/server/service/category"
-	"tagservice/server/service/namespace"
-	"tagservice/server/service/tag"
 )
 
 type Service struct {
-	Namespace server.Namespace
-	Tag       server.Tag
-	Category  server.Category
+	Namespace tagservice.Namespace
+	Tag       tagservice.Tag
+	Category  tagservice.Category
 }
 
 func Load(ctx context.Context, dsn string, verbose bool) (*Service, error) {

@@ -2,12 +2,12 @@ package repository
 
 import (
 	"context"
+	"github.com/dmalykh/tagservice/repository/entgo/ent"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/enttest"
+	"github.com/dmalykh/tagservice/tagservice/model"
+	"github.com/dmalykh/tagservice/tagservice/repository"
 	"github.com/jaswdr/faker"
 	suitetest "github.com/stretchr/testify/suite"
-	"tagservice/repository/entgo/ent"
-	"tagservice/repository/entgo/ent/enttest"
-	"tagservice/server/model"
-	"tagservice/server/repository"
 	"testing"
 )
 

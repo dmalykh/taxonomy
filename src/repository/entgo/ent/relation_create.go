@@ -6,9 +6,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"tagservice/repository/entgo/ent/namespace"
-	"tagservice/repository/entgo/ent/relation"
-	"tagservice/repository/entgo/ent/tag"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/namespace"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/relation"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/tag"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"

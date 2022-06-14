@@ -2,10 +2,10 @@ package transaction
 
 import (
 	"context"
-	"tagservice/repository/entgo/ent"
-	entrepo "tagservice/repository/entgo/repository"
-	"tagservice/server/repository"
-	"tagservice/server/repository/transaction"
+	"github.com/dmalykh/tagservice/repository/entgo/ent"
+	entrepo "github.com/dmalykh/tagservice/repository/entgo/repository"
+	"github.com/dmalykh/tagservice/tagservice/repository"
+	"github.com/dmalykh/tagservice/tagservice/repository/transaction"
 )
 
 type Transaction struct {

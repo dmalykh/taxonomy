@@ -3,16 +3,16 @@ package tag
 import (
 	"context"
 	"errors"
+	mockservice "github.com/dmalykh/tagservice/mocks"
+	mockrepository "github.com/dmalykh/tagservice/mocks/repository"
+	mocks "github.com/dmalykh/tagservice/mocks/repository/transaction"
+	"github.com/dmalykh/tagservice/tagservice"
+	"github.com/dmalykh/tagservice/tagservice/model"
+	"github.com/dmalykh/tagservice/tagservice/repository"
+	"github.com/dmalykh/tagservice/tagservice/repository/transaction"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
-	mockservice "tagservice/mocks"
-	mockrepository "tagservice/mocks/repository"
-	mocks "tagservice/mocks/repository/transaction"
-	"tagservice/server"
-	"tagservice/server/model"
-	"tagservice/server/repository"
-	"tagservice/server/repository/transaction"
 	"testing"
 )
 
@@ -30,7 +30,7 @@ func TestTagService_Delete(t *testing.T) {
 				return model.Tag{}, repository.ErrFindTag
 			},
 			TxBeginTxReturns: func() (transaction.Transaction, error) { return nil, nil },
-			err:              server.ErrTagNotFound,
+			err:              tagservice.ErrTagNotFound,
 		},
 		{
 			name: `unknown err when getting tag`,
@@ -174,7 +174,7 @@ func TestTagService_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Initialize service
-			var s = func() server.Tag {
+			var s = func() tagservice.Tag {
 				var tx = mocks.NewTransactioner(t)
 				tx.On(`BeginTx`, mock.Anything, mock.Anything).Return(tt.TxBeginTxReturns()).Maybe()
 
@@ -240,7 +240,7 @@ func TestTagService_GetRelationEntities(t1 *testing.T) {
 				assert.Len(t, relations, 0)
 			},
 			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
-				return assert.ErrorIs(t, err, server.ErrTagNamespaceNotFound)
+				return assert.ErrorIs(t, err, tagservice.ErrTagNamespaceNotFound)
 			},
 		},
 		{

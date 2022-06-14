@@ -6,10 +6,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/category"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/predicate"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/tag"
 	"math"
-	"tagservice/repository/entgo/ent/category"
-	"tagservice/repository/entgo/ent/predicate"
-	"tagservice/repository/entgo/ent/tag"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"

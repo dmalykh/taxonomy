@@ -4,8 +4,8 @@ package ent
 
 import (
 	"fmt"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/namespace"
 	"strings"
-	"tagservice/repository/entgo/ent/namespace"
 
 	"entgo.io/ent/dialect/sql"
 )

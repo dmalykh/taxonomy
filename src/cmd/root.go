@@ -24,9 +24,9 @@ import (
 func New() *cobra.Command {
 	// Root
 	var c = &cobra.Command{
-		Use:   "tagservice",
+		Use:   "github.com/dmalykh/tagservice",
 		Short: "Service for tag management. It allows CRUD operations with tags, categories and namespaces.",
-		Long:  `tagservice is the cli to manage, build and debug your tags`,
+		Long:  `github.com/dmalykh/tagservice is the cli to manage, build and debug your tags`,
 	}
 	c.PersistentFlags().String("dsn", os.Getenv(`DSN`), "Data source name (connection information)")
 	c.PersistentFlags().BoolP("verbose", "v", false, "Make some output more verbose.")

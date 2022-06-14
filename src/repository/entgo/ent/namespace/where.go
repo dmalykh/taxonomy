@@ -3,7 +3,7 @@
 package namespace
 
 import (
-	"tagservice/repository/entgo/ent/predicate"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/predicate"
 
 	"entgo.io/ent/dialect/sql"
 )

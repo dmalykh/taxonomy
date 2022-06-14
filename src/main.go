@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "tagservice/cmd"
+import "github.com/dmalykh/tagservice/cmd"
 
 func main() {
 	cmd.Execute(cmd.New())

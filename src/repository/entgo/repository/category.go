@@ -3,9 +3,9 @@ package repository
 import (
 	"context"
 	"fmt"
-	"tagservice/repository/entgo/ent"
-	"tagservice/server/model"
-	"tagservice/server/repository"
+	"github.com/dmalykh/tagservice/repository/entgo/ent"
+	"github.com/dmalykh/tagservice/tagservice/model"
+	"github.com/dmalykh/tagservice/tagservice/repository"
 	"unsafe"
 )
 

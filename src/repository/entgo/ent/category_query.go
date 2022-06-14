@@ -7,9 +7,9 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/category"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/predicate"
 	"math"
-	"tagservice/repository/entgo/ent/category"
-	"tagservice/repository/entgo/ent/predicate"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"

@@ -1,11 +1,11 @@
 package main
 
 import (
+	"github.com/dmalykh/tagservice/api/graphql/graph"
+	"github.com/dmalykh/tagservice/api/graphql/graph/generated"
 	"log"
 	"net/http"
 	"os"
-	"tagservice/api/graphql/graph"
-	"tagservice/api/graphql/graph/generated"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"

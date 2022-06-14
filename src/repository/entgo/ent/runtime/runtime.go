@@ -2,7 +2,7 @@
 
 package runtime
 
-// The schema-stitching logic is generated in tagservice/repository/entgo/ent/runtime.go
+// The schema-stitching logic is generated in github.com/dmalykh/tagservice/repository/entgo/ent/runtime.go
 
 const (
 	Version = "v0.10.1"                                         // Version of ent codegen.

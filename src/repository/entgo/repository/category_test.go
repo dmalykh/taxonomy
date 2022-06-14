@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/AlekSi/pointer"
+	"github.com/dmalykh/tagservice/repository/entgo/ent"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/enttest"
+	"github.com/dmalykh/tagservice/tagservice/model"
+	"github.com/dmalykh/tagservice/tagservice/repository"
 	"github.com/jaswdr/faker"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"tagservice/repository/entgo/ent"
-	"tagservice/repository/entgo/ent/enttest"
-	"tagservice/server/model"
-	"tagservice/server/repository"
 	"testing"
 )
 

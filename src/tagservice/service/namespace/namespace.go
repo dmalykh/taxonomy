@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/dmalykh/tagservice/tagservice"
+	"github.com/dmalykh/tagservice/tagservice/model"
+	"github.com/dmalykh/tagservice/tagservice/repository"
+	"github.com/dmalykh/tagservice/tagservice/repository/transaction"
 	"go.uber.org/zap"
-	"tagservice/server"
-	"tagservice/server/model"
-	"tagservice/server/repository"
-	"tagservice/server/repository/transaction"
 )
 
 var ErrNamespaceNotFound = errors.New(`namespace not found`)
@@ -22,7 +22,7 @@ type Config struct {
 	Logger              *zap.Logger
 }
 
-func New(config *Config) server.Namespace {
+func New(config *Config) tagservice.Namespace {
 	return &NamespaceService{
 		transaction:         config.Transaction,
 		namespaceRepository: config.NamespaceRepository,

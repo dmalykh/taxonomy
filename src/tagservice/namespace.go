@@ -1,8 +1,8 @@
-package server
+package tagservice
 
 import (
 	"context"
-	"tagservice/server/model"
+	"github.com/dmalykh/tagservice/tagservice/model"
 )
 
 type Namespace interface {

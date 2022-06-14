@@ -1,8 +1,8 @@
 package cmd
 
 import (
+	"github.com/dmalykh/tagservice/cmd/loader"
 	"github.com/spf13/cobra"
-	"tagservice/cmd/loader"
 )
 
 func service(cmd *cobra.Command) *loader.Service {

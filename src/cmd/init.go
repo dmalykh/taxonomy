@@ -5,8 +5,8 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"github.com/dmalykh/tagservice/repository/entgo"
 	"github.com/spf13/cobra"
-	"tagservice/repository/entgo"
 )
 
 func initCommand() *cobra.Command {

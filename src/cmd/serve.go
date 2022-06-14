@@ -15,12 +15,12 @@ func serveCommand() *cobra.Command {
 		Use: "serve",
 	}
 
-	serveCmd.PersistentFlags().IntP("port", "p", 8080, "port on which the server will listen")
+	serveCmd.PersistentFlags().IntP("port", "p", 8080, "port on which the github.com/dmalykh/tagservice will listen")
 	CheckErr(serveCmd.MarkPersistentFlagRequired(`port`))
 
 	serveCmd.AddCommand(&cobra.Command{
 		Use:   "graphql",
-		Short: "Run graphql server",
+		Short: "Run graphql github.com/dmalykh/tagservice",
 		Run: func(cmd *cobra.Command, args []string) {
 
 		},

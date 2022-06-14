@@ -3,7 +3,7 @@ package transaction
 import (
 	"context"
 	"database/sql"
-	"tagservice/server/repository"
+	"github.com/dmalykh/tagservice/tagservice/repository"
 )
 
 type TxOptions sql.TxOptions

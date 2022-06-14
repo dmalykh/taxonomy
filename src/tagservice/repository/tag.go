@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
-	"tagservice/server/model"
+	"github.com/dmalykh/tagservice/tagservice/model"
 )
 
 var (

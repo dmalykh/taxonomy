@@ -5,8 +5,8 @@ package ent
 import (
 	"context"
 	"fmt"
-	"tagservice/repository/entgo/ent/predicate"
-	"tagservice/repository/entgo/ent/relation"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/predicate"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/relation"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"

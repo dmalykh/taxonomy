@@ -4,8 +4,8 @@ package ent
 
 import (
 	"fmt"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/category"
 	"strings"
-	"tagservice/repository/entgo/ent/category"
 
 	"entgo.io/ent/dialect/sql"
 )

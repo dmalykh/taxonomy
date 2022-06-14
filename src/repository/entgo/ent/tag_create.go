@@ -6,8 +6,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"tagservice/repository/entgo/ent/category"
-	"tagservice/repository/entgo/ent/tag"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/category"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/tag"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"

@@ -4,10 +4,10 @@ import (
 	"context"
 	"entgo.io/ent/dialect/sql"
 	"fmt"
-	"tagservice/repository/entgo/ent"
-	"tagservice/repository/entgo/ent/relation"
-	"tagservice/server/model"
-	"tagservice/server/repository"
+	"github.com/dmalykh/tagservice/repository/entgo/ent"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/relation"
+	"github.com/dmalykh/tagservice/tagservice/model"
+	"github.com/dmalykh/tagservice/tagservice/repository"
 )
 
 type Relation struct {

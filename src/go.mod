@@ -1,4 +1,4 @@
-module tagservice
+module github.com/dmalykh/tagservice
 
 go 1.18
 
