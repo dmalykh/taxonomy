@@ -1,0 +1,16 @@
+extend schema
+@link(url: "https://specs.apollo.dev/federation/v2.0",
+    import: ["@key"])
+
+extend type Category @key(fields: "id") {
+    name: String! @shareable
+    parent: Category @shareable
+}
+
+extend type Tag  @key(fields: "id") {
+    name: String! @shareable
+    category: ID! @shareable
+}
+
+extend type Entity @key(fields: "id namespace") {
+}

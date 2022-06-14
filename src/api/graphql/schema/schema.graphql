@@ -1,0 +1,106 @@
+type PageInfo {
+    startCursor: ID!
+    endCursor: ID!
+    hasNextPage: Boolean
+}
+
+input CategoryInput {
+    "Category's name"
+    name: String!
+    "Category's title"
+    title: String!
+    "Parent category"
+    parent: ID
+    "Category's description"
+    description: String
+}
+
+type Category {
+    id: ID!
+    "Category's name"
+    name: String!
+    "Category's title"
+    title: String!
+    "Parent category"
+    parent: Category
+    "Children categories"
+    children: [Category]!
+    "Tags in category"
+    tags(first: Int = 20, after: ID): TagsConnection
+    "Category's description"
+    description: String
+}
+type TagsConnection {
+    edges: [TagsEdge!]!
+    pageInfo: PageInfo!
+}
+
+type TagsEdge {
+    cursor: ID!
+    node: Tag
+}
+
+
+input TagInput {
+    "Tag's name"
+    name: String!
+    "Tag's title"
+    title: String!
+    "Tag's category"
+    category: ID!
+    "Description"
+    description: String
+}
+
+type Tag {
+    id: ID!
+    "Tag's name"
+    name: String!
+    "Tag's title"
+    title: String!
+    "Tag's category"
+    category: ID!
+    "Description"
+    description: String
+    entities(first: Int = 20, after: ID, namespace: [String]): EntitiesConnection
+}
+
+type EntitiesConnection {
+    edges: [EntitiesEdge!]!
+    pageInfo: PageInfo!
+}
+
+type EntitiesEdge {
+    cursor: ID!
+    node: Entity
+}
+
+type Entity {
+    id: ID!
+    namespace: String
+}
+
+type Query {
+    tag(id:ID): Tag
+    "Returns all tags"
+    tags(categoryId:ID, name: String): [Tag]!
+    "Returns all tags related to specified namespace and entities's id"
+    tagsByEntities(namespace: String!, entityId: [ID!]!): [Tag]!
+
+    categoryById(id:ID!): Category
+    categoryByName(name:String!): Category
+    "Returns all categories"
+    categories:[Category]!
+
+    entitiesIds(tagId:[ID!]!, namespace: String!): [ID]!
+}
+
+type Mutation {
+    createTag(input: TagInput!) : Tag
+    updateTag(id:ID!, input: TagInput!) : Tag
+    set(tagId:[ID!]!, namespace: String!, entityId: [ID!]!): Boolean
+    unset(tagId:[ID!]!, namespace: String!, entityId: [ID!]!): Boolean
+
+    createCategory(input: CategoryInput!) : Category
+    updateCategory(id:ID!, input: CategoryInput!) : Category
+}
