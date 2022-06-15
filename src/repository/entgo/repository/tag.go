@@ -99,7 +99,7 @@ func (t *Tag) GetByName(ctx context.Context, name string) ([]model.Tag, error) {
 }
 
 func (t *Tag) GetByFilter(ctx context.Context, filter model.TagFilter, limit, offset uint) ([]model.Tag, error) {
-	enttags, err := t.client.Query().Where(func(s *sql.Selector) {
+	var query = t.client.Query().Where(func(s *sql.Selector) {
 		// Filter by categories id
 		if len(filter.CategoryId) > 0 {
 			s.Where(sql.InInts(tag.CategoryColumn, func() []int {
@@ -110,7 +110,11 @@ func (t *Tag) GetByFilter(ctx context.Context, filter model.TagFilter, limit, of
 				return ints
 			}()...))
 		}
-	}).Limit(int(limit)).Offset(int(offset)).All(ctx)
+	})
+	if limit == 0 && offset == 0 {
+		query = query.Limit(int(limit)).Offset(int(offset))
+	}
+	enttags, err := query.All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", repository.ErrFindTag, err.Error())
 	}
