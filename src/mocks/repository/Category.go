@@ -4,8 +4,8 @@ package mocks
 
 import (
 	context "context"
-	model "github.com/dmalykh/tagservice/tagservice/model"
 
+	model "github.com/dmalykh/tagservice/tagservice/model"
 	mock "github.com/stretchr/testify/mock"
 
 	testing "testing"
@@ -72,13 +72,13 @@ func (_m *Category) GetById(ctx context.Context, id uint) (model.Category, error
 	return r0, r1
 }
 
-// GetList provides a mock function with given fields: ctx, limit, offset
-func (_m *Category) GetList(ctx context.Context, limit uint, offset uint) ([]model.Category, error) {
-	ret := _m.Called(ctx, limit, offset)
+// GetList provides a mock function with given fields: ctx, filter
+func (_m *Category) GetList(ctx context.Context, filter *model.CategoryFilter) ([]model.Category, error) {
+	ret := _m.Called(ctx, filter)
 
 	var r0 []model.Category
-	if rf, ok := ret.Get(0).(func(context.Context, uint, uint) []model.Category); ok {
-		r0 = rf(ctx, limit, offset)
+	if rf, ok := ret.Get(0).(func(context.Context, *model.CategoryFilter) []model.Category); ok {
+		r0 = rf(ctx, filter)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Category)
@@ -86,8 +86,8 @@ func (_m *Category) GetList(ctx context.Context, limit uint, offset uint) ([]mod
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, uint, uint) error); ok {
-		r1 = rf(ctx, limit, offset)
+	if rf, ok := ret.Get(1).(func(context.Context, *model.CategoryFilter) error); ok {
+		r1 = rf(ctx, filter)
 	} else {
 		r1 = ret.Error(1)
 	}

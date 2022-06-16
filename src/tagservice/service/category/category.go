@@ -104,7 +104,7 @@ func (c *CategoryService) Delete(ctx context.Context, id uint) error {
 	}
 
 	// Check tags. Category should be empty before deletion
-	tags, err := c.tagService.GetList(ctx, id, 1, 0)
+	tags, err := c.tagService.GetList(ctx, &model.TagFilter{CategoryId: []uint{id}})
 	logger.Debug(`get tags of category`, zap.Error(err))
 	if err != nil {
 		return fmt.Errorf(`unknown error %w`, err)
@@ -121,9 +121,9 @@ func (c *CategoryService) Delete(ctx context.Context, id uint) error {
 	return nil
 }
 
-func (c *CategoryService) GetList(ctx context.Context, limit, offset uint) ([]model.Category, error) {
-	var logger = c.log.With(zap.String(`method`, `GetList`), zap.Uint(`limit`, limit), zap.Uint(`offset`, offset))
-	list, err := c.categoryRepository.GetList(ctx, limit, offset)
+func (c *CategoryService) GetList(ctx context.Context, filter *model.CategoryFilter) ([]model.Category, error) {
+	var logger = c.log.With(zap.String(`method`, `GetList`), zap.Any(`filter`, filter))
+	list, err := c.categoryRepository.GetList(ctx, filter)
 	logger.Debug(`get list`, zap.Error(err))
 	if err != nil {
 		return nil, fmt.Errorf(`can't receive list of categorys %w`, err)

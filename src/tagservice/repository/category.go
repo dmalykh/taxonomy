@@ -19,5 +19,5 @@ type Category interface {
 	Update(ctx context.Context, id uint, data *model.CategoryData) (model.Category, error)
 	DeleteById(ctx context.Context, id uint) error
 	GetById(ctx context.Context, id uint) (model.Category, error)
-	GetList(ctx context.Context, limit, offset uint) ([]model.Category, error)
+	GetList(ctx context.Context, filter *model.CategoryFilter) ([]model.Category, error)
 }

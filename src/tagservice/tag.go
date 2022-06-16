@@ -20,23 +20,30 @@ type Tag interface {
 	Update(ctx context.Context, id uint, data *model.TagData) (model.Tag, error)
 	Delete(ctx context.Context, id uint) error
 	GetById(ctx context.Context, id uint) (model.Tag, error)
-	GetByName(ctx context.Context, name string, categoryId uint) (model.Tag, error)
 
 	// GetList returns slice with tags that proper for conditions. Set nil category_id to receive tags from all categories.
-	GetList(ctx context.Context, categoryId uint, limit, offset uint) ([]model.Tag, error)
+	GetList(ctx context.Context, filter *model.TagFilter) ([]model.Tag, error)
 
 	// SetRelation create relation between specified tag, namespace and all entities. Return error if any of relation didn't create.
 	// If relation already exists, it will be rewriting.
 	SetRelation(ctx context.Context, tagId uint, namespace string, entitiesId ...uint) error
 	UnsetRelation(ctx context.Context, tagId uint, namespace string, entitiesId ...uint) error
 
-	// GetRelationEntities returns all entities with specified namespace and which have all specified tags in tagGroups. All tags
-	// specified in one tagGroup use "OR" operand, between tagGroups "AND" operand used.
+	// GetRelations returns all entities with specified namespace and which have all specified tags in tagGroups.
 	// For example:
-	// 		Created categories for laptops "RAM", "Matrix type", "Display size".
-	// 		We would receive all laptops that have: "RAM" (512 or 1024) and "Matrix type" (OLED or IPS) and "Display size" (between 13 and 16)
-	// Use tagGroups, you should previously receive id of desirable tags, for example used names:
-	//		["512", "1024"], ["OLED", "IPS"], [all tags between 13 and 26 values]
-	GetRelationEntities(ctx context.Context, namespaceName string, tagGroups [][]uint) ([]model.Relation, error)
+	// 		Created *categories* for laptops "RAM", "Matrix type", "Display size".
+	// 		We would receive all laptops that have:
+	//			- "RAM" 512 or 1024 (i.e. tag's id for 512 is 92, for 1024 is 23)
+	//			- "Matrix type" OLED or IPS  (i.e. tag's id for OLED is 43, for IPS is 58)
+	//			- "Display size" between 13 and 15 (i.e. tag's id for 13 is 83, for 14 is 99, for 15 is 146)
+	// 		So TagId in model.EntityFilter should given as	["512", "1024"], ["OLED", "IPS"], [all tags between 13 and 26 values]:
+	//			model.EntityFilter{
+	//				TagId: [][]uint{
+	//					{92, 23},
+	//					{43, 58},
+	//					{83, 99, 146},
+	//				}
+	//			}
+	GetRelations(ctx context.Context, filter *model.EntityFilter) ([]model.Relation, error)
 	GetTagsByEntities(ctx context.Context, namespaceName string, entities ...uint) ([]model.Tag, error)
 }

@@ -243,68 +243,6 @@ func TestTagService_GetRelationEntities(t1 *testing.T) {
 				return assert.ErrorIs(t, err, tagservice.ErrTagNamespaceNotFound)
 			},
 		},
-		{
-			name:      `duplicates removed`,
-			tagGroups: [][]uint{{34}, {92, 96}, {33}},
-			NamespaceGetByNameReturns: func() (model.Namespace, error) {
-				return model.Namespace{Id: 11}, nil
-			},
-			RelationGetReturns: func() ([]model.Relation, error) {
-				return []model.Relation{
-					{EntityId: 22},
-					{EntityId: 22},
-					{EntityId: 53},
-				}, nil
-			},
-			want: func(t assert.TestingT, relations []model.Relation) {
-				assert.Len(t, relations, 2)
-			},
-			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
-				return assert.NoError(t, err)
-			},
-		},
-		{
-			name: `no groups`,
-			NamespaceGetByNameReturns: func() (model.Namespace, error) {
-				return model.Namespace{Id: 11}, nil
-			},
-			tagGroups: [][]uint{{}, {}, {}},
-			RelationGetReturns: func() ([]model.Relation, error) {
-				return []model.Relation{
-					{EntityId: 93},
-					{EntityId: 22},
-					{EntityId: 22},
-					{EntityId: 53},
-					{EntityId: 53},
-				}, nil
-			},
-			want: func(t assert.TestingT, relations []model.Relation) {
-				assert.Len(t, relations, 3)
-			},
-			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
-				return assert.NoError(t, err)
-			},
-		},
-		{
-			name: `empty groups`,
-			NamespaceGetByNameReturns: func() (model.Namespace, error) {
-				return model.Namespace{Id: 11}, nil
-			},
-			RelationGetReturns: func() ([]model.Relation, error) {
-				return []model.Relation{
-					{EntityId: 93},
-					{EntityId: 22},
-					{EntityId: 22},
-					{EntityId: 53},
-				}, nil
-			},
-			want: func(t assert.TestingT, relations []model.Relation) {
-				assert.Len(t, relations, 0)
-			},
-			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
-				return assert.NoError(t, err)
-			},
-		},
 	}
 
 	// Create categories "RAM", "CPU", "Display size"
@@ -324,7 +262,10 @@ func TestTagService_GetRelationEntities(t1 *testing.T) {
 				relationRepository: relationrepo,
 			}
 
-			relations, err := t.GetRelationEntities(context.TODO(), `any`, tt.tagGroups)
+			relations, err := t.GetRelations(context.TODO(), &model.EntityFilter{
+				TagId:     tt.tagGroups,
+				Namespace: []string{`any`},
+			})
 			tt.wantErr(t1, err)
 			tt.want(t1, relations)
 

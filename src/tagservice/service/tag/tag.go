@@ -271,44 +271,15 @@ func (t *TagService) UnsetRelation(ctx context.Context, tagId uint, entitiesName
 	return nil
 }
 
-func (t *TagService) GetList(ctx context.Context, categoryId uint, limit, offset uint) ([]model.Tag, error) {
-	var logger = t.log.With(zap.String(`method`, `GetList`), zap.Uint(`categoryId`, categoryId), zap.Uint(`limit`, limit), zap.Uint(`offset`, offset))
+func (t *TagService) GetList(ctx context.Context, filter *model.TagFilter) ([]model.Tag, error) {
+	var logger = t.log.With(zap.String(`method`, `GetList`), zap.Any(`filter`, filter))
 
-	tags, err := t.tagRepository.GetByFilter(ctx, model.TagFilter{CategoryId: []uint{categoryId}}, limit, offset)
+	tags, err := t.tagRepository.GetByFilter(ctx, filter)
 	logger.Debug(`got tags`, zap.Any(`tags`, tags), zap.Error(err))
 	if err != nil {
 		return nil, fmt.Errorf(`unknown error %w`, err)
 	}
 	return tags, nil
-}
-
-func (t *TagService) GetRelationEntities(ctx context.Context, namespaceName string, tagGroups [][]uint) ([]model.Relation, error) {
-	var logger = t.log.With(zap.String(`method`, `GetRelationEntities`), zap.String(`namespaceName`, namespaceName), zap.Any(`tagGroups`, tagGroups))
-
-	namespace, err := t.namespaceService.GetByName(ctx, namespaceName)
-	logger.Debug(`got namespace`, zap.Any(`namespace`, namespace), zap.Error(err))
-	if err != nil {
-		return nil, tagservice.ErrTagNamespaceNotFound
-	}
-
-	var unique = make(map[uint]model.Relation)
-	for _, tagIds := range tagGroups {
-		rels, err := t.relationRepository.Get(ctx, tagIds, []uint{namespace.Id}, nil)
-		logger.Debug(`got relations`, zap.Uints(`tagIds`, tagIds), zap.Any(`rels`, rels), zap.Error(err))
-		if err != nil {
-			return nil, fmt.Errorf(`unknown error %w`, err)
-		}
-		for _, rel := range rels {
-			unique[rel.EntityId] = rel
-		}
-	}
-	logger.Debug(`finally`, zap.Any(`unique`, unique))
-
-	var relations = make([]model.Relation, 0, len(unique))
-	for _, rel := range unique {
-		relations = append(relations, rel)
-	}
-	return relations, nil
 }
 
 func (t *TagService) GetTagsByEntities(ctx context.Context, namespaceName string, entities ...uint) ([]model.Tag, error) {
@@ -320,7 +291,10 @@ func (t *TagService) GetTagsByEntities(ctx context.Context, namespaceName string
 		return nil, tagservice.ErrTagNamespaceNotFound
 	}
 
-	relations, err := t.relationRepository.Get(ctx, nil, []uint{namespace.Id}, entities)
+	relations, err := t.relationRepository.Get(ctx, &model.RelationFilter{
+		Namespace: []uint{namespace.Id},
+		EntityId:  entities,
+	})
 	logger.Debug(`got relations`, zap.Any(`relations`, relations), zap.Error(err))
 	if err != nil {
 		return nil, fmt.Errorf(`unknown error %w`, err)
@@ -338,4 +312,32 @@ func (t *TagService) GetTagsByEntities(ctx context.Context, namespaceName string
 		tags = append(tags, tag)
 	}
 	return tags, nil
+}
+
+func (t *TagService) GetRelations(ctx context.Context, filter *model.EntityFilter) ([]model.Relation, error) {
+	var logger = t.log.With(zap.String(`method`, `GetTagsByEntities`), zap.Any(`filter`, filter))
+
+	// Get ids of namespaces
+	var namespaces = make([]uint, 0, len(filter.Namespace))
+	for _, ns := range filter.Namespace {
+		namespace, err := t.namespaceService.GetByName(ctx, ns)
+		if err != nil {
+			return nil, tagservice.ErrTagNamespaceNotFound
+		}
+		namespaces = append(namespaces, namespace.Id)
+	}
+
+	// Get relations
+	relations, err := t.relationRepository.Get(ctx, &model.RelationFilter{
+		TagId:     filter.TagId,
+		EntityId:  filter.EntityId,
+		Namespace: namespaces,
+		AfterId:   filter.AfterId,
+		Limit:     filter.Limit,
+	})
+	logger.Debug(`got relations`, zap.Any(`relations`, relations), zap.Error(err))
+	if err != nil {
+		return nil, fmt.Errorf(`unknown error %w`, err)
+	}
+	return relations, nil
 }

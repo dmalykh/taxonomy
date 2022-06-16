@@ -4,8 +4,8 @@ package mocks
 
 import (
 	context "context"
-	model "github.com/dmalykh/tagservice/tagservice/model"
 
+	model "github.com/dmalykh/tagservice/tagservice/model"
 	mock "github.com/stretchr/testify/mock"
 
 	testing "testing"
@@ -51,13 +51,13 @@ func (_m *Relation) Delete(ctx context.Context, tagIds []uint, namespaceIds []ui
 	return r0
 }
 
-// Get provides a mock function with given fields: ctx, tagIds, namespaceIds, entityIds
-func (_m *Relation) Get(ctx context.Context, tagIds []uint, namespaceIds []uint, entityIds []uint) ([]model.Relation, error) {
-	ret := _m.Called(ctx, tagIds, namespaceIds, entityIds)
+// Get provides a mock function with given fields: ctx, filter
+func (_m *Relation) Get(ctx context.Context, filter *model.RelationFilter) ([]model.Relation, error) {
+	ret := _m.Called(ctx, filter)
 
 	var r0 []model.Relation
-	if rf, ok := ret.Get(0).(func(context.Context, []uint, []uint, []uint) []model.Relation); ok {
-		r0 = rf(ctx, tagIds, namespaceIds, entityIds)
+	if rf, ok := ret.Get(0).(func(context.Context, *model.RelationFilter) []model.Relation); ok {
+		r0 = rf(ctx, filter)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Relation)
@@ -65,8 +65,8 @@ func (_m *Relation) Get(ctx context.Context, tagIds []uint, namespaceIds []uint,
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, []uint, []uint, []uint) error); ok {
-		r1 = rf(ctx, tagIds, namespaceIds, entityIds)
+	if rf, ok := ret.Get(1).(func(context.Context, *model.RelationFilter) error); ok {
+		r1 = rf(ctx, filter)
 	} else {
 		r1 = ret.Error(1)
 	}

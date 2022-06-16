@@ -14,4 +14,8 @@ type TagData struct {
 
 type TagFilter struct {
 	CategoryId []uint
+	Name       *string
+	AfterId    *uint
+	Limit      *uint
+	Offset     *uint
 }

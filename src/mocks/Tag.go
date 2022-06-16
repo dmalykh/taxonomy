@@ -4,8 +4,8 @@ package mocks
 
 import (
 	context "context"
-	model "github.com/dmalykh/tagservice/tagservice/model"
 
+	model "github.com/dmalykh/tagservice/tagservice/model"
 	mock "github.com/stretchr/testify/mock"
 
 	testing "testing"
@@ -72,34 +72,13 @@ func (_m *Tag) GetById(ctx context.Context, id uint) (model.Tag, error) {
 	return r0, r1
 }
 
-// GetByName provides a mock function with given fields: ctx, name, categoryId
-func (_m *Tag) GetByName(ctx context.Context, name string, categoryId uint) (model.Tag, error) {
-	ret := _m.Called(ctx, name, categoryId)
-
-	var r0 model.Tag
-	if rf, ok := ret.Get(0).(func(context.Context, string, uint) model.Tag); ok {
-		r0 = rf(ctx, name, categoryId)
-	} else {
-		r0 = ret.Get(0).(model.Tag)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string, uint) error); ok {
-		r1 = rf(ctx, name, categoryId)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetList provides a mock function with given fields: ctx, categoryId, limit, offset
-func (_m *Tag) GetList(ctx context.Context, categoryId uint, limit uint, offset uint) ([]model.Tag, error) {
-	ret := _m.Called(ctx, categoryId, limit, offset)
+// GetList provides a mock function with given fields: ctx, filter
+func (_m *Tag) GetList(ctx context.Context, filter *model.TagFilter) ([]model.Tag, error) {
+	ret := _m.Called(ctx, filter)
 
 	var r0 []model.Tag
-	if rf, ok := ret.Get(0).(func(context.Context, uint, uint, uint) []model.Tag); ok {
-		r0 = rf(ctx, categoryId, limit, offset)
+	if rf, ok := ret.Get(0).(func(context.Context, *model.TagFilter) []model.Tag); ok {
+		r0 = rf(ctx, filter)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Tag)
@@ -107,8 +86,8 @@ func (_m *Tag) GetList(ctx context.Context, categoryId uint, limit uint, offset 
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, uint, uint, uint) error); ok {
-		r1 = rf(ctx, categoryId, limit, offset)
+	if rf, ok := ret.Get(1).(func(context.Context, *model.TagFilter) error); ok {
+		r1 = rf(ctx, filter)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -116,13 +95,13 @@ func (_m *Tag) GetList(ctx context.Context, categoryId uint, limit uint, offset 
 	return r0, r1
 }
 
-// GetRelationEntities provides a mock function with given fields: ctx, namespaceName, tagGroups
-func (_m *Tag) GetRelationEntities(ctx context.Context, namespaceName string, tagGroups [][]uint) ([]model.Relation, error) {
-	ret := _m.Called(ctx, namespaceName, tagGroups)
+// GetRelations provides a mock function with given fields: ctx, filter
+func (_m *Tag) GetRelations(ctx context.Context, filter *model.EntityFilter) ([]model.Relation, error) {
+	ret := _m.Called(ctx, filter)
 
 	var r0 []model.Relation
-	if rf, ok := ret.Get(0).(func(context.Context, string, [][]uint) []model.Relation); ok {
-		r0 = rf(ctx, namespaceName, tagGroups)
+	if rf, ok := ret.Get(0).(func(context.Context, *model.EntityFilter) []model.Relation); ok {
+		r0 = rf(ctx, filter)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Relation)
@@ -130,8 +109,8 @@ func (_m *Tag) GetRelationEntities(ctx context.Context, namespaceName string, ta
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string, [][]uint) error); ok {
-		r1 = rf(ctx, namespaceName, tagGroups)
+	if rf, ok := ret.Get(1).(func(context.Context, *model.EntityFilter) error); ok {
+		r1 = rf(ctx, filter)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -171,6 +150,27 @@ func (_m *Tag) GetTagsByEntities(ctx context.Context, namespaceName string, enti
 
 // SetRelation provides a mock function with given fields: ctx, tagId, namespace, entitiesId
 func (_m *Tag) SetRelation(ctx context.Context, tagId uint, namespace string, entitiesId ...uint) error {
+	_va := make([]interface{}, len(entitiesId))
+	for _i := range entitiesId {
+		_va[_i] = entitiesId[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, tagId, namespace)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint, string, ...uint) error); ok {
+		r0 = rf(ctx, tagId, namespace, entitiesId...)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UnsetRelation provides a mock function with given fields: ctx, tagId, namespace, entitiesId
+func (_m *Tag) UnsetRelation(ctx context.Context, tagId uint, namespace string, entitiesId ...uint) error {
 	_va := make([]interface{}, len(entitiesId))
 	for _i := range entitiesId {
 		_va[_i] = entitiesId[_i]

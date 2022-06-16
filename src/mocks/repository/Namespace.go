@@ -4,8 +4,8 @@ package mocks
 
 import (
 	context "context"
-	model "github.com/dmalykh/tagservice/tagservice/model"
 
+	model "github.com/dmalykh/tagservice/tagservice/model"
 	mock "github.com/stretchr/testify/mock"
 
 	testing "testing"

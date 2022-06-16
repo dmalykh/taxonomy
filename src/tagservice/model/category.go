@@ -11,3 +11,8 @@ type CategoryData struct {
 	Description *string
 	ParentId    *uint
 }
+
+type CategoryFilter struct {
+	ParentId *uint
+	Name     *string
+}

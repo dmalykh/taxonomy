@@ -4,8 +4,8 @@ package mocks
 
 import (
 	context "context"
-	model "github.com/dmalykh/tagservice/tagservice/model"
 
+	model "github.com/dmalykh/tagservice/tagservice/model"
 	mock "github.com/stretchr/testify/mock"
 
 	testing "testing"
@@ -51,13 +51,13 @@ func (_m *Tag) DeleteById(ctx context.Context, id uint) error {
 	return r0
 }
 
-// GetByFilter provides a mock function with given fields: ctx, filter, limit, offset
-func (_m *Tag) GetByFilter(ctx context.Context, filter model.TagFilter, limit uint, offset uint) ([]model.Tag, error) {
-	ret := _m.Called(ctx, filter, limit, offset)
+// GetByFilter provides a mock function with given fields: ctx, filter
+func (_m *Tag) GetByFilter(ctx context.Context, filter *model.TagFilter) ([]model.Tag, error) {
+	ret := _m.Called(ctx, filter)
 
 	var r0 []model.Tag
-	if rf, ok := ret.Get(0).(func(context.Context, model.TagFilter, uint, uint) []model.Tag); ok {
-		r0 = rf(ctx, filter, limit, offset)
+	if rf, ok := ret.Get(0).(func(context.Context, *model.TagFilter) []model.Tag); ok {
+		r0 = rf(ctx, filter)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Tag)
@@ -65,8 +65,8 @@ func (_m *Tag) GetByFilter(ctx context.Context, filter model.TagFilter, limit ui
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, model.TagFilter, uint, uint) error); ok {
-		r1 = rf(ctx, filter, limit, offset)
+	if rf, ok := ret.Get(1).(func(context.Context, *model.TagFilter) error); ok {
+		r1 = rf(ctx, filter)
 	} else {
 		r1 = ret.Error(1)
 	}

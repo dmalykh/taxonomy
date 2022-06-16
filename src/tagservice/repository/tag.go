@@ -19,5 +19,5 @@ type Tag interface {
 	DeleteById(ctx context.Context, id uint) error
 	GetById(ctx context.Context, id uint) (model.Tag, error)
 	GetByName(ctx context.Context, name string) ([]model.Tag, error)
-	GetByFilter(ctx context.Context, filter model.TagFilter, limit, offset uint) ([]model.Tag, error)
+	GetByFilter(ctx context.Context, filter *model.TagFilter) ([]model.Tag, error)
 }
