@@ -1,6 +1,8 @@
+scalar Cursor
+
 type PageInfo {
-    startCursor: ID!
-    endCursor: ID!
+    startCursor: Cursor!
+    endCursor: Cursor!
     hasNextPage: Boolean
 }
 
@@ -10,12 +12,12 @@ input CategoryInput {
     "Category's title"
     title: String!
     "Parent category"
-    parent: ID
+    parentId: ID
     "Category's description"
     description: String
 }
 
-type Category {
+type Category @key(fields: "id") {
     id: ID!
     "Category's name"
     name: String!
@@ -26,7 +28,7 @@ type Category {
     "Children categories"
     children: [Category]!
     "Tags in category"
-    tags(first: Int = 20, after: ID): TagsConnection
+    tags(first: Int! = 20, after: Cursor): TagsConnection
     "Category's description"
     description: String
 }
@@ -36,7 +38,7 @@ type TagsConnection {
 }
 
 type TagsEdge {
-    cursor: ID!
+    cursor: Cursor!
     node: Tag
 }
 
@@ -47,22 +49,23 @@ input TagInput {
     "Tag's title"
     title: String!
     "Tag's category"
-    category: ID!
+    categoryId: ID!
     "Description"
     description: String
 }
 
-type Tag {
+type Tag @key(fields: "id") {
     id: ID!
     "Tag's name"
     name: String!
     "Tag's title"
-    title: String!
+    title: String
     "Tag's category"
-    category: ID!
+    category: Category!
     "Description"
     description: String
-    entities(first: Int = 20, after: ID, namespace: [String]): EntitiesConnection
+    "Entities related with tag"
+    entities(first: Int! = 20, after: Cursor, namespace: [String]): EntitiesConnection
 }
 
 type EntitiesConnection {
@@ -71,36 +74,36 @@ type EntitiesConnection {
 }
 
 type EntitiesEdge {
-    cursor: ID!
-    node: Entity
+    cursor: Cursor!
+    node: EntityNode
 }
 
-type Entity {
-    id: ID!
-    namespace: String
+type EntityNode {
+    id: ID!  @external
+    namespace: String!
 }
 
 type Query {
-    tag(id:ID): Tag
+    tag(id:ID!): Tag!
+
     "Returns all tags"
-    tags(categoryId:ID, name: String): [Tag]!
-    "Returns all tags related to specified namespace and entities's id"
+    tags(categoryId:ID!, name: String, first: Int! = 20, after: Cursor): TagsConnection
+
+    "Returns all tags related to specified namespace and entities' id"
     tagsByEntities(namespace: String!, entityId: [ID!]!): [Tag]!
 
-    categoryById(id:ID!): Category
-    categoryByName(name:String!): Category
-    "Returns all categories"
-    categories:[Category]!
+    category(id:ID!): Category!
 
-    entitiesIds(tagId:[ID!]!, namespace: String!): [ID]!
+    "Returns all categories"
+    categories(parentId:ID, name:String):[Category]!
 }
 
 type Mutation {
-    createTag(input: TagInput!) : Tag
-    updateTag(id:ID!, input: TagInput!) : Tag
+    createTag(input: TagInput!) : Tag!
+    updateTag(id:ID!, input: TagInput!) : Tag!
     set(tagId:[ID!]!, namespace: String!, entityId: [ID!]!): Boolean
     unset(tagId:[ID!]!, namespace: String!, entityId: [ID!]!): Boolean
 
-    createCategory(input: CategoryInput!) : Category
-    updateCategory(id:ID!, input: CategoryInput!) : Category
+    createCategory(input: CategoryInput!) : Category!
+    updateCategory(id:ID!, input: CategoryInput!) : Category!
 }

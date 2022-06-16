@@ -8,21 +8,21 @@ exec:
   package: generated
 
 # Uncomment to enable federation
- federation:
-   filename: generated/federation.go
-   package: generated
+federation:
+ filename: generated/federation.go
+ package: generated
 
 # Where should any generated models go?
 model:
-  filename: generated/model/models_gen.go
+  filename: generated/genmodel/models_gen.go
   package: genmodel
   version: 2
 
 # Where should the resolver implementations go?
-resolver:
-  layout: follow-schema
-  dir: graph
-  package: graph
+#resolver:
+#  layout: follow-schema
+#  dir: graph
+#  package: graph
 
 # Optional: turn on use ` + "`" + `gqlgen:"fieldName"` + "`" + ` tags in your models
 # struct_tag: json
@@ -32,10 +32,10 @@ omit_slice_element_pointers: true
 
 # Optional: turn off to make struct-type struct fields not use pointers
 # e.g. type Thing struct { FieldA OtherThing } instead of { FieldA *OtherThing }
-# struct_fields_always_pointers: true
+struct_fields_always_pointers: false
 
 # Optional: turn off to make resolvers return values instead of pointers for structs
-# resolvers_always_return_pointers: true
+resolvers_always_return_pointers: false
 
 # Optional: set to speed up generation time by not performing a final validation pass.
 # skip_validation: true
@@ -43,7 +43,7 @@ omit_slice_element_pointers: true
 # gqlgen will search for any type names in the schema in these go packages
 # if they match it will use them, otherwise it will generate them.
 autobind:
-#  - "github.com/dmalykh/tagservice/api/graphql/graph/model"
+#  - "github.com/dmalykh/tagservice/api/graphql/graph/genmodel"
 
 # This section declares type mapping between the GraphQL and go type systems
 #
@@ -51,14 +51,18 @@ autobind:
 # modelgen, the others will be allowed when binding to fields. Configure them to
 # your liking
 models:
+  Cursor:
+    model:
+      - github.com/99designs/gqlgen/graphql.String
   ID:
     model:
-      - github.com/99designs/gqlgen/graphql.ID
-      - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
-      - github.com/99designs/gqlgen/graphql.Int32
   Int:
     model:
-      - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
-      - github.com/99designs/gqlgen/graphql.Int32
+  Tag:
+    model:
+      - github.com/dmalykh/tagservice/api/graphql/model.Tag
+  Category:
+    model:
+      - github.com/dmalykh/tagservice/api/graphql/model.Category
