@@ -24,7 +24,7 @@ func (m *Mutation) CreateTag(ctx context.Context, input genmodel.TagInput) (apim
 		Description: *(input.Description),
 	})
 	if err != nil {
-		return apimodel.Tag{}, gqlerror.Errorf(`error to create tag %w`, err)
+		return apimodel.Tag{}, gqlerror.Errorf(`error to create tag %s`, err.Error())
 	}
 	return tag2gen(tag), nil
 }
@@ -37,7 +37,7 @@ func (m *Mutation) UpdateTag(ctx context.Context, id int64, input genmodel.TagIn
 		Description: *(input.Description),
 	})
 	if err != nil {
-		return apimodel.Tag{}, gqlerror.Errorf(`error to update tag %w`, err)
+		return apimodel.Tag{}, gqlerror.Errorf(`error to update tag %s`, err.Error())
 	}
 	return tag2gen(tag), nil
 }
@@ -46,7 +46,7 @@ func (m *Mutation) Set(ctx context.Context, tagID []int64, namespace string, ent
 	var entitiesId = int64stoUints(entityID)
 	for _, id := range tagID {
 		if err := m.tagService.SetRelation(ctx, uint(id), namespace, entitiesId...); err != nil {
-			return nil, gqlerror.Errorf(`error to set relation %d %s %q tag %w`, id, namespace, entitiesId, err)
+			return nil, gqlerror.Errorf(`error to set relation %d %s %q tag %s`, id, namespace, entitiesId, err.Error())
 		}
 	}
 	return pointer.ToBool(true), nil
@@ -56,7 +56,7 @@ func (m *Mutation) Unset(ctx context.Context, tagID []int64, namespace string, e
 	var entitiesId = int64stoUints(entityID)
 	for _, id := range tagID {
 		if err := m.tagService.SetRelation(ctx, uint(id), namespace, entitiesId...); err != nil {
-			return nil, gqlerror.Errorf(`error to unset relation %d %s %q tag %w`, id, namespace, entitiesId, err)
+			return nil, gqlerror.Errorf(`error to unset relation %d %s %q tag %s`, id, namespace, entitiesId, err.Error())
 		}
 	}
 	return pointer.ToBool(true), nil
@@ -70,7 +70,7 @@ func (m *Mutation) CreateCategory(ctx context.Context, input genmodel.CategoryIn
 		Description: input.Description,
 	})
 	if err != nil {
-		return apimodel.Category{}, gqlerror.Errorf(`error to create category %w`, err)
+		return apimodel.Category{}, gqlerror.Errorf(`error to create category %s`, err.Error())
 	}
 	return category2gen(category), nil
 }
@@ -83,7 +83,7 @@ func (m *Mutation) UpdateCategory(ctx context.Context, id int64, input genmodel.
 		Description: input.Description,
 	})
 	if err != nil {
-		return apimodel.Category{}, gqlerror.Errorf(`error to update category %w`, err)
+		return apimodel.Category{}, gqlerror.Errorf(`error to update category %s`, err.Error())
 	}
 	return category2gen(category), nil
 }

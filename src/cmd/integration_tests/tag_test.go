@@ -50,6 +50,7 @@ func (suite *TestTagOperations) TestCreate() {
 		name     string
 		prepare  func()
 		commands [][]string
+		Error    func(err error)
 		check    func(out string)
 	}{
 		{
@@ -58,6 +59,9 @@ func (suite *TestTagOperations) TestCreate() {
 				suite.client.Category.Create().SetName(`test`).SaveX(context.TODO())
 			},
 			[][]string{{`create`, `Hello!`, `--category`, `1`}},
+			func(err error) {
+				suite.NoError(err)
+			},
 			func(out string) {
 				suite.Empty(out)
 			},
@@ -66,8 +70,12 @@ func (suite *TestTagOperations) TestCreate() {
 			`no category`,
 			func() {},
 			[][]string{{`create`, `Hello!`}},
+			func(err error) {
+				suite.Error(err)
+				suite.Contains(err.Error(), `required flag(s) "category" not set`)
+			},
 			func(out string) {
-				suite.Contains(out, `category not found`)
+
 			},
 		},
 	}
@@ -89,7 +97,7 @@ func (suite *TestTagOperations) TestCreate() {
 
 			for _, command := range tt.commands {
 				cmd.SetArgs(append([]string{`--dsn`, suite.dsn, `tag`}, command...))
-				suite.NoError(cmd.Execute())
+				tt.Error(cmd.Execute())
 			}
 			out, _ := ioutil.ReadAll(b)
 			tt.check(string(out))

@@ -44,7 +44,7 @@ func relCommand() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			namespace, err := cmd.Flags().GetString(`namespace`)
 			CheckErr(err)
-			relations, err := service(cmd).Tag.GetRelationEntities(cmd.Context(), namespace, nil)
+			relations, err := service(cmd).Tag.GetRelations(cmd.Context(), &model.EntityFilter{Namespace: []string{namespace}})
 
 			CheckErr(err)
 			table := tablewriter.NewWriter(cmd.OutOrStdout())

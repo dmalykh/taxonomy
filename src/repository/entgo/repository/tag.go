@@ -98,11 +98,11 @@ func (t *Tag) GetByName(ctx context.Context, name string) ([]model.Tag, error) {
 	return tags, nil
 }
 
-func (t *Tag) GetByFilter(ctx context.Context, filter model.TagFilter, limit, offset uint) ([]model.Tag, error) {
+func (t *Tag) GetByFilter(ctx context.Context, filter *model.TagFilter) ([]model.Tag, error) {
 	var query = t.client.Query().Where(func(s *sql.Selector) {
 		// Filter by categories id
 		if len(filter.CategoryId) > 0 {
-			s.Where(sql.InInts(tag.CategoryColumn, func() []int {
+			s.Where(sql.InInts(tag.FieldCategoryID, func() []int {
 				var ints = make([]int, len(filter.CategoryId))
 				for i, val := range filter.CategoryId {
 					ints[i] = int(val)
@@ -110,9 +110,17 @@ func (t *Tag) GetByFilter(ctx context.Context, filter model.TagFilter, limit, of
 				return ints
 			}()...))
 		}
+		// Filter by name
+		if filter.Name != nil {
+			s.Where(sql.EQ(tag.FieldName, *filter.Name))
+		}
+		// Add condition to id
+		if filter.AfterId != nil {
+			s.Where(sql.GT(tag.FieldID, *filter.AfterId))
+		}
 	})
-	if limit == 0 && offset == 0 {
-		query = query.Limit(int(limit)).Offset(int(offset))
+	if filter.Limit != 0 || filter.Offset != 0 {
+		query = query.Limit(int(filter.Limit)).Offset(int(filter.Offset))
 	}
 	enttags, err := query.All(ctx)
 	if err != nil {

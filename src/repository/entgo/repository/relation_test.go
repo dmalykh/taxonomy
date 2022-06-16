@@ -278,73 +278,73 @@ func (suite *RelationTestSuite) TestDelete() {
 func (suite *RelationTestSuite) TestGet() {
 
 	var tests = []struct {
-		name   string
-		delete func() ([]uint, []uint, []uint)
-		check  func(t assert.TestingT, relations []model.Relation)
-		err    assert.ErrorAssertionFunc
+		name  string
+		get   func() ([][]uint, []uint, []uint)
+		check func(relations []model.Relation)
+		err   func(error, ...interface{}) bool
 	}{
 		{
 			`get all entities`,
-			func() ([]uint, []uint, []uint) {
+			func() ([][]uint, []uint, []uint) {
 				suite.generate(100)
 				return nil, nil, nil
 			},
-			func(t assert.TestingT, relations []model.Relation) {
-				assert.Len(t, relations, 100)
+			func(relations []model.Relation) {
+				suite.Len(relations, 100)
 			},
-			func(t assert.TestingT, err error, i ...interface{}) bool {
-				return assert.NoError(t, err)
+			func(err error, i ...interface{}) bool {
+				return suite.NoError(err)
 			},
 		},
 		{
 			`entity without namespace error`,
-			func() ([]uint, []uint, []uint) {
+			func() ([][]uint, []uint, []uint) {
 				return nil, nil, []uint{22, 33}
 			},
-			func(t assert.TestingT, relations []model.Relation) {
-				assert.Empty(t, relations)
+			func(relations []model.Relation) {
+				suite.Empty(relations)
 			},
-			func(t assert.TestingT, err error, i ...interface{}) bool {
-				return assert.ErrorIs(t, err, repository.ErrEntityWithoutNamespace)
+			func(err error, i ...interface{}) bool {
+				return suite.ErrorIs(err, repository.ErrEntityWithoutNamespace)
 			},
 		},
 		{
 			`get half of tags only`,
-			func() ([]uint, []uint, []uint) {
+			func() ([][]uint, []uint, []uint) {
 				tags, _, _ := suite.generate(100)
-				return tags[:50], nil, nil
+				return [][]uint{tags[:25], tags[25:50]}, nil, nil
 			},
-			func(t assert.TestingT, relations []model.Relation) {
-				assert.Len(t, relations, 50)
+			func(relations []model.Relation) {
+				suite.Len(relations, 50)
 			},
-			func(t assert.TestingT, err error, i ...interface{}) bool {
-				return assert.NoError(t, err)
+			func(err error, i ...interface{}) bool {
+				return suite.NoError(err)
 			},
 		},
 		{
 			`get half of namespaces only`,
-			func() ([]uint, []uint, []uint) {
+			func() ([][]uint, []uint, []uint) {
 				_, namespaces, _ := suite.generate(100)
 				return nil, namespaces[:50], nil
 			},
-			func(t assert.TestingT, relations []model.Relation) {
-				assert.Len(t, relations, 50)
+			func(relations []model.Relation) {
+				suite.Len(relations, 50)
 			},
-			func(t assert.TestingT, err error, i ...interface{}) bool {
-				return assert.NoError(t, err)
+			func(err error, i ...interface{}) bool {
+				return suite.NoError(err)
 			},
 		},
 		{
 			`get half of entities only`,
-			func() ([]uint, []uint, []uint) {
+			func() ([][]uint, []uint, []uint) {
 				_, namespaces, entities := suite.generate(100)
 				return nil, namespaces, entities[:50]
 			},
-			func(t assert.TestingT, relations []model.Relation) {
-				assert.Len(t, relations, 50)
+			func(relations []model.Relation) {
+				suite.Len(relations, 50)
 			},
-			func(t assert.TestingT, err error, i ...interface{}) bool {
-				return assert.NoError(t, err)
+			func(err error, i ...interface{}) bool {
+				return suite.NoError(err)
 			},
 		},
 	}
@@ -356,10 +356,14 @@ func (suite *RelationTestSuite) TestGet() {
 
 			var ctx = context.TODO()
 			var rel = NewRelation(suite.client.Relation)
-			var tagIds, namespaceIds, entityIds = tt.delete()
-			relations, err := rel.Get(ctx, tagIds, namespaceIds, entityIds)
-			require.True(suite.T(), tt.err(suite.T(), err))
-			tt.check(suite.T(), relations)
+			var tagIds, namespaceIds, entityIds = tt.get()
+			relations, err := rel.Get(ctx, &model.RelationFilter{
+				TagId:     tagIds,
+				Namespace: namespaceIds,
+				EntityId:  entityIds,
+			})
+			require.True(suite.T(), tt.err(err))
+			tt.check(relations)
 		})
 	}
 

@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"github.com/AlekSi/pointer"
 	"github.com/dmalykh/tagservice/api/graphql/generated/genmodel"
 	apimodel "github.com/dmalykh/tagservice/api/graphql/model"
 	"github.com/dmalykh/tagservice/api/graphql/service/cursor"
@@ -32,7 +31,7 @@ func (q *Query) Tags(ctx context.Context, categoryID int64, name *string, first 
 
 	tags, err := q.tagService.GetList(ctx, &model.TagFilter{
 		CategoryId: []uint{uint(categoryID)},
-		Limit:      pointer.ToUint(uint(first + 1)), // dirty hack to obtain HasNextPage
+		Limit:      uint(first + 1), // dirty hack to obtain HasNextPage
 		AfterId:    &afterId,
 		Name:       name,
 	})
@@ -45,7 +44,7 @@ func (q *Query) Tags(ctx context.Context, categoryID int64, name *string, first 
 func (q *Query) TagsByEntities(ctx context.Context, namespace string, entityID []int64) ([]*apimodel.Tag, error) {
 	tags, err := q.tagService.GetTagsByEntities(ctx, namespace, int64stoUints(entityID)...)
 	if err != nil {
-		return nil, gqlerror.Errorf(`error to get tags by entities %w`, err)
+		return nil, gqlerror.Errorf(`error to get tags by entities %s`, err.Error())
 	}
 	return func(tags []model.Tag) []*apimodel.Tag {
 		var apitags = make([]*apimodel.Tag, len(tags))
@@ -68,7 +67,7 @@ func (q *Query) Categories(ctx context.Context, parentID *int64, name *string) (
 		Name:     name,
 	})
 	if err != nil {
-		return nil, gqlerror.Errorf(`error to get categories by filter %w`, err)
+		return nil, gqlerror.Errorf(`error to get categories by filter %s`, err.Error())
 	}
 	return func(categorys []model.Category) []*apimodel.Category {
 		var apicategorys = make([]*apimodel.Category, len(categorys))

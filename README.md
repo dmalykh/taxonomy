@@ -1,8 +1,17 @@
 # UNDER DEVELOPMENT
 
 # TagService
-TagService is full microservice for tags management. 
+TagService is a self-hosted, lightweight and simple (yet functional) full microservice for tags management.
 You could use it either independent microservice or embed library.
+
+### Purpose
+> Tag everywhere! I really exhausted to implement tags management services in every project. The core idea of `tagservice`
+is wide usage and universal solution for every project.
+> 
+> `Tagservice` could be embeded, has GraphQL and GRPC APIs, also provided powerfull command line interface. 
+Of course, it's database agnostic and made with clean architecture principles. 
+If you want to modify every layer you should implement its interface.
+
 
 ## Overview
 Connect every object with tags. Each object relate with tag via _namespace_ and _entity_id_.
@@ -40,8 +49,10 @@ RENAME server dir to tagservice
 
 ## TODO
 - [ ] Getting started
+- [ ] GraphQl API tests
+- [ ] GRPC API
 - [ ] Documentation
 - [ ] Publish API specification
 - [ ] Nested namespaces
-- [ ] Default namespace 
-- [ ] Main category
+- [ ] Make default namespace on install
+- [ ] Make default category on install

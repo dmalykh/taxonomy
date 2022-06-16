@@ -8,7 +8,6 @@ import (
 	"github.com/dmalykh/tagservice/tagservice/model"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
-	"math"
 	"strconv"
 	"unsafe"
 )
@@ -114,7 +113,7 @@ func categoryCommand() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Short: `Show all categorys`,
 		Run: func(cmd *cobra.Command, args []string) {
-			categorys, err := service(cmd).Category.GetList(cmd.Context(), math.MaxUint, 0)
+			categorys, err := service(cmd).Category.GetList(cmd.Context(), &model.CategoryFilter{})
 			CheckErr(err)
 
 			table := tablewriter.NewWriter(cmd.OutOrStdout())

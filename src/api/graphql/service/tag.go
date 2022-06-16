@@ -30,8 +30,8 @@ func (t *Tag) Entities(ctx context.Context, obj *apimodel.Tag, first int64, afte
 	}
 
 	// Get relations
-	relations, err := t.tagService.GetRelations(ctx, &model.RelationFilter{
-		TagId: []uint{uint(obj.ID)},
+	relations, err := t.tagService.GetRelations(ctx, &model.EntityFilter{
+		TagId: [][]uint{{uint(obj.ID)}},
 		Namespace: func() []string {
 			var namespaces = make([]string, len(namespace))
 			for i, ns := range namespace {

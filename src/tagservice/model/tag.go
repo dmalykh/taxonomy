@@ -16,6 +16,6 @@ type TagFilter struct {
 	CategoryId []uint
 	Name       *string
 	AfterId    *uint
-	Limit      *uint
-	Offset     *uint
+	Limit      uint
+	Offset     uint
 }

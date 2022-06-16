@@ -49,6 +49,13 @@ func TestEncodeDecode(t *testing.T) {
 			},
 			need: int64(433245362531),
 		},
+		{
+			name: `Correct simple encoding and decoding uint value`,
+			encode: func() string {
+				return Marshal(uint(433245362531))
+			},
+			need: uint(433245362531),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -63,6 +70,11 @@ func TestEncodeDecode(t *testing.T) {
 				break
 			case int64:
 				var v int64
+				assert.NoError(t, Unmarshal(encoded, &v))
+				assert.Equal(t, tt.need, v)
+				break
+			case uint:
+				var v uint
 				assert.NoError(t, Unmarshal(encoded, &v))
 				assert.Equal(t, tt.need, v)
 				break

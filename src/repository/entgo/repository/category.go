@@ -2,8 +2,10 @@ package repository
 
 import (
 	"context"
+	"entgo.io/ent/dialect/sql"
 	"fmt"
 	"github.com/dmalykh/tagservice/repository/entgo/ent"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/category"
 	"github.com/dmalykh/tagservice/tagservice/model"
 	"github.com/dmalykh/tagservice/tagservice/repository"
 	"unsafe"
@@ -68,8 +70,17 @@ func (c *Category) GetById(ctx context.Context, id uint) (model.Category, error)
 	return c.ent2model(ns), err
 }
 
-func (c *Category) GetList(ctx context.Context, limit, offset uint) ([]model.Category, error) {
-	entcategories, err := c.client.Query().Offset(int(offset)).Limit(int(limit)).All(ctx)
+func (c *Category) GetList(ctx context.Context, filter *model.CategoryFilter) ([]model.Category, error) {
+	entcategories, err := c.client.Query().Where(func(s *sql.Selector) {
+		// Filter by parent id
+		if filter.ParentId != nil {
+			s.Where(sql.EQ(category.FieldParentID, *filter.ParentId))
+		}
+		// Filter by name
+		if filter.Name != nil {
+			s.Where(sql.EQ(s.C(category.FieldName), *filter.Name))
+		}
+	}).All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", repository.ErrFindCategory, err.Error())
 	}

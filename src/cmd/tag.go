@@ -121,7 +121,11 @@ func tagCommand() *cobra.Command {
 			if err != nil {
 				offset = 0
 			}
-			tags, err := service(cmd).Tag.GetList(cmd.Context(), uint(categoryId), uint(limit), uint(offset))
+			tags, err := service(cmd).Tag.GetList(cmd.Context(), &model.TagFilter{
+				CategoryId: []uint{uint(categoryId)},
+				Limit:      uint(limit),
+				Offset:     uint(offset),
+			})
 			CheckErr(err)
 
 			table := tablewriter.NewWriter(cmd.OutOrStdout())

@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"github.com/AlekSi/pointer"
 	"github.com/dmalykh/tagservice/api/graphql/generated/genmodel"
 	apimodel "github.com/dmalykh/tagservice/api/graphql/model"
 	"github.com/dmalykh/tagservice/api/graphql/service/cursor"
@@ -34,7 +33,7 @@ func (c *Category) Children(ctx context.Context, obj *apimodel.Category) ([]*api
 		ParentId: (*uint)(unsafe.Pointer(&obj.ParentId)),
 	})
 	if err != nil {
-		return nil, gqlerror.Errorf(`error to get categories by entities %w`, err)
+		return nil, gqlerror.Errorf(`error to get categories by entities %s`, err.Error())
 	}
 	return func(categorys []model.Category) []*apimodel.Category {
 		var apicategorys = make([]*apimodel.Category, len(categorys))
@@ -56,7 +55,7 @@ func (c *Category) Tags(ctx context.Context, obj *apimodel.Category, first int64
 
 	tags, err := c.tagService.GetList(ctx, &model.TagFilter{
 		CategoryId: []uint{uint(obj.ID)},
-		Limit:      pointer.ToUint(uint(first + 1)), // dirty hack to obtain HasNextPage
+		Limit:      uint(first + 1), // dirty hack to obtain HasNextPage
 		AfterId:    &afterId,
 	})
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"fmt"
 	"github.com/dmalykh/tagservice/repository/entgo/ent"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/predicate"
 	"github.com/dmalykh/tagservice/repository/entgo/ent/relation"
 	"github.com/dmalykh/tagservice/tagservice/model"
 	"github.com/dmalykh/tagservice/tagservice/repository"
@@ -88,55 +89,66 @@ func (r *Relation) Delete(ctx context.Context, tagIds []uint, namespaceIds []uin
 	return nil
 }
 
-func (r *Relation) Get(ctx context.Context, tagIds []uint, namespaceIds []uint, entityIds []uint) ([]model.Relation, error) {
-	if len(entityIds) > 0 && len(namespaceIds) == 0 {
+func (r *Relation) Get(ctx context.Context, filter *model.RelationFilter) ([]model.Relation, error) {
+	if len(filter.EntityId) > 0 && len(filter.Namespace) == 0 {
 		return nil, repository.ErrEntityWithoutNamespace
 	}
 	entrelations, err := r.client.Query().Where(
-		relation.And(
+		relation.And(func() []predicate.Relation {
+			var predicates = make([]predicate.Relation, 0, 5)
 			// By tags
-			func(s *sql.Selector) {
-				if len(tagIds) > 0 {
-					s.Where(sql.In(relation.FieldTagID, func() []interface{} {
-						var arr = make([]interface{}, len(tagIds))
-						for i, id := range tagIds {
-							arr[i] = id
+			if len(filter.TagId) > 0 {
+				predicates = append(predicates, predicate.Relation(func(s *sql.Selector) {
+					s.Where(sql.InInts(relation.FieldTagID, func() []int {
+						var arr = make([]int, 0, len(filter.TagId))
+						for _, group := range filter.TagId {
+							for _, id := range group {
+								arr = append(arr, int(id))
+							}
 						}
 						return arr
 					}()...))
-				}
-			},
+				}))
+			}
 			// By namespaces
-			func(s *sql.Selector) {
-				if len(namespaceIds) > 0 {
+			if len(filter.Namespace) > 0 {
+				predicates = append(predicates, predicate.Relation(func(s *sql.Selector) {
 					s.Where(sql.In(relation.FieldNamespaceID, func() []interface{} {
-						var arr = make([]interface{}, len(namespaceIds))
-						for i, id := range namespaceIds {
+						var arr = make([]interface{}, len(filter.Namespace))
+						for i, id := range filter.Namespace {
 							arr[i] = id
 						}
 						return arr
 					}()...))
-				}
-			},
+				}))
+			}
 			// By entity
-			func(s *sql.Selector) {
-				if len(entityIds) > 0 && len(namespaceIds) > 0 {
-					s.Where(sql.In(relation.FieldEntityID, func() []interface{} {
-						var arr = make([]interface{}, len(entityIds))
-						for i, id := range entityIds {
-							arr[i] = id
+			if len(filter.EntityId) > 0 && len(filter.Namespace) > 0 {
+				predicates = append(predicates, predicate.Relation(func(s *sql.Selector) {
+					s.Where(sql.InInts(relation.FieldEntityID, func() []int {
+						var arr = make([]int, len(filter.EntityId))
+						for i, id := range filter.EntityId {
+							arr[i] = int(id)
 						}
 						return arr
 					}()...))
-				}
-			},
-		)).All(ctx)
+				}))
+			}
+			// After id condition
+			if filter.AfterId != nil {
+				predicates = append(predicates, relation.IDGT(int(*filter.AfterId)))
+			}
+
+			return predicates
+		}()...),
+	).All(ctx)
 	if err != nil {
 		return nil, err
 	}
 	var relations = make([]model.Relation, 0, len(entrelations))
 	for _, rel := range entrelations {
 		relations = append(relations, model.Relation{
+			Id:          uint(rel.ID),
 			TagId:       uint(rel.TagID),
 			NamespaceId: uint(rel.NamespaceID),
 			EntityId:    uint(rel.EntityID),
