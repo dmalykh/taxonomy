@@ -12,7 +12,7 @@ import (
 func initCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   `init`,
-		Short: `Initiate service, create table in database`,
+		Short: `Initiate service, create tables in a database`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// Get DSN
 			dsn, err := cmd.Flags().GetString(`dsn`)

@@ -28,9 +28,14 @@ func New() *cobra.Command {
 		Short: "Service for tag management. It allows CRUD operations with tags, categories and namespaces.",
 		Long:  `github.com/dmalykh/tagservice is the cli to manage, build and debug your tags`,
 	}
-	c.PersistentFlags().String("dsn", os.Getenv(`DSN`), "Data source name (connection information)")
+	var defaultDSN = func() string {
+		if dsn := os.Getenv(`DSN`); dsn != `` {
+			return dsn
+		}
+		return `sqlite://./tagservice.db?cache=shared&_fk=1`
+	}()
+	c.PersistentFlags().String("dsn", defaultDSN, "Data source name (connection information)")
 	c.PersistentFlags().BoolP("verbose", "v", false, "Make some output more verbose.")
-	CheckErr(c.MarkPersistentFlagRequired("dsn"))
 
 	// Add subcommands
 	c.AddCommand(initCommand(), categoryCommand(), tagCommand(), namespaceCommand(), relCommand(), serveCommand())

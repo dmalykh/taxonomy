@@ -16,7 +16,7 @@ func categoryCommand() *cobra.Command {
 
 	var categoryCmd = &cobra.Command{
 		Use:   `category`,
-		Short: `CRUD operations with categories`,
+		Short: `Operations with categories`,
 		Run: func(cmd *cobra.Command, args []string) {
 			CheckErr(cmd.Help())
 		},

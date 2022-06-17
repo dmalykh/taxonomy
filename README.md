@@ -5,8 +5,8 @@ TagService is a self-hosted, lightweight and simple (yet functional) full micros
 You could use it either independent microservice or embed library.
 
 ### Purpose
-> Tag everywhere! I really exhausted to implement tags management services in every project. The core idea of `tagservice`
-is wide usage and universal solution for every project.
+> Tags everywhere! I really exhausted to implement tags management services in every project. The core idea of `tagservice`
+is wide usage universal solution for every project where tags needed.
 > 
 > `Tagservice` could be embeded, has GraphQL and GRPC APIs, also provided powerfull command line interface. 
 Of course, it's database agnostic and made with clean architecture principles. 
