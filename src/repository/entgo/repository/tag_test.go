@@ -1,14 +1,16 @@
-package repository
+package repository_test
 
 import (
 	"context"
+	"testing"
+
 	"github.com/dmalykh/tagservice/repository/entgo/ent"
 	"github.com/dmalykh/tagservice/repository/entgo/ent/enttest"
+	repo "github.com/dmalykh/tagservice/repository/entgo/repository"
 	"github.com/dmalykh/tagservice/tagservice/model"
 	"github.com/dmalykh/tagservice/tagservice/repository"
 	"github.com/jaswdr/faker"
 	suitetest "github.com/stretchr/testify/suite"
-	"testing"
 )
 
 type TestTagOperations struct {
@@ -19,21 +21,24 @@ type TestTagOperations struct {
 func (suite *TestTagOperations) SetupTest() {
 	suite.client = enttest.Open(suite.T(), "sqlite3", ":memory:?_fk=1", []enttest.Option{
 		enttest.WithOptions(ent.Log(suite.T().Log)),
-	}...) //.Debug()
+	}...) // .Debug()
 }
 
 func (suite *TestTagOperations) TearDownTest() {
+	//goland:noinspection GoUnhandledErrorResult
 	suite.client.Close()
 }
 
+//goland:noinspection GoContextTodo
 func (suite *TestTagOperations) TestTag_Create() {
-	var faker = faker.New()
+	//goland:noinspection GoImportUsedAsName
+	faker := faker.New()
 
 	tests := []struct {
 		name     string
 		prepare  func()
 		data     model.TagData
-		checkErr func(error, ...interface{}) //returns continue
+		checkErr func(error, ...interface{}) // returns continue
 	}{
 		{
 			`ok`,
@@ -43,7 +48,7 @@ func (suite *TestTagOperations) TestTag_Create() {
 			model.TagData{
 				Name:       faker.Beer().Name(),
 				Title:      faker.Beer().Name(),
-				CategoryId: 1,
+				CategoryID: 1,
 			},
 			func(err error, i ...interface{}) {
 				suite.NoError(err)
@@ -56,7 +61,7 @@ func (suite *TestTagOperations) TestTag_Create() {
 			},
 			model.TagData{
 				Name:       faker.Beer().Name(),
-				CategoryId: 1,
+				CategoryID: 1,
 			},
 			func(err error, i ...interface{}) {
 				suite.NoError(err)
@@ -69,7 +74,7 @@ func (suite *TestTagOperations) TestTag_Create() {
 			},
 			model.TagData{
 				Title:      faker.Beer().Name(),
-				CategoryId: 1,
+				CategoryID: 1,
 			},
 			func(err error, i ...interface{}) {
 				suite.ErrorIs(err, repository.ErrCreateTag)
@@ -95,7 +100,7 @@ func (suite *TestTagOperations) TestTag_Create() {
 			},
 			model.TagData{
 				Name:       `sowa`,
-				CategoryId: 2,
+				CategoryID: 2,
 			},
 			func(err error, i ...interface{}) {
 				suite.NoError(err)
@@ -109,7 +114,7 @@ func (suite *TestTagOperations) TestTag_Create() {
 			},
 			model.TagData{
 				Name:       `sowa`,
-				CategoryId: 1,
+				CategoryID: 1,
 			},
 			func(err error, i ...interface{}) {
 				suite.ErrorIs(err, repository.ErrCreateTag)
@@ -120,8 +125,8 @@ func (suite *TestTagOperations) TestTag_Create() {
 		suite.Run(tt.name, func() {
 			suite.TearDownTest()
 			suite.SetupTest()
-			var ctx = context.TODO()
-			var tagClient = NewTag(suite.client.Tag)
+			ctx := context.TODO()
+			tagClient := repo.NewTag(suite.client.Tag)
 
 			tt.prepare()
 			returned, err := tagClient.Create(ctx, &tt.data)
@@ -133,16 +138,16 @@ func (suite *TestTagOperations) TestTag_Create() {
 				suite.Equal(tt.data.Name, returned.Data.Name)
 				suite.Equal(tt.data.Title, returned.Data.Title)
 				suite.Equal(tt.data.Description, returned.Data.Description)
-				suite.Equal(tt.data.CategoryId, returned.Data.CategoryId)
+				suite.Equal(tt.data.CategoryID, returned.Data.CategoryID)
 			}
 
 			{
-				got, err := tagClient.GetById(ctx, returned.Id)
+				got, err := tagClient.GetByID(ctx, returned.ID)
 				suite.NoError(err)
 				suite.Equal(tt.data.Name, got.Data.Name)
 				suite.Equal(tt.data.Title, got.Data.Title)
 				suite.Equal(tt.data.Description, got.Data.Description)
-				suite.Equal(tt.data.CategoryId, got.Data.CategoryId)
+				suite.Equal(tt.data.CategoryID, got.Data.CategoryID)
 			}
 		})
 	}

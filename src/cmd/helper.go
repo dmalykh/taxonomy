@@ -15,10 +15,11 @@ func service(cmd *cobra.Command) *loader.Service {
 	// Load service
 	service, err := loader.Load(cmd.Context(), dsn, verbose)
 	CheckErr(err)
+
 	return service
 }
 
-// https://github.com/spf13/cobra/pull/1568
+// CheckErr check error and panics if error exists  https://github.com/spf13/cobra/pull/1568
 func CheckErr(msg interface{}) {
 	if msg != nil {
 		panic(msg)

@@ -37,8 +37,8 @@ func (_m *Namespace) Create(ctx context.Context, name string) (model.Namespace, 
 	return r0, r1
 }
 
-// DeleteById provides a mock function with given fields: ctx, id
-func (_m *Namespace) DeleteById(ctx context.Context, id uint) error {
+// DeleteByID provides a mock function with given fields: ctx, id
+func (_m *Namespace) DeleteByID(ctx context.Context, id uint) error {
 	ret := _m.Called(ctx, id)
 
 	var r0 error
@@ -51,8 +51,8 @@ func (_m *Namespace) DeleteById(ctx context.Context, id uint) error {
 	return r0
 }
 
-// GetById provides a mock function with given fields: ctx, id
-func (_m *Namespace) GetById(ctx context.Context, id uint) (model.Namespace, error) {
+// GetByID provides a mock function with given fields: ctx, id
+func (_m *Namespace) GetByID(ctx context.Context, id uint) (model.Namespace, error) {
 	ret := _m.Called(ctx, id)
 
 	var r0 model.Namespace

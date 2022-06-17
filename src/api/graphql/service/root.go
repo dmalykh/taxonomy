@@ -1,3 +1,4 @@
+//nolint:ireturn
 package service
 
 import (
@@ -5,7 +6,7 @@ import (
 	"github.com/dmalykh/tagservice/tagservice"
 )
 
-func NewResolver(tagService tagservice.Tag, categoryService tagservice.Category, namespaceService tagservice.Namespace) generated.ResolverRoot {
+func NewResolver(tagService tagservice.Tag, categoryService tagservice.Category, namespaceService tagservice.Namespace) generated.ResolverRoot { //nolint:lll
 	return &Root{
 		queryResolver: &Query{
 			tagService:      tagService,
@@ -31,6 +32,7 @@ func NewResolver(tagService tagservice.Tag, categoryService tagservice.Category,
 	}
 }
 
+//goland:noinspection GoUnnecessarilyExportedIdentifiers
 type Root struct {
 	queryResolver    generated.QueryResolver
 	mutationResolver generated.MutationResolver

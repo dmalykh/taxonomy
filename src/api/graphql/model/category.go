@@ -7,7 +7,7 @@ type Category struct {
 	// Category's title
 	Title string `json:"title"`
 	// Parent category
-	ParentId *int64
+	ParentID *int64
 	// Category's description
 	Description *string `json:"description"`
 }

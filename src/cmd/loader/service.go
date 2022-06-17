@@ -2,6 +2,8 @@ package loader
 
 import (
 	"context"
+	"fmt"
+
 	"github.com/dmalykh/tagservice/repository/entgo"
 	"github.com/dmalykh/tagservice/repository/entgo/repository"
 	"github.com/dmalykh/tagservice/tagservice"
@@ -18,20 +20,21 @@ type Service struct {
 }
 
 func Load(ctx context.Context, dsn string, verbose bool) (*Service, error) {
-
 	client, err := entgo.Connect(ctx, dsn, verbose)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(`error connect to database: %w`, err)
 	}
 
 	// Init zap logger
-	var logger *zap.Logger
-	switch verbose {
-	case true:
-		logger, err = zap.NewDevelopment()
-		break
-	default:
-		logger, err = zap.NewProduction()
+	logger, err := func() (*zap.Logger, error) {
+		if verbose == true {
+			return zap.NewDevelopment() //nolint:wrapcheck
+		}
+
+		return zap.NewProduction() //nolint:wrapcheck
+	}()
+	if err != nil {
+		return nil, fmt.Errorf(`logger error: %w`, err)
 	}
 
 	// Graceful shutdown
@@ -43,6 +46,7 @@ func Load(ctx context.Context, dsn string, verbose bool) (*Service, error) {
 					logger.DPanic(`panic`, zap.Any(`recover`, r))
 				}
 			}()
+
 			err := client.Close()
 			if err != nil {
 				panic(err)
@@ -58,7 +62,8 @@ func Load(ctx context.Context, dsn string, verbose bool) (*Service, error) {
 
 	// Construct service
 	var service Service
-	var transaction = entgo.Transactioner(client)
+
+	transaction := entgo.Transactioner(client)
 
 	service.Namespace = namespace.New(&namespace.Config{
 		Transaction:         transaction,
@@ -83,5 +88,4 @@ func Load(ctx context.Context, dsn string, verbose bool) (*Service, error) {
 	})
 
 	return &service, nil
-
 }

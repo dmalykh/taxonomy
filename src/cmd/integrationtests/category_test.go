@@ -1,20 +1,22 @@
-package integration_tests
+//nolint:dupl
+package integrationtests_test
 
 import (
 	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
+	"math/rand"
+	"os"
+	"testing"
+	"time"
+
 	"github.com/AlekSi/pointer"
 	cmd2 "github.com/dmalykh/tagservice/cmd"
 	"github.com/dmalykh/tagservice/repository/entgo"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	suitetest "github.com/stretchr/testify/suite"
-	"io/ioutil"
-	"math/rand"
-	"os"
-	"testing"
-	"time"
 )
 
 type TestCategoryOperations struct {
@@ -23,35 +25,42 @@ type TestCategoryOperations struct {
 	dsn    string
 }
 
+//nolint:gosec
 func (suite *TestCategoryOperations) SetupTest() {
 	rand.Seed(time.Now().UnixNano())
 	suite.dbpath = suite.T().TempDir() + fmt.Sprintf(`cachedb%d.db`, rand.Int())
 	suite.dsn = fmt.Sprintf(`sqlite://%s?mode=memory&cache=shared&_fk=1`, suite.dbpath)
 
-	var cmd = cmd2.New()
+	cmd := cmd2.New()
+
 	cmd.SetArgs([]string{`--dsn`, suite.dsn, `init`})
 	suite.Require().NoError(cmd.Execute())
 }
 
 func (suite *TestCategoryOperations) TearDownTest() {
 	if suite.dbpath != `` {
+		//goland:noinspection GoUnhandledErrorResult
 		os.Remove(suite.dbpath)
 	}
 }
 
 func (suite *TestCategoryOperations) TestCreate() {
-	var cmd = cmd2.New()
-	var b = bytes.NewBufferString(``)
+	var (
+		cmd = cmd2.New()
+		b   = bytes.NewBufferString(``)
+	)
+
 	cmd.SetOut(b)
 
 	cmd.SetArgs([]string{`--dsn`, suite.dsn, `category`, `create`, `Hello!`})
 	suite.NoError(cmd.Execute())
+
 	out, _ := ioutil.ReadAll(b)
 	suite.Empty(out)
 }
 
 func (suite *TestCategoryOperations) TestErrDuplicateNames() {
-	var tests = []struct {
+	tests := []struct {
 		name       string
 		firstArgs  [][]string
 		secondArgs [][]string
@@ -82,12 +91,13 @@ func (suite *TestCategoryOperations) TestErrDuplicateNames() {
 			},
 		},
 	}
+
 	for _, tt := range tests {
 		suite.TearDownTest()
 		suite.SetupTest()
 		suite.Run(tt.name, func() {
-			var cmd = cmd2.New()
-			var b = bytes.NewBufferString(``)
+			cmd := cmd2.New()
+			b := bytes.NewBufferString(``)
 			cmd.SetOut(b)
 			cmd.SetErr(b)
 
@@ -119,8 +129,9 @@ func (suite *TestCategoryOperations) TestErrDuplicateNames() {
 	}
 }
 
+//goland:noinspection GoContextTodo,GoContextTodo
 func (suite *TestCategoryOperations) TestErrUpdate() {
-	var tests = []struct {
+	tests := []struct {
 		name       string
 		createArgs [][]string
 		updateArgs [][]string
@@ -133,7 +144,7 @@ func (suite *TestCategoryOperations) TestErrUpdate() {
 			func(t *TestCategoryOperations, out string) {
 				c, err := entgo.Connect(context.TODO(), suite.dsn, false)
 				cmd2.CheckErr(err)
-				var all = c.Category.Query().AllX(context.TODO())
+				all := c.Category.Query().AllX(context.TODO())
 				assert.Equal(t.T(), `itsme`, all[0].Name)
 				assert.Equal(t.T(), 2, *all[0].ParentID)
 				assert.Equal(t.T(), `cherrypie`, all[1].Name)
@@ -142,13 +153,16 @@ func (suite *TestCategoryOperations) TestErrUpdate() {
 		},
 	}
 
-	var b = bytes.NewBufferString(``)
-	var newcmd = func() *cobra.Command {
-		var c = cmd2.New()
-		c.SetOut(b)
-		c.SetErr(b)
-		return c
-	}
+	var (
+		b      = bytes.NewBufferString(``)
+		newcmd = func() *cobra.Command {
+			c := cmd2.New()
+			c.SetOut(b)
+			c.SetErr(b)
+
+			return c
+		}
+	)
 
 	for _, tt := range tests {
 		suite.TearDownTest()
@@ -165,7 +179,7 @@ func (suite *TestCategoryOperations) TestErrUpdate() {
 
 			for _, arg := range tt.createArgs {
 				func(arg []string) {
-					var cmd = newcmd()
+					cmd := newcmd()
 					cmd.SetArgs(append([]string{`--dsn`, suite.dsn, `category`, `create`}, arg...))
 					suite.Require().NoError(cmd.Execute())
 					out, _ := ioutil.ReadAll(b)
@@ -176,7 +190,7 @@ func (suite *TestCategoryOperations) TestErrUpdate() {
 			var finalOutput []byte
 			for _, arg := range tt.updateArgs {
 				func(arg []string) {
-					var cmd = newcmd()
+					cmd := newcmd()
 					cmd.SetArgs(append([]string{`--dsn`, suite.dsn, `category`, `update`}, arg...))
 					suite.Require().NoError(cmd.Execute())
 					out, _ := ioutil.ReadAll(b)

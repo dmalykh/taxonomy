@@ -52,7 +52,7 @@ func (_m *Category) Delete(ctx context.Context, id uint) error {
 }
 
 // GetById provides a mock function with given fields: ctx, id
-func (_m *Category) GetById(ctx context.Context, id uint) (model.Category, error) {
+func (_m *Category) GetByID(ctx context.Context, id uint) (model.Category, error) {
 	ret := _m.Called(ctx, id)
 
 	var r0 model.Category

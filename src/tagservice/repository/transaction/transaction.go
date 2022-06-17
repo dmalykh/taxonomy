@@ -3,8 +3,12 @@ package transaction
 import (
 	"context"
 	"database/sql"
+	"errors"
+
 	"github.com/dmalykh/tagservice/tagservice/repository"
 )
+
+var ErrBeginxTx = errors.New(`error begin transaction`)
 
 type TxOptions sql.TxOptions
 

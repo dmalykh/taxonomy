@@ -1,20 +1,16 @@
-/*
-Copyright © 2022 NAME HERE <EMAIL ADDRESS> @TODO
-
-*/
 package cmd
 
 import (
+	"math"
+	"strconv"
+
 	"github.com/dmalykh/tagservice/tagservice/model"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
-	"math"
-	"strconv"
 )
 
 func namespaceCommand() *cobra.Command {
-
-	var namespaceCmd = &cobra.Command{
+	namespaceCmd := &cobra.Command{
 		Use:   "namespace",
 		Short: "CRUD operations with namespaces",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -22,7 +18,7 @@ func namespaceCommand() *cobra.Command {
 		},
 	}
 
-	var createCmd = &cobra.Command{
+	createCmd := &cobra.Command{
 		Use:        "create [name]",
 		Args:       cobra.ExactArgs(1),
 		ArgAliases: []string{`name`},
@@ -33,7 +29,7 @@ func namespaceCommand() *cobra.Command {
 		},
 	}
 
-	var updateCmd = &cobra.Command{
+	updateCmd := &cobra.Command{
 		Use:   "update [id] [name]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Update namespace (name must be unique)",
@@ -45,7 +41,7 @@ func namespaceCommand() *cobra.Command {
 		},
 	}
 
-	var deleteCmd = &cobra.Command{
+	deleteCmd := &cobra.Command{
 		Use:   "delete [id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Delete namespace",
@@ -56,7 +52,7 @@ func namespaceCommand() *cobra.Command {
 		},
 	}
 
-	var listCmd = &cobra.Command{
+	listCmd := &cobra.Command{
 		Use:   "list",
 		Args:  cobra.NoArgs,
 		Short: "Show all namespaces",
@@ -70,7 +66,7 @@ func namespaceCommand() *cobra.Command {
 			for _, namespace := range namespaces {
 				table.Append(func(namespace model.Namespace) []string {
 					return []string{
-						strconv.Itoa(int(namespace.Id)),
+						strconv.Itoa(int(namespace.ID)),
 						namespace.Name,
 					}
 				}(namespace))
@@ -80,5 +76,6 @@ func namespaceCommand() *cobra.Command {
 	}
 
 	namespaceCmd.AddCommand(createCmd, updateCmd, deleteCmd, listCmd)
+
 	return namespaceCmd
 }

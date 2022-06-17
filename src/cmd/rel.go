@@ -1,14 +1,15 @@
 package cmd
 
 import (
+	"strconv"
+
 	"github.com/dmalykh/tagservice/tagservice/model"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
-	"strconv"
 )
 
 func relCommand() *cobra.Command {
-	var relCmd = &cobra.Command{
+	relCmd := &cobra.Command{
 		Use:   `rel`,
 		Short: `Work with relations`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -16,20 +17,21 @@ func relCommand() *cobra.Command {
 		},
 	}
 
-	var setCmd = &cobra.Command{
+	setCmd := &cobra.Command{
 		Use:   `set`,
 		Args:  cobra.NoArgs,
 		Short: `Set relation`,
 		Run: func(cmd *cobra.Command, args []string) {
-			tagId, err := cmd.Flags().GetUint(`tag`)
+			tagID, err := cmd.Flags().GetUint(`tag`)
 			CheckErr(err)
 			namespace, err := cmd.Flags().GetString(`namespace`)
 			CheckErr(err)
-			entitiesId, err := cmd.Flags().GetUintSlice(`entity`)
+			entitiesID, err := cmd.Flags().GetUintSlice(`entity`)
 			CheckErr(err)
-			CheckErr(service(cmd).Tag.SetRelation(cmd.Context(), tagId, namespace, entitiesId...))
+			CheckErr(service(cmd).Tag.SetRelation(cmd.Context(), tagID, namespace, entitiesID...))
 		},
 	}
+
 	setCmd.Flags().UintP(`tag`, `t`, 0, `tag's id'`)
 	setCmd.Flags().StringP(`namespace`, `n`, ``, `description for the tag`)
 	setCmd.Flags().UintSliceP(`entity`, `e`, nil, `entity's id for relation`)
@@ -37,7 +39,7 @@ func relCommand() *cobra.Command {
 	CheckErr(setCmd.MarkFlagRequired(`namespace`))
 	CheckErr(setCmd.MarkFlagRequired(`entity`))
 
-	var listCmd = &cobra.Command{
+	listCmd := &cobra.Command{
 		Use:   `list`,
 		Args:  cobra.NoArgs,
 		Short: `List of relations`,
@@ -53,14 +55,15 @@ func relCommand() *cobra.Command {
 			for _, relation := range relations {
 				table.Append(func(relation model.Relation) []string {
 					return []string{
-						strconv.Itoa(int(relation.TagId)),
-						strconv.Itoa(int(relation.EntityId)),
+						strconv.Itoa(int(relation.TagID)),
+						strconv.Itoa(int(relation.EntityID)),
 					}
 				}(relation))
 			}
 			table.Render()
 		},
 	}
+
 	listCmd.Flags().StringP(`namespace`, `n`, ``, `description for the tag`)
 	CheckErr(setCmd.MarkFlagRequired(`namespace`))
 

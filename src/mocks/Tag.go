@@ -51,8 +51,8 @@ func (_m *Tag) Delete(ctx context.Context, id uint) error {
 	return r0
 }
 
-// GetById provides a mock function with given fields: ctx, id
-func (_m *Tag) GetById(ctx context.Context, id uint) (model.Tag, error) {
+// GetByID provides a mock function with given fields: ctx, id
+func (_m *Tag) GetByID(ctx context.Context, id uint) (model.Tag, error) {
 	ret := _m.Called(ctx, id)
 
 	var r0 model.Tag

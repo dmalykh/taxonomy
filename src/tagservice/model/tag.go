@@ -1,7 +1,7 @@
 package model
 
 type Tag struct {
-	Id   uint
+	ID   uint
 	Data TagData
 }
 
@@ -9,13 +9,13 @@ type TagData struct {
 	Name        string
 	Title       string
 	Description string
-	CategoryId  uint
+	CategoryID  uint
 }
 
 type TagFilter struct {
-	CategoryId []uint
+	CategoryID []uint
 	Name       *string
-	AfterId    *uint
+	AfterID    *uint
 	Limit      uint
 	Offset     uint
 }

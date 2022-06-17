@@ -1,19 +1,15 @@
-/*
-Copyright © 2022 NAME HERE <EMAIL ADDRESS> @TODO
-
-*/
 package cmd
 
 import (
+	"strconv"
+
 	"github.com/dmalykh/tagservice/tagservice/model"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
-	"strconv"
 )
 
 func tagCommand() *cobra.Command {
-
-	var tagCmd = &cobra.Command{
+	tagCmd := &cobra.Command{
 		Use:   `tag`,
 		Short: `CRUD operations with tags`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -21,7 +17,7 @@ func tagCommand() *cobra.Command {
 		},
 	}
 
-	var createCmd = &cobra.Command{
+	createCmd := &cobra.Command{
 		Use:        `create [name]`,
 		Args:       cobra.ExactArgs(1),
 		ArgAliases: []string{`name`},
@@ -31,24 +27,26 @@ func tagCommand() *cobra.Command {
 				Name:        args[0],
 				Title:       cmd.Flag(`title`).Value.String(),
 				Description: cmd.Flag(`description`).Value.String(),
-				CategoryId: func() uint {
+				CategoryID: func() uint {
 					if !cmd.Flags().Changed(`category`) {
 						cobra.CompErrorln(`category required`)
 					}
-					categoryId, err := cmd.Flags().GetUint(`category`)
+					categoryID, err := cmd.Flags().GetUint(`category`)
 					CheckErr(err)
-					return categoryId
+
+					return categoryID
 				}(),
 			})
 			CheckErr(err)
 		},
 	}
+
 	createCmd.Flags().StringP(`title`, `t`, ``, `title of the tag`)
 	createCmd.Flags().Uint(`category`, 0, `id of category for the tag`)
 	createCmd.Flags().String(`description`, ``, `description for the tag`)
 	CheckErr(createCmd.MarkFlagRequired(`category`))
 
-	var updateCmd = &cobra.Command{
+	updateCmd := &cobra.Command{
 		Use:   `update [id]`,
 		Args:  cobra.ExactArgs(1),
 		Short: `Update tag`,
@@ -82,7 +80,7 @@ func tagCommand() *cobra.Command {
 					category, err := cmd.Flags().GetUint(`category`)
 					CheckErr(err)
 					if category > 0 {
-						update.CategoryId = category
+						update.CategoryID = category
 					}
 				}
 			}
@@ -90,12 +88,13 @@ func tagCommand() *cobra.Command {
 			CheckErr(err)
 		},
 	}
+
 	updateCmd.Flags().Uint(`category`, 0, `id of category for this tag`)
 	updateCmd.Flags().StringP(`name`, `n`, ``, `name of the tag`)
 	updateCmd.Flags().StringP(`title`, `t`, ``, `title of the tag`)
 	updateCmd.Flags().String(`description`, ``, `description for this category`)
 
-	var deleteCmd = &cobra.Command{
+	deleteCmd := &cobra.Command{
 		Use:   `delete [id]`,
 		Args:  cobra.ExactArgs(1),
 		Short: `Delete tag`,
@@ -106,12 +105,12 @@ func tagCommand() *cobra.Command {
 		},
 	}
 
-	var listCmd = &cobra.Command{
+	listCmd := &cobra.Command{
 		Use:   `list [category's id] [limit] [offset]`,
 		Args:  cobra.MinimumNArgs(1),
 		Short: `Show all tags`,
 		Run: func(cmd *cobra.Command, args []string) {
-			categoryId, err := strconv.ParseUint(args[0], 10, 32)
+			categoryID, err := strconv.ParseUint(args[0], 10, 32)
 			CheckErr(err)
 			limit, err := strconv.ParseUint(args[1], 10, 32)
 			if err != nil {
@@ -122,7 +121,7 @@ func tagCommand() *cobra.Command {
 				offset = 0
 			}
 			tags, err := service(cmd).Tag.GetList(cmd.Context(), &model.TagFilter{
-				CategoryId: []uint{uint(categoryId)},
+				CategoryID: []uint{uint(categoryID)},
 				Limit:      uint(limit),
 				Offset:     uint(offset),
 			})
@@ -134,7 +133,7 @@ func tagCommand() *cobra.Command {
 			for _, tag := range tags {
 				table.Append(func(tag model.Tag) []string {
 					return []string{
-						strconv.Itoa(int(tag.Id)),
+						strconv.Itoa(int(tag.ID)),
 						tag.Data.Name,
 						tag.Data.Title,
 					}

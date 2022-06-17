@@ -7,7 +7,7 @@ type Tag struct {
 	// Tag's title
 	Title *string `json:"title"`
 	// Tag's category
-	CategoryId int64 `json:"category"`
+	CategoryID int64 `json:"category"`
 	// Description
 	Description *string `json:"description"`
 }

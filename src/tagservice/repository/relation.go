@@ -3,11 +3,13 @@ package repository
 import (
 	"context"
 	"errors"
+
 	"github.com/dmalykh/tagservice/tagservice/model"
 )
 
 var (
 	ErrCreateRelation         = errors.New(`failed to create relation`)
+	ErrGetRelation            = errors.New(`failed to get relation`)
 	ErrEntityWithoutNamespace = errors.New(`namespace required when requiring entity`)
 	ErrDeleteRelations        = errors.New(`failed to delete relation`)
 )

@@ -1,7 +1,7 @@
 package model
 
 type Category struct {
-	Id   uint
+	ID   uint
 	Data CategoryData
 }
 
@@ -9,10 +9,10 @@ type CategoryData struct {
 	Name        string
 	Title       string
 	Description *string
-	ParentId    *uint
+	ParentID    *uint
 }
 
 type CategoryFilter struct {
-	ParentId *uint
+	ParentID *uint
 	Name     *string
 }

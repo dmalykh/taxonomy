@@ -2,42 +2,50 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"unsafe"
+
 	"github.com/dmalykh/tagservice/api/graphql/generated/genmodel"
 	apimodel "github.com/dmalykh/tagservice/api/graphql/model"
 	"github.com/dmalykh/tagservice/api/graphql/service/cursor"
 	"github.com/dmalykh/tagservice/tagservice"
 	"github.com/dmalykh/tagservice/tagservice/model"
 	"github.com/vektah/gqlparser/v2/gqlerror"
-	"unsafe"
 )
 
+//goland:noinspection GoUnnecessarilyExportedIdentifiers
 type Query struct {
 	tagService      tagservice.Tag
 	categoryService tagservice.Category
 }
 
 func (q *Query) Tag(ctx context.Context, id int64) (apimodel.Tag, error) {
-	tag, err := q.tagService.GetById(ctx, uint(id))
-	return tag2gen(tag), err
+	tag, err := q.tagService.GetByID(ctx, uint(id))
+	if err != nil {
+		return apimodel.Tag{}, fmt.Errorf(`error %w to get tag %d: %s`, tagservice.ErrTagNotFound, id, err.Error())
+	}
+
+	return tag2gen(tag), nil
 }
 
 func (q *Query) Tags(ctx context.Context, categoryID int64, name *string, first int64, after *string) (*genmodel.TagsConnection, error) {
-	var afterId uint
+	var afterID uint
 	if after != nil {
-		if err := cursor.Unmarshal(*after, &afterId); err != nil {
-			return nil, err
+		if err := cursor.Unmarshal(*after, &afterID); err != nil {
+			return nil, fmt.Errorf(`error to unmarshal %q: %w`, *after, err)
 		}
 	}
 
 	tags, err := q.tagService.GetList(ctx, &model.TagFilter{
-		CategoryId: []uint{uint(categoryID)},
+		CategoryID: []uint{uint(categoryID)},
 		Limit:      uint(first + 1), // dirty hack to obtain HasNextPage
-		AfterId:    &afterId,
+		AfterID:    &afterID,
 		Name:       name,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(`error to get list %w`, err)
 	}
+
 	return tagsConnection(tags, int(first)), nil
 }
 
@@ -46,35 +54,42 @@ func (q *Query) TagsByEntities(ctx context.Context, namespace string, entityID [
 	if err != nil {
 		return nil, gqlerror.Errorf(`error to get tags by entities %s`, err.Error())
 	}
+
 	return func(tags []model.Tag) []*apimodel.Tag {
-		var apitags = make([]*apimodel.Tag, len(tags))
+		apitags := make([]*apimodel.Tag, len(tags))
+
 		for i, tag := range tags {
-			var tag = tag2gen(tag)
+			tag := tag2gen(tag)
 			apitags[i] = &tag
 		}
+
 		return apitags
 	}(tags), nil
 }
 
 func (q *Query) Category(ctx context.Context, id int64) (apimodel.Category, error) {
-	category, err := q.categoryService.GetById(ctx, uint(id))
+	category, err := q.categoryService.GetByID(ctx, uint(id))
+
 	return category2gen(category), err
 }
 
 func (q *Query) Categories(ctx context.Context, parentID *int64, name *string) ([]*apimodel.Category, error) {
 	categorys, err := q.categoryService.GetList(ctx, &model.CategoryFilter{
-		ParentId: (*uint)(unsafe.Pointer(parentID)),
+		ParentID: (*uint)(unsafe.Pointer(parentID)),
 		Name:     name,
 	})
 	if err != nil {
 		return nil, gqlerror.Errorf(`error to get categories by filter %s`, err.Error())
 	}
+
 	return func(categorys []model.Category) []*apimodel.Category {
-		var apicategorys = make([]*apimodel.Category, len(categorys))
+		apicategorys := make([]*apimodel.Category, len(categorys))
+
 		for i, category := range categorys {
-			var category = category2gen(category)
+			category := category2gen(category)
 			apicategorys[i] = &category
 		}
+
 		return apicategorys
 	}(categorys), nil
 }

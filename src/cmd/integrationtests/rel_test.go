@@ -1,19 +1,20 @@
-package integration_tests
+package integrationtests_test
 
 import (
 	"bytes"
 	"context"
 	"fmt"
-	cmd2 "github.com/dmalykh/tagservice/cmd"
-	"github.com/dmalykh/tagservice/repository/entgo/ent"
-	"github.com/dmalykh/tagservice/repository/entgo/ent/enttest"
-	"github.com/jaswdr/faker"
-	suitetest "github.com/stretchr/testify/suite"
 	"io/ioutil"
 	"math/rand"
 	"os"
 	"testing"
 	"time"
+
+	cmd2 "github.com/dmalykh/tagservice/cmd"
+	"github.com/dmalykh/tagservice/repository/entgo/ent"
+	"github.com/dmalykh/tagservice/repository/entgo/ent/enttest"
+	"github.com/jaswdr/faker"
+	suitetest "github.com/stretchr/testify/suite"
 )
 
 type TestRelOperations struct {
@@ -23,6 +24,7 @@ type TestRelOperations struct {
 	client *ent.Client
 }
 
+// nolint:gosec
 func (suite *TestRelOperations) SetupTest() {
 	rand.Seed(time.Now().UnixNano())
 	suite.dbpath = suite.T().TempDir() + fmt.Sprintf(`cachedb%d.db`, rand.Int())
@@ -35,13 +37,17 @@ func (suite *TestRelOperations) SetupTest() {
 
 func (suite *TestRelOperations) TearDownTest() {
 	if suite.dbpath != `` {
+		//goland:noinspection GoUnhandledErrorResult
 		os.Remove(suite.dbpath)
 	}
 }
 
+//goland:noinspection GoContextTodo,GoContextTodo,GoContextTodo,GoContextTodo
 func (suite *TestRelOperations) TestSet() {
-	var faker = faker.New()
-	var tests = []struct {
+	//goland:noinspection GoImportUsedAsName
+	faker := faker.New()
+
+	tests := []struct {
 		name     string
 		prepare  func()
 		commands [][]string
@@ -50,14 +56,14 @@ func (suite *TestRelOperations) TestSet() {
 		{
 			`ok`,
 			func() {
-				var category = suite.client.Category.Create().SetName(faker.Beer().Name()).SaveX(context.TODO())
+				category := suite.client.Category.Create().SetName(faker.Beer().Name()).SaveX(context.TODO())
 				suite.client.Tag.Create().SetName(faker.Beer().Name()).SetCategoryID(category.ID).SaveX(context.TODO())
 				suite.client.Namespace.Create().SetName(`gorilka`).SaveX(context.TODO())
 			},
 			[][]string{{`set`, `--tag`, `1`, `--namespace`, `gorilka`, `--entity`, `333`, `--entity`, `444`, `--entity`, `333`}},
 			func(out string) {
 				suite.Empty(out)
-				var all = suite.client.Relation.Query().AllX(context.TODO())
+				all := suite.client.Relation.Query().AllX(context.TODO())
 				suite.Len(all, 2)
 			},
 		},
@@ -65,9 +71,9 @@ func (suite *TestRelOperations) TestSet() {
 
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
-			var cmd = cmd2.New()
+			cmd := cmd2.New()
 			tt.prepare()
-			var b = bytes.NewBufferString(``)
+			b := bytes.NewBufferString(``)
 			cmd.SetOut(b)
 
 			// Catch panic in error

@@ -38,7 +38,7 @@ func (_m *Category) Create(ctx context.Context, data *model.CategoryData) (model
 }
 
 // DeleteById provides a mock function with given fields: ctx, id
-func (_m *Category) DeleteById(ctx context.Context, id uint) error {
+func (_m *Category) DeleteByID(ctx context.Context, id uint) error {
 	ret := _m.Called(ctx, id)
 
 	var r0 error
@@ -51,8 +51,8 @@ func (_m *Category) DeleteById(ctx context.Context, id uint) error {
 	return r0
 }
 
-// GetById provides a mock function with given fields: ctx, id
-func (_m *Category) GetById(ctx context.Context, id uint) (model.Category, error) {
+// GetByID provides a mock function with given fields: ctx, id
+func (_m *Category) GetByID(ctx context.Context, id uint) (model.Category, error) {
 	ret := _m.Called(ctx, id)
 
 	var r0 model.Category

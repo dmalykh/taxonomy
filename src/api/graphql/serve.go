@@ -2,14 +2,16 @@ package graphql
 
 import (
 	"context"
+	"fmt"
+	"log"
+	"net/http"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/dmalykh/tagservice/api/graphql/generated"
 	"github.com/dmalykh/tagservice/api/graphql/service"
 	"github.com/dmalykh/tagservice/tagservice"
-	"log"
-	"net/http"
 )
 
 type Config struct {
@@ -21,7 +23,6 @@ type Config struct {
 }
 
 func Serve(config *Config) error {
-
 	srv := handler.NewDefaultServer(
 		generated.NewExecutableSchema(
 			generated.Config{
@@ -33,6 +34,7 @@ func Serve(config *Config) error {
 		srv.AroundOperations(func(ctx context.Context, next graphql.OperationHandler) graphql.ResponseHandler {
 			oc := graphql.GetOperationContext(ctx)
 			log.Println(oc.RawQuery)
+
 			return next(ctx)
 		})
 	}
@@ -41,5 +43,6 @@ func Serve(config *Config) error {
 	http.Handle("/query", srv)
 
 	log.Printf("connect to :%s for GraphQL playground", config.Port)
-	return http.ListenAndServe(":"+config.Port, nil)
+
+	return fmt.Errorf(`server error: %w`, http.ListenAndServe(":"+config.Port, nil))
 }

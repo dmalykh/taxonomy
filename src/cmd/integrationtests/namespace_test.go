@@ -1,19 +1,21 @@
-package integration_tests
+//nolint:dupl
+package integrationtests_test
 
 import (
 	"bytes"
 	"context"
 	"fmt"
-	cmd2 "github.com/dmalykh/tagservice/cmd"
-	"github.com/dmalykh/tagservice/repository/entgo"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/assert"
-	suitetest "github.com/stretchr/testify/suite"
 	"io/ioutil"
 	"math/rand"
 	"os"
 	"testing"
 	"time"
+
+	cmd2 "github.com/dmalykh/tagservice/cmd"
+	"github.com/dmalykh/tagservice/repository/entgo"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
+	suitetest "github.com/stretchr/testify/suite"
 )
 
 type TestNamespaceOperations struct {
@@ -22,39 +24,49 @@ type TestNamespaceOperations struct {
 	dsn    string
 }
 
+// nolint:gosec
 func (suite *TestNamespaceOperations) SetupTest() {
 	rand.Seed(time.Now().UnixNano())
 	suite.dbpath = suite.T().TempDir() + fmt.Sprintf(`cachedb%d.db`, rand.Int())
 	suite.dsn = fmt.Sprintf(`sqlite://%s?mode=memory&cache=shared&_fk=1`, suite.dbpath)
 
-	var cmd = cmd2.New()
+	cmd := cmd2.New()
+
 	cmd.SetArgs([]string{`--dsn`, suite.dsn, `init`})
 	suite.Require().NoError(cmd.Execute())
 }
 
 func (suite *TestNamespaceOperations) TearDownTest() {
 	if suite.dbpath != `` {
+		//goland:noinspection GoUnhandledErrorResult
 		os.Remove(suite.dbpath)
 	}
 }
 
+//goland:noinspection GoContextTodo,GoContextTodo
 func (suite *TestNamespaceOperations) TestCreate() {
-	var cmd = cmd2.New()
-	var b = bytes.NewBufferString(``)
+	var (
+		cmd = cmd2.New()
+		b   = bytes.NewBufferString(``)
+	)
+
 	cmd.SetOut(b)
 
 	cmd.SetArgs([]string{`--dsn`, suite.dsn, `namespace`, `create`, `Hello!`})
 	suite.NoError(cmd.Execute())
+
 	out, _ := ioutil.ReadAll(b)
 	suite.Empty(out)
 	c, err := entgo.Connect(context.TODO(), suite.dsn, false)
 	cmd2.CheckErr(err)
+
 	ns := c.Namespace.GetX(context.TODO(), 1)
 	assert.Equal(suite.T(), `Hello!`, ns.Name)
 }
 
+//goland:noinspection GoContextTodo,GoContextTodo
 func (suite *TestNamespaceOperations) TestUpdate() {
-	var tests = []struct {
+	tests := []struct {
 		name       string
 		createArgs [][]string
 		updateArgs [][]string
@@ -67,20 +79,23 @@ func (suite *TestNamespaceOperations) TestUpdate() {
 			func(t *TestNamespaceOperations, out string) {
 				c, err := entgo.Connect(context.TODO(), suite.dsn, false)
 				cmd2.CheckErr(err)
-				var all = c.Namespace.Query().AllX(context.TODO())
+				all := c.Namespace.Query().AllX(context.TODO())
 				assert.Len(t.T(), all, 1)
 				assert.Equal(t.T(), `aruba`, all[0].Name)
 			},
 		},
 	}
 
-	var b = bytes.NewBufferString(``)
-	var newcmd = func() *cobra.Command {
-		var c = cmd2.New()
-		c.SetOut(b)
-		c.SetErr(b)
-		return c
-	}
+	var (
+		b      = bytes.NewBufferString(``)
+		newcmd = func() *cobra.Command {
+			c := cmd2.New()
+			c.SetOut(b)
+			c.SetErr(b)
+
+			return c
+		}
+	)
 
 	for _, tt := range tests {
 		suite.TearDownTest()
@@ -97,7 +112,7 @@ func (suite *TestNamespaceOperations) TestUpdate() {
 
 			for _, arg := range tt.createArgs {
 				func(arg []string) {
-					var cmd = newcmd()
+					cmd := newcmd()
 					cmd.SetArgs(append([]string{`--dsn`, suite.dsn, `namespace`, `create`}, arg...))
 					suite.Require().NoError(cmd.Execute())
 					out, _ := ioutil.ReadAll(b)
@@ -108,7 +123,7 @@ func (suite *TestNamespaceOperations) TestUpdate() {
 			var finalOutput []byte
 			for _, arg := range tt.updateArgs {
 				func(arg []string) {
-					var cmd = newcmd()
+					cmd := newcmd()
 					cmd.SetArgs(append([]string{`--dsn`, suite.dsn, `namespace`, `update`}, arg...))
 					suite.Require().NoError(cmd.Execute())
 					out, _ := ioutil.ReadAll(b)

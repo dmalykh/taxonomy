@@ -1,15 +1,18 @@
+//nolint:revive
 package entgo
 
 import (
 	"context"
 	"fmt"
+	"log"
+
 	"github.com/dmalykh/tagservice/repository/entgo/ent"
 	tx "github.com/dmalykh/tagservice/repository/entgo/transaction"
 	"github.com/dmalykh/tagservice/tagservice/repository/transaction"
+	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/xo/dburl"
-	"log"
 )
 
 func Connect(ctx context.Context, dsn string, debug bool) (*ent.Client, error) {
@@ -23,16 +26,19 @@ func Connect(ctx context.Context, dsn string, debug bool) (*ent.Client, error) {
 		return nil, fmt.Errorf(`(sql open "%s") %w`, u.Driver, err)
 	}
 
-	//Shutdown database connection
+	// Shutdown database connection.
 	go func() {
 		<-ctx.Done()
+
 		if err := client.Close(); err != nil {
 			log.Fatal(err)
 		}
 	}()
+
 	if debug {
 		client = client.Debug()
 	}
+
 	return client, nil
 }
 
@@ -44,8 +50,9 @@ func Init(ctx context.Context, dsn string, verbose bool) error {
 
 	// Run the automatic migration tool to create all schema resources.
 	if err := client.Schema.Create(ctx); err != nil {
-		return err
+		return fmt.Errorf(`error create schema: %w`, err)
 	}
+
 	return nil
 }
 

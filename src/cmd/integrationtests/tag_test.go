@@ -1,9 +1,15 @@
-package integration_tests
+package integrationtests_test
 
 import (
 	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
+	"math/rand"
+	"os"
+	"testing"
+	"time"
+
 	cmd2 "github.com/dmalykh/tagservice/cmd"
 	"github.com/dmalykh/tagservice/repository/entgo"
 	"github.com/dmalykh/tagservice/repository/entgo/ent"
@@ -11,11 +17,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	suitetest "github.com/stretchr/testify/suite"
-	"io/ioutil"
-	"math/rand"
-	"os"
-	"testing"
-	"time"
 )
 
 type TestTagOperations struct {
@@ -25,6 +26,7 @@ type TestTagOperations struct {
 	client *ent.Client
 }
 
+// nolint:gosec
 func (suite *TestTagOperations) SetupTest() {
 	rand.Seed(time.Now().UnixNano())
 	suite.dbpath = suite.T().TempDir() + fmt.Sprintf(`cachedb%d.db`, rand.Int())
@@ -34,19 +36,22 @@ func (suite *TestTagOperations) SetupTest() {
 		enttest.WithOptions(ent.Log(suite.T().Log)),
 	}...).Debug()
 
-	var cmd = cmd2.New()
+	cmd := cmd2.New()
+
 	cmd.SetArgs([]string{`--dsn`, suite.dsn, `init`})
 	suite.Require().NoError(cmd.Execute())
 }
 
 func (suite *TestTagOperations) TearDownTest() {
 	if suite.dbpath != `` {
+		//goland:noinspection GoUnhandledErrorResult
 		os.Remove(suite.dbpath)
 	}
 }
 
+//goland:noinspection GoContextTodo
 func (suite *TestTagOperations) TestCreate() {
-	var tests = []struct {
+	tests := []struct {
 		name     string
 		prepare  func()
 		commands [][]string
@@ -75,16 +80,15 @@ func (suite *TestTagOperations) TestCreate() {
 				suite.Contains(err.Error(), `required flag(s) "category" not set`)
 			},
 			func(out string) {
-
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
-			var cmd = cmd2.New()
+			cmd := cmd2.New()
 			tt.prepare()
-			var b = bytes.NewBufferString(``)
+			b := bytes.NewBufferString(``)
 			cmd.SetOut(b)
 
 			// Catch panic in error
@@ -105,8 +109,9 @@ func (suite *TestTagOperations) TestCreate() {
 	}
 }
 
+//goland:noinspection GoContextTodo,GoContextTodo,GoContextTodo,GoContextTodo
 func (suite *TestTagOperations) TestErrUpdate() {
-	var tests = []struct {
+	tests := []struct {
 		name       string
 		prepare    func()
 		createArgs [][]string
@@ -124,7 +129,7 @@ func (suite *TestTagOperations) TestErrUpdate() {
 			func(t *TestTagOperations, out string) {
 				c, err := entgo.Connect(context.TODO(), suite.dsn, false)
 				cmd2.CheckErr(err)
-				var all = c.Tag.Query().AllX(context.TODO())
+				all := c.Tag.Query().AllX(context.TODO())
 				assert.Equal(t.T(), `itsme`, all[0].Name)
 				assert.Equal(t.T(), 1, all[0].CategoryID)
 				assert.Equal(t.T(), `cherrypie`, all[1].Name)
@@ -133,13 +138,16 @@ func (suite *TestTagOperations) TestErrUpdate() {
 		},
 	}
 
-	var b = bytes.NewBufferString(``)
-	var newcmd = func() *cobra.Command {
-		var c = cmd2.New()
-		c.SetOut(b)
-		c.SetErr(b)
-		return c
-	}
+	var (
+		b      = bytes.NewBufferString(``)
+		newcmd = func() *cobra.Command {
+			c := cmd2.New()
+			c.SetOut(b)
+			c.SetErr(b)
+
+			return c
+		}
+	)
 
 	for _, tt := range tests {
 		suite.TearDownTest()
@@ -156,7 +164,7 @@ func (suite *TestTagOperations) TestErrUpdate() {
 			tt.prepare()
 			for _, arg := range tt.createArgs {
 				func(arg []string) {
-					var cmd = newcmd()
+					cmd := newcmd()
 					cmd.SetArgs(append([]string{`--dsn`, suite.dsn, `tag`, `create`}, arg...))
 					suite.Require().NoError(cmd.Execute())
 					out, _ := ioutil.ReadAll(b)
@@ -167,7 +175,7 @@ func (suite *TestTagOperations) TestErrUpdate() {
 			var finalOutput []byte
 			for _, arg := range tt.updateArgs {
 				func(arg []string) {
-					var cmd = newcmd()
+					cmd := newcmd()
 					cmd.SetArgs(append([]string{`--dsn`, suite.dsn, `tag`, `update`}, arg...))
 					suite.Require().NoError(cmd.Execute())
 					out, _ := ioutil.ReadAll(b)

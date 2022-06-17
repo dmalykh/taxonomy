@@ -1,24 +1,20 @@
-/*
-Copyright © 2022 NAME HERE <EMAIL ADDRESS>
-
-*/
 package cmd
 
 import (
+	"strconv"
+
 	"github.com/dmalykh/tagservice/api/graphql"
 	"github.com/spf13/cobra"
-	"strconv"
 )
 
-// serveCmd represents the serve command
-
+// serveCmd represents the serve command.
 func serveCommand() *cobra.Command {
-	var serveCmd = &cobra.Command{
+	serveCmd := &cobra.Command{
 		Use:   `serve`,
 		Short: `Run API server`,
 	}
 
-	serveCmd.PersistentFlags().IntP(`port`, `p`, 8080, `port on which the github.com/dmalykh/tagservice will listen`)
+	serveCmd.PersistentFlags().IntP(`port`, `p`, 8080, `port on which the github.com/dmalykh/tagservice will listen`) //nolint:gomnd
 	CheckErr(serveCmd.MarkPersistentFlagRequired(`port`))
 
 	serveCmd.AddCommand(&cobra.Command{
@@ -32,7 +28,7 @@ func serveCommand() *cobra.Command {
 			verbose, err := cmd.Flags().GetBool(`verbose`)
 			CheckErr(err)
 			// Run service
-			var s = service(cmd)
+			s := service(cmd)
 			CheckErr(graphql.Serve(&graphql.Config{
 				Port:             strconv.Itoa(port),
 				TagService:       s.Tag,
@@ -42,5 +38,6 @@ func serveCommand() *cobra.Command {
 			}))
 		},
 	})
+
 	return serveCmd
 }

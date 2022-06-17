@@ -37,8 +37,8 @@ func (_m *Tag) Create(ctx context.Context, data *model.TagData) (model.Tag, erro
 	return r0, r1
 }
 
-// DeleteById provides a mock function with given fields: ctx, id
-func (_m *Tag) DeleteById(ctx context.Context, id uint) error {
+// DeleteByID provides a mock function with given fields: ctx, id
+func (_m *Tag) DeleteByID(ctx context.Context, id uint) error {
 	ret := _m.Called(ctx, id)
 
 	var r0 error
@@ -52,7 +52,7 @@ func (_m *Tag) DeleteById(ctx context.Context, id uint) error {
 }
 
 // GetByFilter provides a mock function with given fields: ctx, filter
-func (_m *Tag) GetByFilter(ctx context.Context, filter *model.TagFilter) ([]model.Tag, error) {
+func (_m *Tag) GetList(ctx context.Context, filter *model.TagFilter) ([]model.Tag, error) {
 	ret := _m.Called(ctx, filter)
 
 	var r0 []model.Tag
@@ -74,8 +74,8 @@ func (_m *Tag) GetByFilter(ctx context.Context, filter *model.TagFilter) ([]mode
 	return r0, r1
 }
 
-// GetById provides a mock function with given fields: ctx, id
-func (_m *Tag) GetById(ctx context.Context, id uint) (model.Tag, error) {
+// GetByID provides a mock function with given fields: ctx, id
+func (_m *Tag) GetByID(ctx context.Context, id uint) (model.Tag, error) {
 	ret := _m.Called(ctx, id)
 
 	var r0 model.Tag

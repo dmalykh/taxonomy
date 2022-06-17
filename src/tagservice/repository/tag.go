@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+
 	"github.com/dmalykh/tagservice/tagservice/model"
 )
 
@@ -16,8 +17,8 @@ var (
 type Tag interface {
 	Create(ctx context.Context, data *model.TagData) (model.Tag, error)
 	Update(ctx context.Context, id uint, data *model.TagData) (model.Tag, error)
-	DeleteById(ctx context.Context, id uint) error
-	GetById(ctx context.Context, id uint) (model.Tag, error)
+	DeleteByID(ctx context.Context, id uint) error
+	GetByID(ctx context.Context, id uint) (model.Tag, error)
 	GetByName(ctx context.Context, name string) ([]model.Tag, error)
-	GetByFilter(ctx context.Context, filter *model.TagFilter) ([]model.Tag, error)
+	GetList(ctx context.Context, filter *model.TagFilter) ([]model.Tag, error)
 }

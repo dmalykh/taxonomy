@@ -1,9 +1,12 @@
-package repository
+package repository_test
 
 import (
 	"context"
+	"testing"
+
 	"github.com/dmalykh/tagservice/repository/entgo/ent"
 	"github.com/dmalykh/tagservice/repository/entgo/ent/enttest"
+	repo "github.com/dmalykh/tagservice/repository/entgo/repository"
 	"github.com/dmalykh/tagservice/tagservice/model"
 	"github.com/dmalykh/tagservice/tagservice/repository"
 	"github.com/jaswdr/faker"
@@ -11,7 +14,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"testing"
 )
 
 type RelationTestSuite struct {
@@ -23,7 +25,7 @@ type RelationTestSuite struct {
 func (suite *RelationTestSuite) SetupTest() {
 	suite.client = enttest.Open(suite.T(), "sqlite3", ":memory:?_fk=1", []enttest.Option{
 		enttest.WithOptions(ent.Log(suite.T().Log)),
-	}...) //.Debug()
+	}...) // .Debug()
 	suite.faker = faker.New()
 }
 
@@ -31,19 +33,19 @@ func (suite *RelationTestSuite) TearDownTest() {
 	assert.NoError(suite.T(), suite.client.Close())
 }
 
-func (suite *RelationTestSuite) mockTag(ctx context.Context, categoryId int) *ent.Tag {
+func (suite *RelationTestSuite) mockTag(ctx context.Context, categoryID int) *ent.Tag {
 	return suite.client.Tag.Create().
 		SetName(suite.faker.RandomStringWithLength(suite.faker.IntBetween(1, 9999))).
 		SetTitle(suite.faker.Beer().Name()).
-		SetCategoryID(categoryId).
+		SetCategoryID(categoryID).
 		SaveX(ctx)
 }
 
-func (suite *RelationTestSuite) mockCategory(ctx context.Context, parentId *int) *ent.Category {
+func (suite *RelationTestSuite) mockCategory(ctx context.Context, parentID *int) *ent.Category {
 	return suite.client.Category.Create().
 		SetName(suite.faker.RandomStringWithLength(suite.faker.IntBetween(1, 9999))).
 		SetTitle(suite.faker.Company().Name()).
-		SetNillableParentID(parentId).
+		SetNillableParentID(parentID).
 		SaveX(ctx)
 }
 
@@ -53,31 +55,40 @@ func (suite *RelationTestSuite) mockNamespace(ctx context.Context) *ent.Namespac
 		SaveX(ctx)
 }
 
-func (suite *RelationTestSuite) mockRelation(ctx context.Context, tagId, namespaceId, entityId int) *ent.Relation {
+func (suite *RelationTestSuite) mockRelation(ctx context.Context, tagID, namespaceID, entityID int) *ent.Relation {
 	return suite.client.Relation.Create().
-		SetTagID(tagId).
-		SetNamespaceID(namespaceId).
-		SetEntityID(entityId).
+		SetTagID(tagID).
+		SetNamespaceID(namespaceID).
+		SetEntityID(entityID).
 		SaveX(ctx)
 }
 
 // Generate mock data for deletion
+//goland:noinspection GoContextTodo
 func (suite *RelationTestSuite) generate(count int) ([]uint, []uint, []uint) {
-	var ctx = context.TODO()
-	tags, namespaces, entities := make([]uint, count), make([]uint, count), make([]uint, count)
+	var (
+		ctx                        = context.TODO()
+		tags, namespaces, entities = make([]uint, count), make([]uint, count), make([]uint, count)
+	)
+
 	for i := 0; i < count; i++ {
-		var category = suite.mockCategory(ctx, nil)
-		var tag = suite.mockTag(ctx, category.ID)
-		var namespace = suite.mockNamespace(ctx)
-		var entityId = suite.faker.Int()
-		suite.mockRelation(ctx, tag.ID, namespace.ID, entityId)
-		tags[i], namespaces[i], entities[i] = uint(tag.ID), uint(namespace.ID), uint(entityId)
+		var (
+			category  = suite.mockCategory(ctx, nil)
+			tag       = suite.mockTag(ctx, category.ID)
+			namespace = suite.mockNamespace(ctx)
+			entityID  = suite.faker.Int()
+		)
+
+		suite.mockRelation(ctx, tag.ID, namespace.ID, entityID)
+		tags[i], namespaces[i], entities[i] = uint(tag.ID), uint(namespace.ID), uint(entityID)
 	}
+
 	return tags, namespaces, entities
 }
 
+//goland:noinspection GoContextTodo
 func (suite *RelationTestSuite) TestCreate() {
-	var tests = []struct {
+	tests := []struct {
 		name      string
 		relations func(ctx context.Context, client *ent.Client) []*model.Relation
 		err       error
@@ -96,17 +107,18 @@ func (suite *RelationTestSuite) TestCreate() {
 		{
 			name: `ok`,
 			relations: func(ctx context.Context, client *ent.Client) []*model.Relation {
-				var category = suite.mockCategory(ctx, nil)
+				category := suite.mockCategory(ctx, nil)
+
 				return []*model.Relation{
-					&model.Relation{
-						TagId:       uint(suite.mockTag(ctx, category.ID).ID),
-						NamespaceId: uint(suite.mockNamespace(ctx).ID),
-						EntityId:    140,
+					{
+						TagID:       uint(suite.mockTag(ctx, category.ID).ID),
+						NamespaceID: uint(suite.mockNamespace(ctx).ID),
+						EntityID:    140,
 					},
-					&model.Relation{
-						TagId:       uint(suite.mockTag(ctx, category.ID).ID),
-						NamespaceId: uint(suite.mockNamespace(ctx).ID),
-						EntityId:    99999999,
+					{
+						TagID:       uint(suite.mockTag(ctx, category.ID).ID),
+						NamespaceID: uint(suite.mockNamespace(ctx).ID),
+						EntityID:    99999999,
 					},
 				}
 			},
@@ -116,17 +128,18 @@ func (suite *RelationTestSuite) TestCreate() {
 		{
 			name: `error, one of relations broken`,
 			relations: func(ctx context.Context, client *ent.Client) []*model.Relation {
-				var category = client.Category.Create().SetName(suite.faker.Company().Suffix()).
+				category := client.Category.Create().SetName(suite.faker.Company().Suffix()).
 					SetTitle(suite.faker.Company().Name()).SaveX(ctx)
+
 				return []*model.Relation{
-					&model.Relation{
-						TagId:       uint(suite.mockTag(ctx, category.ID).ID),
-						NamespaceId: uint(suite.mockNamespace(ctx).ID),
-						EntityId:    140,
+					{
+						TagID:       uint(suite.mockTag(ctx, category.ID).ID),
+						NamespaceID: uint(suite.mockNamespace(ctx).ID),
+						EntityID:    140,
 					},
-					&model.Relation{
-						NamespaceId: uint(suite.mockNamespace(ctx).ID),
-						EntityId:    99999999,
+					{
+						NamespaceID: uint(suite.mockNamespace(ctx).ID),
+						EntityID:    99999999,
 					},
 				}
 			},
@@ -136,20 +149,21 @@ func (suite *RelationTestSuite) TestCreate() {
 		{
 			name: `no error same tags and namespaces`,
 			relations: func(ctx context.Context, client *ent.Client) []*model.Relation {
-				var category = client.Category.Create().SetName(suite.faker.Company().Suffix()).
+				category := client.Category.Create().SetName(suite.faker.Company().Suffix()).
 					SetTitle(suite.faker.Company().Name()).SaveX(ctx)
-				var tag = suite.mockTag(ctx, category.ID)
-				var namespace = suite.mockNamespace(ctx)
+				tag := suite.mockTag(ctx, category.ID)
+				namespace := suite.mockNamespace(ctx)
+
 				return []*model.Relation{
-					&model.Relation{
-						TagId:       uint(tag.ID),
-						NamespaceId: uint(namespace.ID),
-						EntityId:    140,
+					{
+						TagID:       uint(tag.ID),
+						NamespaceID: uint(namespace.ID),
+						EntityID:    140,
 					},
-					&model.Relation{
-						TagId:       uint(tag.ID),
-						NamespaceId: uint(namespace.ID),
-						EntityId:    99999999,
+					{
+						TagID:       uint(tag.ID),
+						NamespaceID: uint(namespace.ID),
+						EntityID:    99999999,
 					},
 				}
 			},
@@ -159,24 +173,25 @@ func (suite *RelationTestSuite) TestCreate() {
 		{
 			name: `duplicate records error`,
 			relations: func(ctx context.Context, client *ent.Client) []*model.Relation {
-				var category = client.Category.Create().SetName(suite.faker.Company().Suffix()).
+				category := client.Category.Create().SetName(suite.faker.Company().Suffix()).
 					SetTitle(suite.faker.Company().Name()).SaveX(ctx)
-				var tag = suite.mockTag(ctx, category.ID)
-				var namespace = suite.mockNamespace(ctx)
+				tag := suite.mockTag(ctx, category.ID)
+				namespace := suite.mockNamespace(ctx)
+
 				return []*model.Relation{
-					&model.Relation{
-						TagId:       uint(tag.ID),
-						NamespaceId: uint(namespace.ID),
-						EntityId:    222,
+					{
+						TagID:       uint(tag.ID),
+						NamespaceID: uint(namespace.ID),
+						EntityID:    222,
 					},
-					&model.Relation{
-						TagId:       uint(tag.ID),
-						NamespaceId: uint(namespace.ID),
-						EntityId:    222,
+					{
+						TagID:       uint(tag.ID),
+						NamespaceID: uint(namespace.ID),
+						EntityID:    222,
 					},
 				}
 			},
-			err:  nil, //@TODO make a bug in ent. CreateBulk doesn't return error, records just doesn't added.
+			err:  nil, // @TODO make a bug in ent. CreateBulk doesn't return error, records just doesn't added.
 			want: 0,
 		},
 	}
@@ -185,9 +200,9 @@ func (suite *RelationTestSuite) TestCreate() {
 		suite.TearDownTest()
 		suite.SetupTest()
 		suite.Run(tt.name, func() {
-			var ctx = context.TODO()
+			ctx := context.TODO()
 			{
-				var rel = NewRelation(suite.client.Relation)
+				rel := repo.NewRelation(suite.client.Relation)
 				err := rel.Create(ctx, tt.relations(ctx, suite.client)...)
 				assert.ErrorIs(suite.T(), err, tt.err)
 			}
@@ -200,9 +215,9 @@ func (suite *RelationTestSuite) TestCreate() {
 	}
 }
 
+//goland:noinspection GoContextTodo,GoContextTodo,GoContextTodo,GoContextTodo
 func (suite *RelationTestSuite) TestDelete() {
-
-	var tests = []struct {
+	tests := []struct {
 		name   string
 		delete func() ([]uint, []uint, []uint)
 		check  func(t assert.TestingT)
@@ -223,6 +238,7 @@ func (suite *RelationTestSuite) TestDelete() {
 			`remove half of tags only`,
 			func() ([]uint, []uint, []uint) {
 				tags, _, _ := suite.generate(100)
+
 				return tags[:50], nil, nil
 			},
 			func(t assert.TestingT) {
@@ -236,6 +252,7 @@ func (suite *RelationTestSuite) TestDelete() {
 			`remove half of namespaces only`,
 			func() ([]uint, []uint, []uint) {
 				_, namespaces, _ := suite.generate(100)
+
 				return nil, namespaces[:50], nil
 			},
 			func(t assert.TestingT) {
@@ -249,6 +266,7 @@ func (suite *RelationTestSuite) TestDelete() {
 			`remove half of entities only`,
 			func() ([]uint, []uint, []uint) {
 				_, namespaces, entities := suite.generate(100)
+
 				return nil, namespaces, entities[:50]
 			},
 			func(t assert.TestingT) {
@@ -264,20 +282,18 @@ func (suite *RelationTestSuite) TestDelete() {
 		suite.TearDownTest()
 		suite.SetupTest()
 		suite.Run(tt.name, func() {
-
-			var ctx = context.TODO()
-			var rel = NewRelation(suite.client.Relation)
-			var tagIds, namespaceIds, entityIds = tt.delete()
+			ctx := context.TODO()
+			rel := repo.NewRelation(suite.client.Relation)
+			tagIds, namespaceIds, entityIds := tt.delete()
 			require.True(suite.T(), tt.err(suite.T(), rel.Delete(ctx, tagIds, namespaceIds, entityIds)))
 			tt.check(suite.T())
 		})
 	}
-
 }
 
+//goland:noinspection GoContextTodo
 func (suite *RelationTestSuite) TestGet() {
-
-	var tests = []struct {
+	tests := []struct {
 		name  string
 		get   func() ([][]uint, []uint, []uint)
 		check func(relations []model.Relation)
@@ -287,6 +303,7 @@ func (suite *RelationTestSuite) TestGet() {
 			`get all entities`,
 			func() ([][]uint, []uint, []uint) {
 				suite.generate(100)
+
 				return nil, nil, nil
 			},
 			func(relations []model.Relation) {
@@ -312,6 +329,7 @@ func (suite *RelationTestSuite) TestGet() {
 			`get half of tags only`,
 			func() ([][]uint, []uint, []uint) {
 				tags, _, _ := suite.generate(100)
+
 				return [][]uint{tags[:25], tags[25:50]}, nil, nil
 			},
 			func(relations []model.Relation) {
@@ -325,6 +343,7 @@ func (suite *RelationTestSuite) TestGet() {
 			`get half of namespaces only`,
 			func() ([][]uint, []uint, []uint) {
 				_, namespaces, _ := suite.generate(100)
+
 				return nil, namespaces[:50], nil
 			},
 			func(relations []model.Relation) {
@@ -338,6 +357,7 @@ func (suite *RelationTestSuite) TestGet() {
 			`get half of entities only`,
 			func() ([][]uint, []uint, []uint) {
 				_, namespaces, entities := suite.generate(100)
+
 				return nil, namespaces, entities[:50]
 			},
 			func(relations []model.Relation) {
@@ -353,20 +373,18 @@ func (suite *RelationTestSuite) TestGet() {
 		suite.TearDownTest()
 		suite.SetupTest()
 		suite.Run(tt.name, func() {
-
-			var ctx = context.TODO()
-			var rel = NewRelation(suite.client.Relation)
-			var tagIds, namespaceIds, entityIds = tt.get()
+			ctx := context.TODO()
+			rel := repo.NewRelation(suite.client.Relation)
+			tagIds, namespaceIds, entityIds := tt.get()
 			relations, err := rel.Get(ctx, &model.RelationFilter{
-				TagId:     tagIds,
+				TagID:     tagIds,
 				Namespace: namespaceIds,
-				EntityId:  entityIds,
+				EntityID:  entityIds,
 			})
 			require.True(suite.T(), tt.err(err))
 			tt.check(relations)
 		})
 	}
-
 }
 
 func TestRelationTestSuite(t *testing.T) {

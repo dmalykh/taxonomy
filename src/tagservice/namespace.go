@@ -2,7 +2,15 @@ package tagservice
 
 import (
 	"context"
+	"errors"
+
 	"github.com/dmalykh/tagservice/tagservice/model"
+)
+
+var (
+	ErrNamespaceNotFound   = errors.New(`namespace not found`)
+	ErrNamespaceNotCreated = errors.New(`namespace have not created`)
+	ErrNamespaceNotUpdated = errors.New(`namespace have not updated`)
 )
 
 type Namespace interface {
