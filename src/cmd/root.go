@@ -9,9 +9,9 @@ import (
 func New() *cobra.Command {
 	// Root
 	c := &cobra.Command{
-		Use:   "github.com/dmalykh/tagservice",
+		Use:   "tagservice",
 		Short: "Service for tag management. It allows CRUD operations with tags, categories and namespaces.",
-		Long:  `github.com/dmalykh/tagservice is the cli to manage, build and debug your tags`,
+		Long:  `tagservice using for manage, build and debug your tags`,
 	}
 	defaultDSN := func() string {
 		if dsn := os.Getenv(`DSN`); dsn != `` {
