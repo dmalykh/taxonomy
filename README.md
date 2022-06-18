@@ -2,6 +2,8 @@
 TagService is a self-hosted, lightweight and simple (yet functional) full microservice for tags management.
 You could use it either independent microservice or embed library.
 
+_**Tagservice is still in development, but it already has stable API and used in production. See TODO section below to learn about planned improvements.**_
+
 ### Purpose
 > Tags everywhere! I really exhausted to implement tags management services in every project. The core idea of `tagservice`
 is wide usage universal solution for every project where tags needed.
@@ -20,11 +22,8 @@ Connect every object with tags. Each object relate with tag via _namespace_ and 
 - Namespace 
 
 ### Restrictions
-Category
-- name and parent id should be unique pair
-
-Tag
-- category required for tag.
+- Category name and parent id should be unique pair
+- category required for every tag
 - name and category id should be unique pair
 
 > Maybe you think how to create tag without category.
@@ -66,8 +65,9 @@ CMD ["tagservice", "serve", "graphql", "-p", "8080"]
 And run it!
 ```shell
 docker build -t tagservice .
-docker run -it --rm tagservice   
+docker run -it --rm -p 8081:8080 tagservice   
 ```
+Open http://127.0.0.1:8081/ to get acquainted with GraphiQL!
 
 
 ## TODO

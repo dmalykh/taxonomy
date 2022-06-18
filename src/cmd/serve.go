@@ -15,7 +15,6 @@ func serveCommand() *cobra.Command {
 	}
 
 	serveCmd.PersistentFlags().IntP(`port`, `p`, 8080, `port on which the github.com/dmalykh/tagservice will listen`) //nolint:gomnd
-	CheckErr(serveCmd.MarkPersistentFlagRequired(`port`))
 
 	serveCmd.AddCommand(&cobra.Command{
 		Use:   `graphql`,
