@@ -1,10 +1,13 @@
 ---
 name: "Build TagService"
 
-"on":
+on:
+  workflow_dispatch:
   push:
-    tags: ['v*']
-    branches: [master]
+    branches:
+      - 'master'
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
   test:
