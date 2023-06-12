@@ -31,6 +31,8 @@ jobs:
         run: |
           go test -v ./... -covermode=count -coverprofile=coverage.out
           go tool cover -func=coverage.out -o=coverage.out
+          pwd
+          ls -la
 
       - name: Upload Coverage Artifact
         uses: actions/upload-artifact@v3
