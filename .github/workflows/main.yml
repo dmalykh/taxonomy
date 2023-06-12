@@ -39,7 +39,7 @@ jobs:
         with:
           name: coverage
           path: |
-            coverage.out
+            ./src/coverage.out
           if-no-files-found: error
 
   build:
