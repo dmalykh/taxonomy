@@ -1,4 +1,5 @@
 # TagService
+![Coverage](https://img.shields.io/badge/Coverage-40.9%25-yellow)
 TagService is a self-hosted, lightweight and simple (yet functional) full microservice for tags management.
 You could use it either independent microservice or embed library.
 
