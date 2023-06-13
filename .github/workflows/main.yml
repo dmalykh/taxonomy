@@ -54,9 +54,13 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ github.token }}
-      
-      - run: ls -la
-      
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: master
+
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
