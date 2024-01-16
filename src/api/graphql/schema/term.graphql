@@ -1,0 +1,43 @@
+
+type TermsConnection {
+    edges: [TermsEdge!]!
+    pageInfo: PageInfo!
+}
+
+type TermsEdge {
+    cursor: Cursor!
+    node: Term
+}
+
+input TermInput {
+    "Term's name"
+    name: String!
+    "Term's title"
+    title: String!
+    "Term's vocabulary"
+    vocabularyId: ID!
+    "Description"
+    description: String
+}
+
+type Term @key(fields: "id") {
+    id: ID!
+    "Term's name"
+    name: String!
+    "Term's title"
+    title: String
+    "Term's vocabulary"
+    vocabulary: Vocabulary!
+    "Description"
+    description: String
+    "Entities related with term"
+    entities(first: Int! = 20, after: Cursor, namespace: [String]): EntitiesConnection
+}
+
+
+input TermFilter {
+    namespace: String!
+    entityId: [ID]
+    vocabularyId:ID
+    name: String
+}

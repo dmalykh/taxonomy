@@ -1,32 +1,32 @@
 package service
 
 import (
+	model2 "github.com/dmalykh/taxonomy/taxonomy/model"
 	"unsafe"
 
 	"github.com/AlekSi/pointer"
-	"github.com/dmalykh/tagservice/api/graphql/generated/genmodel"
-	apimodel "github.com/dmalykh/tagservice/api/graphql/model"
-	"github.com/dmalykh/tagservice/api/graphql/service/cursor"
-	"github.com/dmalykh/tagservice/tagservice/model"
+	"github.com/dmalykh/taxonomy/api/graphql/generated/genmodel"
+	apimodel "github.com/dmalykh/taxonomy/api/graphql/model"
+	"github.com/dmalykh/taxonomy/api/graphql/service/cursor"
 )
 
-func tag2gen(tag model.Tag) apimodel.Tag {
-	return apimodel.Tag{
-		ID:          int64(tag.ID),
-		Name:        tag.Data.Name,
-		Title:       &tag.Data.Title,
-		Description: &tag.Data.Description,
-		CategoryID:  int64(tag.Data.CategoryID),
+func term2gen(term model2.Term) apimodel.Term {
+	return apimodel.Term{
+		ID:           int64(term.ID),
+		Name:         term.Data.Name,
+		Title:        &term.Data.Title,
+		Description:  &term.Data.Description,
+		VocabularyID: int64(term.Data.VocabularyID),
 	}
 }
 
-func category2gen(category model.Category) apimodel.Category {
-	return apimodel.Category{
-		ID:          int64(category.ID),
-		Name:        category.Data.Name,
-		Title:       category.Data.Title,
-		Description: category.Data.Description,
-		ParentID:    (*int64)(unsafe.Pointer(category.Data.ParentID)),
+func vocabulary2gen(vocabulary model2.Vocabulary) apimodel.Vocabulary {
+	return apimodel.Vocabulary{
+		ID:          int64(vocabulary.ID),
+		Name:        vocabulary.Data.Name,
+		Title:       vocabulary.Data.Title,
+		Description: vocabulary.Data.Description,
+		ParentID:    (*int64)(unsafe.Pointer(vocabulary.Data.ParentID)),
 	}
 }
 
@@ -39,24 +39,24 @@ func int64stoUints(ints []int64) []uint {
 	return uints
 }
 
-func tagsConnection(tags []model.Tag, limit int) *genmodel.TagsConnection {
-	var connection genmodel.TagsConnection
+func termsConnection(terms []model2.Term, limit int) *genmodel.TermsConnection {
+	var connection genmodel.TermsConnection
 
-	if len(tags) == 0 {
+	if len(terms) == 0 {
 		return nil
 	}
 
-	if len(tags) > limit {
-		tags = tags[:limit]
+	if len(terms) > limit {
+		terms = terms[:limit]
 	}
 
-	connection.Edges = make([]genmodel.TagsEdge, len(tags))
+	connection.Edges = make([]genmodel.TermsEdge, len(terms))
 
-	for i, tag := range tags {
-		gen := tag2gen(tag)
+	for i, term := range terms {
+		gen := term2gen(term)
 
-		connection.Edges[i] = genmodel.TagsEdge{
-			Cursor: cursor.Marshal(tag.ID),
+		connection.Edges[i] = genmodel.TermsEdge{
+			Cursor: cursor.Marshal(term.ID),
 			Node:   &gen,
 		}
 	}
@@ -64,7 +64,7 @@ func tagsConnection(tags []model.Tag, limit int) *genmodel.TagsConnection {
 	connection.PageInfo = genmodel.PageInfo{
 		StartCursor: connection.Edges[0].Cursor,
 		EndCursor:   connection.Edges[len(connection.Edges)-1].Cursor,
-		HasNextPage: pointer.ToBool(len(tags) > limit),
+		HasNextPage: pointer.ToBool(len(terms) > limit),
 	}
 
 	return &connection

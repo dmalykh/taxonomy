@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/dmalykh/tagservice/cmd/loader"
+	"github.com/dmalykh/taxonomy/cmd/loader"
 	"github.com/spf13/cobra"
 )
 

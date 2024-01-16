@@ -1,0 +1,43 @@
+
+input VocabularyInput {
+    "Vocabulary's name"
+    name: String!
+    "Vocabulary's title"
+    title: String!
+    "Parent vocabulary"
+    parentId: ID
+    "Vocabulary's description"
+    description: String
+}
+
+type Vocabulary @key(fields: "id") {
+    id: ID!
+    "Vocabulary's name"
+    name: String!
+    "Vocabulary's title"
+    title: String!
+    "Parent vocabulary"
+    parent: Vocabulary
+    "Children vocabularies"
+    children: [Vocabulary]!
+    "Terms in vocabulary"
+    terms(first: Int! = 20, after: Cursor): TermsConnection
+    "Vocabulary's description"
+    description: String
+}
+
+
+type VocabularyConnection {
+    edges: [VocabularyEdge!]!
+    pageInfo: PageInfo!
+}
+
+type VocabularyEdge {
+    cursor: Cursor!
+    node: Vocabulary
+}
+
+input VocabularyFilter {
+    parentId:ID
+    name:String
+}

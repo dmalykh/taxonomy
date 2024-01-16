@@ -9,23 +9,23 @@ import (
 func New() *cobra.Command {
 	// Root
 	c := &cobra.Command{
-		Use:   "tagservice",
-		Short: "Service for tag management. It allows CRUD operations with tags, categories and namespaces.",
-		Long:  `tagservice using for manage, build and debug your tags`,
+		Use:   "taxonomy",
+		Short: "the service is used for manage taxonomy",
+		Long:  `Service for taxonomy management. It allows CRUD operations with terms, vocabularies and namespaces.`,
 	}
 	defaultDSN := func() string {
 		if dsn := os.Getenv(`DSN`); dsn != `` {
 			return dsn
 		}
 
-		return `sqlite://./tagservice.db?cache=shared&_fk=1`
+		return `sqlite://./internal.db?cache=shared&_fk=1`
 	}()
 
 	c.PersistentFlags().String("dsn", defaultDSN, "Data source name (connection information)")
 	c.PersistentFlags().BoolP("verbose", "v", false, "Make some output more verbose.")
 
 	// Add subcommands
-	c.AddCommand(initCommand(), categoryCommand(), tagCommand(), namespaceCommand(), relCommand(), serveCommand())
+	c.AddCommand(initCommand(), vocabularyCommand(), termCommand(), namespaceCommand(), relCommand(), serveCommand())
 
 	return c
 }

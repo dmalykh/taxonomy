@@ -3,31 +3,30 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/dmalykh/taxonomy/taxonomy"
 
-	apimodel "github.com/dmalykh/tagservice/api/graphql/model"
-	"github.com/dmalykh/tagservice/tagservice"
+	apimodel "github.com/dmalykh/taxonomy/api/graphql/model"
 )
 
-//goland:noinspection GoUnnecessarilyExportedIdentifiers
 type Entity struct {
-	tagService      tagservice.Tag
-	categoryService tagservice.Category
+	termService       taxonomy.Term
+	vocabularyService taxonomy.Vocabulary
 }
 
-func (e *Entity) FindCategoryByID(ctx context.Context, id int64) (apimodel.Category, error) {
-	category, err := e.categoryService.GetByID(ctx, uint(id))
+func (e *Entity) FindVocabularyByID(ctx context.Context, id int64) (apimodel.Vocabulary, error) {
+	vocabulary, err := e.vocabularyService.GetByID(ctx, uint(id))
 	if err != nil {
-		return apimodel.Category{}, fmt.Errorf(`error %w to get category %d: %s`, tagservice.ErrCategoryNotFound, id, err.Error())
+		return apimodel.Vocabulary{}, fmt.Errorf(`error %w to get vocabulary %d: %s`, taxonomy.ErrVocabularyNotFound, id, err.Error())
 	}
 
-	return category2gen(category), nil
+	return vocabulary2gen(vocabulary), nil
 }
 
-func (e *Entity) FindTagByID(ctx context.Context, id int64) (apimodel.Tag, error) {
-	tag, err := e.tagService.GetByID(ctx, uint(id))
+func (e *Entity) FindTermByID(ctx context.Context, id int64) (apimodel.Term, error) {
+	term, err := e.termService.GetByID(ctx, uint(id))
 	if err != nil {
-		return apimodel.Tag{}, fmt.Errorf(`error %w to get tag %d: %s`, tagservice.ErrTagNotFound, id, err.Error())
+		return apimodel.Term{}, fmt.Errorf(`error %w to get term %d: %s`, taxonomy.ErrTermNotFound, id, err.Error())
 	}
 
-	return tag2gen(tag), nil
+	return term2gen(term), nil
 }

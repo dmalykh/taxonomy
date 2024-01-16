@@ -4,62 +4,61 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/dmalykh/taxonomy/taxonomy"
+	model2 "github.com/dmalykh/taxonomy/taxonomy/model"
 	"unsafe"
 
-	"github.com/dmalykh/tagservice/api/graphql/generated/genmodel"
-	apimodel "github.com/dmalykh/tagservice/api/graphql/model"
-	"github.com/dmalykh/tagservice/api/graphql/service/cursor"
-	"github.com/dmalykh/tagservice/tagservice"
-	"github.com/dmalykh/tagservice/tagservice/model"
+	"github.com/dmalykh/taxonomy/api/graphql/generated/genmodel"
+	apimodel "github.com/dmalykh/taxonomy/api/graphql/model"
+	"github.com/dmalykh/taxonomy/api/graphql/service/cursor"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
-//goland:noinspection GoUnnecessarilyExportedIdentifiers
-type Category struct {
-	tagService      tagservice.Tag
-	categoryService tagservice.Category
+type Vocabulary struct {
+	termService       taxonomy.Term
+	vocabularyService taxonomy.Vocabulary
 }
 
-func (c *Category) Parent(ctx context.Context, obj *apimodel.Category) (*apimodel.Category, error) {
+func (c *Vocabulary) Parent(ctx context.Context, obj *apimodel.Vocabulary) (*apimodel.Vocabulary, error) {
 	if obj.ParentID == nil {
 		return nil, nil
 	}
 
-	category, err := c.categoryService.GetByID(ctx, *(*uint)(unsafe.Pointer(obj.ParentID)))
+	vocabulary, err := c.vocabularyService.GetByID(ctx, *(*uint)(unsafe.Pointer(obj.ParentID)))
 	if err != nil {
-		return nil, fmt.Errorf(`error %w to get category %d: %s`, tagservice.ErrCategoryNotFound, *obj.ParentID, err.Error())
+		return nil, fmt.Errorf(`error %w to get vocabulary %d: %s`, taxonomy.ErrVocabularyNotFound, *obj.ParentID, err.Error())
 	}
 
-	gen := category2gen(category)
+	gen := vocabulary2gen(vocabulary)
 
 	return &gen, nil
 }
 
-func (c *Category) Children(ctx context.Context, obj *apimodel.Category) ([]*apimodel.Category, error) {
+func (c *Vocabulary) Children(ctx context.Context, obj *apimodel.Vocabulary) ([]*apimodel.Vocabulary, error) {
 	if obj.ParentID == nil {
 		return nil, nil
 	}
 
-	categorys, err := c.categoryService.GetList(ctx, &model.CategoryFilter{
+	vocabularys, err := c.vocabularyService.Get(ctx, &model2.VocabularyFilter{
 		ParentID: (*uint)(unsafe.Pointer(&obj.ParentID)),
 	})
 	if err != nil {
 		return nil, gqlerror.Errorf(`error to get categories by entities %s`, err.Error())
 	}
 
-	return func(categorys []model.Category) []*apimodel.Category {
-		apicategorys := make([]*apimodel.Category, len(categorys))
+	return func(vocabularys []model2.Vocabulary) []*apimodel.Vocabulary {
+		apivocabularys := make([]*apimodel.Vocabulary, len(vocabularys))
 
-		for i, category := range categorys {
-			category := category2gen(category)
-			apicategorys[i] = &category
+		for i, vocabulary := range vocabularys {
+			vocabulary := vocabulary2gen(vocabulary)
+			apivocabularys[i] = &vocabulary
 		}
 
-		return apicategorys
-	}(categorys), nil
+		return apivocabularys
+	}(vocabularys), nil
 }
 
-func (c *Category) Tags(ctx context.Context, obj *apimodel.Category, first int64, after *string) (*genmodel.TagsConnection, error) {
+func (c *Vocabulary) Terms(ctx context.Context, obj *apimodel.Vocabulary, first int64, after *string) (*genmodel.TermsConnection, error) {
 	var afterID uint
 
 	if after != nil {
@@ -68,14 +67,14 @@ func (c *Category) Tags(ctx context.Context, obj *apimodel.Category, first int64
 		}
 	}
 
-	tags, err := c.tagService.GetList(ctx, &model.TagFilter{
-		CategoryID: []uint{uint(obj.ID)},
-		Limit:      uint(first + 1), // dirty hack to obtain HasNextPage
-		AfterID:    &afterID,
+	terms, err := c.termService.Get(ctx, &model2.TermFilter{
+		VocabularyID: []uint{uint(obj.ID)},
+		Limit:        uint(first + 1), // dirty hack to obtain HasNextPage
+		AfterID:      &afterID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf(`error to get list %w`, err)
 	}
 
-	return tagsConnection(tags, int(first)), nil
+	return termsConnection(terms, int(first)), nil
 }

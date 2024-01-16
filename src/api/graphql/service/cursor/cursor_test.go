@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dmalykh/tagservice/api/graphql/service/cursor"
+	"github.com/dmalykh/taxonomy/api/graphql/service/cursor"
 	"github.com/stretchr/testify/assert"
 )
 

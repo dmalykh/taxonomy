@@ -2,47 +2,46 @@
 package service
 
 import (
-	"github.com/dmalykh/tagservice/api/graphql/generated"
-	"github.com/dmalykh/tagservice/tagservice"
+	"github.com/dmalykh/taxonomy/api/graphql/generated"
+	"github.com/dmalykh/taxonomy/taxonomy"
 )
 
-func NewResolver(tagService tagservice.Tag, categoryService tagservice.Category, namespaceService tagservice.Namespace) generated.ResolverRoot { //nolint:lll
+func NewResolver(termService taxonomy.Term, vocabularyService taxonomy.Vocabulary, namespaceService taxonomy.Namespace) generated.ResolverRoot { //nolint:lll
 	return &Root{
 		queryResolver: &Query{
-			tagService:      tagService,
-			categoryService: categoryService,
+			termService:       termService,
+			vocabularyService: vocabularyService,
 		},
 		mutationResolver: &Mutation{
-			tagService:      tagService,
-			categoryService: categoryService,
+			termService:       termService,
+			vocabularyService: vocabularyService,
 		},
 		entityResolver: &Entity{
-			tagService:      tagService,
-			categoryService: categoryService,
+			termService:       termService,
+			vocabularyService: vocabularyService,
 		},
-		categoryResolver: &Category{
-			tagService:      tagService,
-			categoryService: categoryService,
+		vocabularyResolver: &Vocabulary{
+			termService:       termService,
+			vocabularyService: vocabularyService,
 		},
-		tagResolver: &Tag{
-			tagService:       tagService,
-			categoryService:  categoryService,
-			namespaceService: namespaceService,
+		termResolver: &Term{
+			termService:       termService,
+			vocabularyService: vocabularyService,
+			namespaceService:  namespaceService,
 		},
 	}
 }
 
-//goland:noinspection GoUnnecessarilyExportedIdentifiers
 type Root struct {
-	queryResolver    generated.QueryResolver
-	mutationResolver generated.MutationResolver
-	entityResolver   generated.EntityResolver
-	categoryResolver generated.CategoryResolver
-	tagResolver      generated.TagResolver
+	queryResolver      generated.QueryResolver
+	mutationResolver   generated.MutationResolver
+	entityResolver     generated.EntityResolver
+	vocabularyResolver generated.VocabularyResolver
+	termResolver       generated.TermResolver
 }
 
-func (r *Root) Category() generated.CategoryResolver {
-	return r.categoryResolver
+func (r *Root) Vocabulary() generated.VocabularyResolver {
+	return r.vocabularyResolver
 }
 
 func (r *Root) Entity() generated.EntityResolver {
@@ -57,6 +56,6 @@ func (r *Root) Query() generated.QueryResolver {
 	return r.queryResolver
 }
 
-func (r *Root) Tag() generated.TagResolver {
-	return r.tagResolver
+func (r *Root) Term() generated.TermResolver {
+	return r.termResolver
 }

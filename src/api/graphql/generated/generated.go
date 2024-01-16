@@ -14,8 +14,8 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/99designs/gqlgen/plugin/federation/fedruntime"
-	"github.com/dmalykh/tagservice/api/graphql/generated/genmodel"
-	"github.com/dmalykh/tagservice/api/graphql/model"
+	"github.com/dmalykh/taxonomy/api/graphql/generated/genmodel"
+	"github.com/dmalykh/taxonomy/api/graphql/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -38,24 +38,24 @@ type Config struct {
 }
 
 type ResolverRoot interface {
-	Category() CategoryResolver
+	Vocabulary() VocabularyResolver
 	Entity() EntityResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
-	Tag() TagResolver
+	Term() TermResolver
 }
 
 type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
-	Category struct {
+	Vocabulary struct {
 		Children    func(childComplexity int) int
 		Description func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Parent      func(childComplexity int) int
-		Tags        func(childComplexity int, first int64, after *string) int
+		Terms       func(childComplexity int, first int64, after *string) int
 		Title       func(childComplexity int) int
 	}
 
@@ -70,8 +70,8 @@ type ComplexityRoot struct {
 	}
 
 	Entity struct {
-		FindCategoryByID func(childComplexity int, id int64) int
-		FindTagByID      func(childComplexity int, id int64) int
+		FindVocabularyByID func(childComplexity int, id int64) int
+		FindTermByID       func(childComplexity int, id int64) int
 	}
 
 	EntityNode struct {
@@ -80,12 +80,12 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateCategory func(childComplexity int, input genmodel.CategoryInput) int
-		CreateTag      func(childComplexity int, input genmodel.TagInput) int
-		Set            func(childComplexity int, tagID []int64, namespace string, entityID []int64) int
-		Unset          func(childComplexity int, tagID []int64, namespace string, entityID []int64) int
-		UpdateCategory func(childComplexity int, id int64, input genmodel.CategoryInput) int
-		UpdateTag      func(childComplexity int, id int64, input genmodel.TagInput) int
+		CreateVocabulary func(childComplexity int, input genmodel.VocabularyInput) int
+		CreateTerm       func(childComplexity int, input genmodel.TermInput) int
+		Set              func(childComplexity int, termID []int64, namespace string, entityID []int64) int
+		Unset            func(childComplexity int, termID []int64, namespace string, entityID []int64) int
+		UpdateVocabulary func(childComplexity int, id int64, input genmodel.VocabularyInput) int
+		UpdateTerm       func(childComplexity int, id int64, input genmodel.TermInput) int
 	}
 
 	PageInfo struct {
@@ -96,16 +96,16 @@ type ComplexityRoot struct {
 
 	Query struct {
 		Categories         func(childComplexity int, parentID *int64, name *string) int
-		Category           func(childComplexity int, id int64) int
-		Tag                func(childComplexity int, id int64) int
-		Tags               func(childComplexity int, categoryID int64, name *string, first int64, after *string) int
-		TagsByEntities     func(childComplexity int, namespace string, entityID []int64) int
+		Vocabulary         func(childComplexity int, id int64) int
+		Term               func(childComplexity int, id int64) int
+		Terms              func(childComplexity int, vocabularyID int64, name *string, first int64, after *string) int
+		TermsByEntities    func(childComplexity int, namespace string, entityID []int64) int
 		__resolve__service func(childComplexity int) int
 		__resolve_entities func(childComplexity int, representations []map[string]interface{}) int
 	}
 
-	Tag struct {
-		Category    func(childComplexity int) int
+	Term struct {
+		Vocabulary  func(childComplexity int) int
 		Description func(childComplexity int) int
 		Entities    func(childComplexity int, first int64, after *string, namespace []*string) int
 		ID          func(childComplexity int) int
@@ -113,12 +113,12 @@ type ComplexityRoot struct {
 		Title       func(childComplexity int) int
 	}
 
-	TagsConnection struct {
+	TermsConnection struct {
 		Edges    func(childComplexity int) int
 		PageInfo func(childComplexity int) int
 	}
 
-	TagsEdge struct {
+	TermsEdge struct {
 		Cursor func(childComplexity int) int
 		Node   func(childComplexity int) int
 	}
@@ -128,34 +128,34 @@ type ComplexityRoot struct {
 	}
 }
 
-type CategoryResolver interface {
-	Parent(ctx context.Context, obj *model.Category) (*model.Category, error)
-	Children(ctx context.Context, obj *model.Category) ([]*model.Category, error)
-	Tags(ctx context.Context, obj *model.Category, first int64, after *string) (*genmodel.TagsConnection, error)
+type VocabularyResolver interface {
+	Parent(ctx context.Context, obj *model.Vocabulary) (*model.Vocabulary, error)
+	Children(ctx context.Context, obj *model.Vocabulary) ([]*model.Vocabulary, error)
+	Terms(ctx context.Context, obj *model.Vocabulary, first int64, after *string) (*genmodel.TermsConnection, error)
 }
 type EntityResolver interface {
-	FindCategoryByID(ctx context.Context, id int64) (model.Category, error)
-	FindTagByID(ctx context.Context, id int64) (model.Tag, error)
+	FindVocabularyByID(ctx context.Context, id int64) (model.Vocabulary, error)
+	FindTermByID(ctx context.Context, id int64) (model.Term, error)
 }
 type MutationResolver interface {
-	CreateTag(ctx context.Context, input genmodel.TagInput) (model.Tag, error)
-	UpdateTag(ctx context.Context, id int64, input genmodel.TagInput) (model.Tag, error)
-	Set(ctx context.Context, tagID []int64, namespace string, entityID []int64) (*bool, error)
-	Unset(ctx context.Context, tagID []int64, namespace string, entityID []int64) (*bool, error)
-	CreateCategory(ctx context.Context, input genmodel.CategoryInput) (model.Category, error)
-	UpdateCategory(ctx context.Context, id int64, input genmodel.CategoryInput) (model.Category, error)
+	CreateTerm(ctx context.Context, input genmodel.TermInput) (model.Term, error)
+	UpdateTerm(ctx context.Context, id int64, input genmodel.TermInput) (model.Term, error)
+	Set(ctx context.Context, termID []int64, namespace string, entityID []int64) (*bool, error)
+	Unset(ctx context.Context, termID []int64, namespace string, entityID []int64) (*bool, error)
+	CreateVocabulary(ctx context.Context, input genmodel.VocabularyInput) (model.Vocabulary, error)
+	UpdateVocabulary(ctx context.Context, id int64, input genmodel.VocabularyInput) (model.Vocabulary, error)
 }
 type QueryResolver interface {
-	Tag(ctx context.Context, id int64) (model.Tag, error)
-	Tags(ctx context.Context, categoryID int64, name *string, first int64, after *string) (*genmodel.TagsConnection, error)
-	TagsByEntities(ctx context.Context, namespace string, entityID []int64) ([]*model.Tag, error)
-	Category(ctx context.Context, id int64) (model.Category, error)
-	Categories(ctx context.Context, parentID *int64, name *string) ([]*model.Category, error)
+	Term(ctx context.Context, id int64) (model.Term, error)
+	Terms(ctx context.Context, vocabularyID int64, name *string, first int64, after *string) (*genmodel.TermsConnection, error)
+	TermsByEntities(ctx context.Context, namespace string, entityID []int64) ([]*model.Term, error)
+	Vocabulary(ctx context.Context, id int64) (model.Vocabulary, error)
+	Categories(ctx context.Context, parentID *int64, name *string) ([]*model.Vocabulary, error)
 }
-type TagResolver interface {
-	Category(ctx context.Context, obj *model.Tag) (model.Category, error)
+type TermResolver interface {
+	Vocabulary(ctx context.Context, obj *model.Term) (model.Vocabulary, error)
 
-	Entities(ctx context.Context, obj *model.Tag, first int64, after *string, namespace []*string) (*genmodel.EntitiesConnection, error)
+	Entities(ctx context.Context, obj *model.Term, first int64, after *string, namespace []*string) (*genmodel.EntitiesConnection, error)
 }
 
 type executableSchema struct {
@@ -173,59 +173,59 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
-	case "Category.children":
-		if e.complexity.Category.Children == nil {
+	case "Vocabulary.children":
+		if e.complexity.Vocabulary.Children == nil {
 			break
 		}
 
-		return e.complexity.Category.Children(childComplexity), true
+		return e.complexity.Vocabulary.Children(childComplexity), true
 
-	case "Category.description":
-		if e.complexity.Category.Description == nil {
+	case "Vocabulary.description":
+		if e.complexity.Vocabulary.Description == nil {
 			break
 		}
 
-		return e.complexity.Category.Description(childComplexity), true
+		return e.complexity.Vocabulary.Description(childComplexity), true
 
-	case "Category.id":
-		if e.complexity.Category.ID == nil {
+	case "Vocabulary.id":
+		if e.complexity.Vocabulary.ID == nil {
 			break
 		}
 
-		return e.complexity.Category.ID(childComplexity), true
+		return e.complexity.Vocabulary.ID(childComplexity), true
 
-	case "Category.name":
-		if e.complexity.Category.Name == nil {
+	case "Vocabulary.name":
+		if e.complexity.Vocabulary.Name == nil {
 			break
 		}
 
-		return e.complexity.Category.Name(childComplexity), true
+		return e.complexity.Vocabulary.Name(childComplexity), true
 
-	case "Category.parent":
-		if e.complexity.Category.Parent == nil {
+	case "Vocabulary.parent":
+		if e.complexity.Vocabulary.Parent == nil {
 			break
 		}
 
-		return e.complexity.Category.Parent(childComplexity), true
+		return e.complexity.Vocabulary.Parent(childComplexity), true
 
-	case "Category.tags":
-		if e.complexity.Category.Tags == nil {
+	case "Vocabulary.terms":
+		if e.complexity.Vocabulary.Terms == nil {
 			break
 		}
 
-		args, err := ec.field_Category_tags_args(context.TODO(), rawArgs)
+		args, err := ec.field_Vocabulary_terms_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Category.Tags(childComplexity, args["first"].(int64), args["after"].(*string)), true
+		return e.complexity.Vocabulary.Terms(childComplexity, args["first"].(int64), args["after"].(*string)), true
 
-	case "Category.title":
-		if e.complexity.Category.Title == nil {
+	case "Vocabulary.title":
+		if e.complexity.Vocabulary.Title == nil {
 			break
 		}
 
-		return e.complexity.Category.Title(childComplexity), true
+		return e.complexity.Vocabulary.Title(childComplexity), true
 
 	case "EntitiesConnection.edges":
 		if e.complexity.EntitiesConnection.Edges == nil {
@@ -255,29 +255,29 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.EntitiesEdge.Node(childComplexity), true
 
-	case "Entity.findCategoryByID":
-		if e.complexity.Entity.FindCategoryByID == nil {
+	case "Entity.findVocabularyByID":
+		if e.complexity.Entity.FindVocabularyByID == nil {
 			break
 		}
 
-		args, err := ec.field_Entity_findCategoryByID_args(context.TODO(), rawArgs)
+		args, err := ec.field_Entity_findVocabularyByID_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Entity.FindCategoryByID(childComplexity, args["id"].(int64)), true
+		return e.complexity.Entity.FindVocabularyByID(childComplexity, args["id"].(int64)), true
 
-	case "Entity.findTagByID":
-		if e.complexity.Entity.FindTagByID == nil {
+	case "Entity.findTermByID":
+		if e.complexity.Entity.FindTermByID == nil {
 			break
 		}
 
-		args, err := ec.field_Entity_findTagByID_args(context.TODO(), rawArgs)
+		args, err := ec.field_Entity_findTermByID_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Entity.FindTagByID(childComplexity, args["id"].(int64)), true
+		return e.complexity.Entity.FindTermByID(childComplexity, args["id"].(int64)), true
 
 	case "EntityNode.id":
 		if e.complexity.EntityNode.ID == nil {
@@ -293,29 +293,29 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.EntityNode.Namespace(childComplexity), true
 
-	case "Mutation.createCategory":
-		if e.complexity.Mutation.CreateCategory == nil {
+	case "Mutation.createVocabulary":
+		if e.complexity.Mutation.CreateVocabulary == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_createCategory_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_createVocabulary_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateCategory(childComplexity, args["input"].(genmodel.CategoryInput)), true
+		return e.complexity.Mutation.CreateVocabulary(childComplexity, args["input"].(genmodel.VocabularyInput)), true
 
-	case "Mutation.createTag":
-		if e.complexity.Mutation.CreateTag == nil {
+	case "Mutation.createTerm":
+		if e.complexity.Mutation.CreateTerm == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_createTag_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_createTerm_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateTag(childComplexity, args["input"].(genmodel.TagInput)), true
+		return e.complexity.Mutation.CreateTerm(childComplexity, args["input"].(genmodel.TermInput)), true
 
 	case "Mutation.set":
 		if e.complexity.Mutation.Set == nil {
@@ -327,7 +327,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.Set(childComplexity, args["tagId"].([]int64), args["namespace"].(string), args["entityId"].([]int64)), true
+		return e.complexity.Mutation.Set(childComplexity, args["termId"].([]int64), args["namespace"].(string), args["entityId"].([]int64)), true
 
 	case "Mutation.unset":
 		if e.complexity.Mutation.Unset == nil {
@@ -339,31 +339,31 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.Unset(childComplexity, args["tagId"].([]int64), args["namespace"].(string), args["entityId"].([]int64)), true
+		return e.complexity.Mutation.Unset(childComplexity, args["termId"].([]int64), args["namespace"].(string), args["entityId"].([]int64)), true
 
-	case "Mutation.updateCategory":
-		if e.complexity.Mutation.UpdateCategory == nil {
+	case "Mutation.updateVocabulary":
+		if e.complexity.Mutation.UpdateVocabulary == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_updateCategory_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_updateVocabulary_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateCategory(childComplexity, args["id"].(int64), args["input"].(genmodel.CategoryInput)), true
+		return e.complexity.Mutation.UpdateVocabulary(childComplexity, args["id"].(int64), args["input"].(genmodel.VocabularyInput)), true
 
-	case "Mutation.updateTag":
-		if e.complexity.Mutation.UpdateTag == nil {
+	case "Mutation.updateTerm":
+		if e.complexity.Mutation.UpdateTerm == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_updateTag_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_updateTerm_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateTag(childComplexity, args["id"].(int64), args["input"].(genmodel.TagInput)), true
+		return e.complexity.Mutation.UpdateTerm(childComplexity, args["id"].(int64), args["input"].(genmodel.TermInput)), true
 
 	case "PageInfo.endCursor":
 		if e.complexity.PageInfo.EndCursor == nil {
@@ -398,53 +398,53 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Categories(childComplexity, args["parentId"].(*int64), args["name"].(*string)), true
 
-	case "Query.category":
-		if e.complexity.Query.Category == nil {
+	case "Query.vocabulary":
+		if e.complexity.Query.Vocabulary == nil {
 			break
 		}
 
-		args, err := ec.field_Query_category_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_vocabulary_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.Category(childComplexity, args["id"].(int64)), true
+		return e.complexity.Query.Vocabulary(childComplexity, args["id"].(int64)), true
 
-	case "Query.tag":
-		if e.complexity.Query.Tag == nil {
+	case "Query.term":
+		if e.complexity.Query.Term == nil {
 			break
 		}
 
-		args, err := ec.field_Query_tag_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_term_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.Tag(childComplexity, args["id"].(int64)), true
+		return e.complexity.Query.Term(childComplexity, args["id"].(int64)), true
 
-	case "Query.tags":
-		if e.complexity.Query.Tags == nil {
+	case "Query.terms":
+		if e.complexity.Query.Terms == nil {
 			break
 		}
 
-		args, err := ec.field_Query_tags_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_terms_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.Tags(childComplexity, args["categoryId"].(int64), args["name"].(*string), args["first"].(int64), args["after"].(*string)), true
+		return e.complexity.Query.Terms(childComplexity, args["vocabularyId"].(int64), args["name"].(*string), args["first"].(int64), args["after"].(*string)), true
 
-	case "Query.tagsByEntities":
-		if e.complexity.Query.TagsByEntities == nil {
+	case "Query.termsByEntities":
+		if e.complexity.Query.TermsByEntities == nil {
 			break
 		}
 
-		args, err := ec.field_Query_tagsByEntities_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_termsByEntities_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.TagsByEntities(childComplexity, args["namespace"].(string), args["entityId"].([]int64)), true
+		return e.complexity.Query.TermsByEntities(childComplexity, args["namespace"].(string), args["entityId"].([]int64)), true
 
 	case "Query._service":
 		if e.complexity.Query.__resolve__service == nil {
@@ -465,80 +465,80 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.__resolve_entities(childComplexity, args["representations"].([]map[string]interface{})), true
 
-	case "Tag.category":
-		if e.complexity.Tag.Category == nil {
+	case "Term.vocabulary":
+		if e.complexity.Term.Vocabulary == nil {
 			break
 		}
 
-		return e.complexity.Tag.Category(childComplexity), true
+		return e.complexity.Term.Vocabulary(childComplexity), true
 
-	case "Tag.description":
-		if e.complexity.Tag.Description == nil {
+	case "Term.description":
+		if e.complexity.Term.Description == nil {
 			break
 		}
 
-		return e.complexity.Tag.Description(childComplexity), true
+		return e.complexity.Term.Description(childComplexity), true
 
-	case "Tag.entities":
-		if e.complexity.Tag.Entities == nil {
+	case "Term.entities":
+		if e.complexity.Term.Entities == nil {
 			break
 		}
 
-		args, err := ec.field_Tag_entities_args(context.TODO(), rawArgs)
+		args, err := ec.field_Term_entities_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Tag.Entities(childComplexity, args["first"].(int64), args["after"].(*string), args["namespace"].([]*string)), true
+		return e.complexity.Term.Entities(childComplexity, args["first"].(int64), args["after"].(*string), args["namespace"].([]*string)), true
 
-	case "Tag.id":
-		if e.complexity.Tag.ID == nil {
+	case "Term.id":
+		if e.complexity.Term.ID == nil {
 			break
 		}
 
-		return e.complexity.Tag.ID(childComplexity), true
+		return e.complexity.Term.ID(childComplexity), true
 
-	case "Tag.name":
-		if e.complexity.Tag.Name == nil {
+	case "Term.name":
+		if e.complexity.Term.Name == nil {
 			break
 		}
 
-		return e.complexity.Tag.Name(childComplexity), true
+		return e.complexity.Term.Name(childComplexity), true
 
-	case "Tag.title":
-		if e.complexity.Tag.Title == nil {
+	case "Term.title":
+		if e.complexity.Term.Title == nil {
 			break
 		}
 
-		return e.complexity.Tag.Title(childComplexity), true
+		return e.complexity.Term.Title(childComplexity), true
 
-	case "TagsConnection.edges":
-		if e.complexity.TagsConnection.Edges == nil {
+	case "TermsConnection.edges":
+		if e.complexity.TermsConnection.Edges == nil {
 			break
 		}
 
-		return e.complexity.TagsConnection.Edges(childComplexity), true
+		return e.complexity.TermsConnection.Edges(childComplexity), true
 
-	case "TagsConnection.pageInfo":
-		if e.complexity.TagsConnection.PageInfo == nil {
+	case "TermsConnection.pageInfo":
+		if e.complexity.TermsConnection.PageInfo == nil {
 			break
 		}
 
-		return e.complexity.TagsConnection.PageInfo(childComplexity), true
+		return e.complexity.TermsConnection.PageInfo(childComplexity), true
 
-	case "TagsEdge.cursor":
-		if e.complexity.TagsEdge.Cursor == nil {
+	case "TermsEdge.cursor":
+		if e.complexity.TermsEdge.Cursor == nil {
 			break
 		}
 
-		return e.complexity.TagsEdge.Cursor(childComplexity), true
+		return e.complexity.TermsEdge.Cursor(childComplexity), true
 
-	case "TagsEdge.node":
-		if e.complexity.TagsEdge.Node == nil {
+	case "TermsEdge.node":
+		if e.complexity.TermsEdge.Node == nil {
 			break
 		}
 
-		return e.complexity.TagsEdge.Node(childComplexity), true
+		return e.complexity.TermsEdge.Node(childComplexity), true
 
 	case "_Service.sdl":
 		if e.complexity._Service.SDL == nil {
@@ -555,8 +555,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
-		ec.unmarshalInputCategoryInput,
-		ec.unmarshalInputTagInput,
+		ec.unmarshalInputVocabularyInput,
+		ec.unmarshalInputTermInput,
 	)
 	first := true
 
@@ -625,65 +625,65 @@ type PageInfo {
     hasNextPage: Boolean
 }
 
-input CategoryInput {
-    "Category's name"
+input VocabularyInput {
+    "Vocabulary's name"
     name: String!
-    "Category's title"
+    "Vocabulary's title"
     title: String!
-    "Parent category"
+    "Parent vocabulary"
     parentId: ID
-    "Category's description"
+    "Vocabulary's description"
     description: String
 }
 
-type Category @key(fields: "id") {
+type Vocabulary @key(fields: "id") {
     id: ID!
-    "Category's name"
+    "Vocabulary's name"
     name: String!
-    "Category's title"
+    "Vocabulary's title"
     title: String!
-    "Parent category"
-    parent: Category
+    "Parent vocabulary"
+    parent: Vocabulary
     "Children categories"
-    children: [Category]!
-    "Tags in category"
-    tags(first: Int! = 20, after: Cursor): TagsConnection
-    "Category's description"
+    children: [Vocabulary]!
+    "Terms in vocabulary"
+    terms(first: Int! = 20, after: Cursor): TermsConnection
+    "Vocabulary's description"
     description: String
 }
-type TagsConnection {
-    edges: [TagsEdge!]!
+type TermsConnection {
+    edges: [TermsEdge!]!
     pageInfo: PageInfo!
 }
 
-type TagsEdge {
+type TermsEdge {
     cursor: Cursor!
-    node: Tag
+    node: Term
 }
 
 
-input TagInput {
-    "Tag's name"
+input TermInput {
+    "Term's name"
     name: String!
-    "Tag's title"
+    "Term's title"
     title: String!
-    "Tag's category"
-    categoryId: ID!
+    "Term's vocabulary"
+    vocabularyId: ID!
     "Description"
     description: String
 }
 
-type Tag @key(fields: "id") {
+type Term @key(fields: "id") {
     id: ID!
-    "Tag's name"
+    "Term's name"
     name: String!
-    "Tag's title"
+    "Term's title"
     title: String
-    "Tag's category"
-    category: Category!
+    "Term's vocabulary"
+    vocabulary: Vocabulary!
     "Description"
     description: String
-    "Entities related with tag"
+    "Entities related with term"
     entities(first: Int! = 20, after: Cursor, namespace: [String]): EntitiesConnection
 }
 
@@ -703,28 +703,28 @@ type EntityNode {
 }
 
 type Query {
-    tag(id:ID!): Tag!
+    term(id:ID!): Term!
 
-    "Returns all tags"
-    tags(categoryId:ID!, name: String, first: Int! = 20, after: Cursor): TagsConnection
+    "Returns all terms"
+    terms(vocabularyId:ID!, name: String, first: Int! = 20, after: Cursor): TermsConnection
 
-    "Returns all tags related to specified namespace and entities' id"
-    tagsByEntities(namespace: String!, entityId: [ID!]!): [Tag]!
+    "Returns all terms related to specified namespace and entities' id"
+    termsByEntities(namespace: String!, entityId: [ID!]!): [Term]!
 
-    category(id:ID!): Category!
+    vocabulary(id:ID!): Vocabulary!
 
     "Returns all categories"
-    categories(parentId:ID, name:String):[Category]!
+    categories(parentId:ID, name:String):[Vocabulary]!
 }
 
 type Mutation {
-    createTag(input: TagInput!) : Tag!
-    updateTag(id:ID!, input: TagInput!) : Tag!
-    set(tagId:[ID!]!, namespace: String!, entityId: [ID!]!): Boolean
-    unset(tagId:[ID!]!, namespace: String!, entityId: [ID!]!): Boolean
+    createTerm(input: TermInput!) : Term!
+    updateTerm(id:ID!, input: TermInput!) : Term!
+    set(termId:[ID!]!, namespace: String!, entityId: [ID!]!): Boolean
+    unset(termId:[ID!]!, namespace: String!, entityId: [ID!]!): Boolean
 
-    createCategory(input: CategoryInput!) : Category!
-    updateCategory(id:ID!, input: CategoryInput!) : Category!
+    createVocabulary(input: VocabularyInput!) : Vocabulary!
+    updateVocabulary(id:ID!, input: VocabularyInput!) : Vocabulary!
 }`, BuiltIn: false},
 	{Name: "../federation/directives.graphql", Input: `
 	scalar _Any
@@ -739,12 +739,12 @@ type Mutation {
 `, BuiltIn: true},
 	{Name: "../federation/entity.graphql", Input: `
 # a union of all types that use the @key directive
-union _Entity = Category | Tag
+union _Entity = Vocabulary | Term
 
 # fake type to build resolver interfaces for users to implement
 type Entity {
-		findCategoryByID(id: ID!,): Category!
-	findTagByID(id: ID!,): Tag!
+		findVocabularyByID(id: ID!,): Vocabulary!
+	findTermByID(id: ID!,): Term!
 
 }
 
@@ -764,7 +764,7 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) field_Category_tags_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Vocabulary_terms_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int64
@@ -788,7 +788,7 @@ func (ec *executionContext) field_Category_tags_args(ctx context.Context, rawArg
 	return args, nil
 }
 
-func (ec *executionContext) field_Entity_findCategoryByID_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Entity_findVocabularyByID_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int64
@@ -803,7 +803,7 @@ func (ec *executionContext) field_Entity_findCategoryByID_args(ctx context.Conte
 	return args, nil
 }
 
-func (ec *executionContext) field_Entity_findTagByID_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Entity_findTermByID_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int64
@@ -818,13 +818,13 @@ func (ec *executionContext) field_Entity_findTagByID_args(ctx context.Context, r
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_createCategory_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_createVocabulary_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 genmodel.CategoryInput
+	var arg0 genmodel.VocabularyInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNCategoryInput2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐCategoryInput(ctx, tmp)
+		arg0, err = ec.unmarshalNVocabularyInput2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐVocabularyInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -833,13 +833,13 @@ func (ec *executionContext) field_Mutation_createCategory_args(ctx context.Conte
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_createTag_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_createTerm_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 genmodel.TagInput
+	var arg0 genmodel.TermInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNTagInput2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐTagInput(ctx, tmp)
+		arg0, err = ec.unmarshalNTermInput2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐTermInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -852,14 +852,14 @@ func (ec *executionContext) field_Mutation_set_args(ctx context.Context, rawArgs
 	var err error
 	args := map[string]interface{}{}
 	var arg0 []int64
-	if tmp, ok := rawArgs["tagId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagId"))
+	if tmp, ok := rawArgs["termId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("termId"))
 		arg0, err = ec.unmarshalNID2ᚕint64ᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["tagId"] = arg0
+	args["termId"] = arg0
 	var arg1 string
 	if tmp, ok := rawArgs["namespace"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("namespace"))
@@ -885,14 +885,14 @@ func (ec *executionContext) field_Mutation_unset_args(ctx context.Context, rawAr
 	var err error
 	args := map[string]interface{}{}
 	var arg0 []int64
-	if tmp, ok := rawArgs["tagId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagId"))
+	if tmp, ok := rawArgs["termId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("termId"))
 		arg0, err = ec.unmarshalNID2ᚕint64ᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["tagId"] = arg0
+	args["termId"] = arg0
 	var arg1 string
 	if tmp, ok := rawArgs["namespace"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("namespace"))
@@ -914,7 +914,7 @@ func (ec *executionContext) field_Mutation_unset_args(ctx context.Context, rawAr
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_updateCategory_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_updateVocabulary_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int64
@@ -926,10 +926,10 @@ func (ec *executionContext) field_Mutation_updateCategory_args(ctx context.Conte
 		}
 	}
 	args["id"] = arg0
-	var arg1 genmodel.CategoryInput
+	var arg1 genmodel.VocabularyInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNCategoryInput2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐCategoryInput(ctx, tmp)
+		arg1, err = ec.unmarshalNVocabularyInput2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐVocabularyInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -938,7 +938,7 @@ func (ec *executionContext) field_Mutation_updateCategory_args(ctx context.Conte
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_updateTag_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_updateTerm_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int64
@@ -950,10 +950,10 @@ func (ec *executionContext) field_Mutation_updateTag_args(ctx context.Context, r
 		}
 	}
 	args["id"] = arg0
-	var arg1 genmodel.TagInput
+	var arg1 genmodel.TermInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNTagInput2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐTagInput(ctx, tmp)
+		arg1, err = ec.unmarshalNTermInput2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐTermInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1016,7 +1016,7 @@ func (ec *executionContext) field_Query_categories_args(ctx context.Context, raw
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_category_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_vocabulary_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int64
@@ -1031,7 +1031,7 @@ func (ec *executionContext) field_Query_category_args(ctx context.Context, rawAr
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_tag_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_term_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int64
@@ -1046,7 +1046,7 @@ func (ec *executionContext) field_Query_tag_args(ctx context.Context, rawArgs ma
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_tagsByEntities_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_termsByEntities_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -1070,18 +1070,18 @@ func (ec *executionContext) field_Query_tagsByEntities_args(ctx context.Context,
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_tags_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_terms_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int64
-	if tmp, ok := rawArgs["categoryId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryId"))
+	if tmp, ok := rawArgs["vocabularyId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("vocabularyId"))
 		arg0, err = ec.unmarshalNID2int64(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["categoryId"] = arg0
+	args["vocabularyId"] = arg0
 	var arg1 *string
 	if tmp, ok := rawArgs["name"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
@@ -1112,7 +1112,7 @@ func (ec *executionContext) field_Query_tags_args(ctx context.Context, rawArgs m
 	return args, nil
 }
 
-func (ec *executionContext) field_Tag_entities_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Term_entities_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int64
@@ -1183,8 +1183,8 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _Category_id(ctx context.Context, field graphql.CollectedField, obj *model.Category) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Category_id(ctx, field)
+func (ec *executionContext) _Vocabulary_id(ctx context.Context, field graphql.CollectedField, obj *model.Vocabulary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Vocabulary_id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1214,9 +1214,9 @@ func (ec *executionContext) _Category_id(ctx context.Context, field graphql.Coll
 	return ec.marshalNID2int64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Category_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Vocabulary_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Category",
+		Object:     "Vocabulary",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -1227,8 +1227,8 @@ func (ec *executionContext) fieldContext_Category_id(ctx context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _Category_name(ctx context.Context, field graphql.CollectedField, obj *model.Category) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Category_name(ctx, field)
+func (ec *executionContext) _Vocabulary_name(ctx context.Context, field graphql.CollectedField, obj *model.Vocabulary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Vocabulary_name(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1258,9 +1258,9 @@ func (ec *executionContext) _Category_name(ctx context.Context, field graphql.Co
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Category_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Vocabulary_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Category",
+		Object:     "Vocabulary",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -1271,8 +1271,8 @@ func (ec *executionContext) fieldContext_Category_name(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Category_title(ctx context.Context, field graphql.CollectedField, obj *model.Category) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Category_title(ctx, field)
+func (ec *executionContext) _Vocabulary_title(ctx context.Context, field graphql.CollectedField, obj *model.Vocabulary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Vocabulary_title(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1302,9 +1302,9 @@ func (ec *executionContext) _Category_title(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Category_title(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Vocabulary_title(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Category",
+		Object:     "Vocabulary",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -1315,8 +1315,8 @@ func (ec *executionContext) fieldContext_Category_title(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Category_parent(ctx context.Context, field graphql.CollectedField, obj *model.Category) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Category_parent(ctx, field)
+func (ec *executionContext) _Vocabulary_parent(ctx context.Context, field graphql.CollectedField, obj *model.Vocabulary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Vocabulary_parent(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1329,7 +1329,7 @@ func (ec *executionContext) _Category_parent(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Category().Parent(rctx, obj)
+		return ec.resolvers.Vocabulary().Parent(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1338,42 +1338,42 @@ func (ec *executionContext) _Category_parent(ctx context.Context, field graphql.
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Category)
+	res := resTmp.(*model.Vocabulary)
 	fc.Result = res
-	return ec.marshalOCategory2ᚖgithubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋmodelᚐCategory(ctx, field.Selections, res)
+	return ec.marshalOVocabulary2ᚖgithubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋmodelᚐVocabulary(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Category_parent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Vocabulary_parent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Category",
+		Object:     "Vocabulary",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Category_id(ctx, field)
+				return ec.fieldContext_Vocabulary_id(ctx, field)
 			case "name":
-				return ec.fieldContext_Category_name(ctx, field)
+				return ec.fieldContext_Vocabulary_name(ctx, field)
 			case "title":
-				return ec.fieldContext_Category_title(ctx, field)
+				return ec.fieldContext_Vocabulary_title(ctx, field)
 			case "parent":
-				return ec.fieldContext_Category_parent(ctx, field)
+				return ec.fieldContext_Vocabulary_parent(ctx, field)
 			case "children":
-				return ec.fieldContext_Category_children(ctx, field)
-			case "tags":
-				return ec.fieldContext_Category_tags(ctx, field)
+				return ec.fieldContext_Vocabulary_children(ctx, field)
+			case "terms":
+				return ec.fieldContext_Vocabulary_terms(ctx, field)
 			case "description":
-				return ec.fieldContext_Category_description(ctx, field)
+				return ec.fieldContext_Vocabulary_description(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Vocabulary", field.Name)
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Category_children(ctx context.Context, field graphql.CollectedField, obj *model.Category) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Category_children(ctx, field)
+func (ec *executionContext) _Vocabulary_children(ctx context.Context, field graphql.CollectedField, obj *model.Vocabulary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Vocabulary_children(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1386,7 +1386,7 @@ func (ec *executionContext) _Category_children(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Category().Children(rctx, obj)
+		return ec.resolvers.Vocabulary().Children(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1398,42 +1398,42 @@ func (ec *executionContext) _Category_children(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Category)
+	res := resTmp.([]*model.Vocabulary)
 	fc.Result = res
-	return ec.marshalNCategory2ᚕᚖgithubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋmodelᚐCategory(ctx, field.Selections, res)
+	return ec.marshalNVocabulary2ᚕᚖgithubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋmodelᚐVocabulary(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Category_children(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Vocabulary_children(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Category",
+		Object:     "Vocabulary",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Category_id(ctx, field)
+				return ec.fieldContext_Vocabulary_id(ctx, field)
 			case "name":
-				return ec.fieldContext_Category_name(ctx, field)
+				return ec.fieldContext_Vocabulary_name(ctx, field)
 			case "title":
-				return ec.fieldContext_Category_title(ctx, field)
+				return ec.fieldContext_Vocabulary_title(ctx, field)
 			case "parent":
-				return ec.fieldContext_Category_parent(ctx, field)
+				return ec.fieldContext_Vocabulary_parent(ctx, field)
 			case "children":
-				return ec.fieldContext_Category_children(ctx, field)
-			case "tags":
-				return ec.fieldContext_Category_tags(ctx, field)
+				return ec.fieldContext_Vocabulary_children(ctx, field)
+			case "terms":
+				return ec.fieldContext_Vocabulary_terms(ctx, field)
 			case "description":
-				return ec.fieldContext_Category_description(ctx, field)
+				return ec.fieldContext_Vocabulary_description(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Vocabulary", field.Name)
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Category_tags(ctx context.Context, field graphql.CollectedField, obj *model.Category) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Category_tags(ctx, field)
+func (ec *executionContext) _Vocabulary_terms(ctx context.Context, field graphql.CollectedField, obj *model.Vocabulary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Vocabulary_terms(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1446,7 +1446,7 @@ func (ec *executionContext) _Category_tags(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Category().Tags(rctx, obj, fc.Args["first"].(int64), fc.Args["after"].(*string))
+		return ec.resolvers.Vocabulary().Terms(rctx, obj, fc.Args["first"].(int64), fc.Args["after"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1455,25 +1455,25 @@ func (ec *executionContext) _Category_tags(ctx context.Context, field graphql.Co
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*genmodel.TagsConnection)
+	res := resTmp.(*genmodel.TermsConnection)
 	fc.Result = res
-	return ec.marshalOTagsConnection2ᚖgithubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐTagsConnection(ctx, field.Selections, res)
+	return ec.marshalOTermsConnection2ᚖgithubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐTermsConnection(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Category_tags(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Vocabulary_terms(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Category",
+		Object:     "Vocabulary",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "edges":
-				return ec.fieldContext_TagsConnection_edges(ctx, field)
+				return ec.fieldContext_TermsConnection_edges(ctx, field)
 			case "pageInfo":
-				return ec.fieldContext_TagsConnection_pageInfo(ctx, field)
+				return ec.fieldContext_TermsConnection_pageInfo(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type TagsConnection", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type TermsConnection", field.Name)
 		},
 	}
 	defer func() {
@@ -1483,15 +1483,15 @@ func (ec *executionContext) fieldContext_Category_tags(ctx context.Context, fiel
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Category_tags_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Vocabulary_terms_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Category_description(ctx context.Context, field graphql.CollectedField, obj *model.Category) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Category_description(ctx, field)
+func (ec *executionContext) _Vocabulary_description(ctx context.Context, field graphql.CollectedField, obj *model.Vocabulary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Vocabulary_description(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1518,9 +1518,9 @@ func (ec *executionContext) _Category_description(ctx context.Context, field gra
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Category_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Vocabulary_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Category",
+		Object:     "Vocabulary",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -1559,7 +1559,7 @@ func (ec *executionContext) _EntitiesConnection_edges(ctx context.Context, field
 	}
 	res := resTmp.([]genmodel.EntitiesEdge)
 	fc.Result = res
-	return ec.marshalNEntitiesEdge2ᚕgithubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐEntitiesEdgeᚄ(ctx, field.Selections, res)
+	return ec.marshalNEntitiesEdge2ᚕgithubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐEntitiesEdgeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_EntitiesConnection_edges(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1609,7 +1609,7 @@ func (ec *executionContext) _EntitiesConnection_pageInfo(ctx context.Context, fi
 	}
 	res := resTmp.(genmodel.PageInfo)
 	fc.Result = res
-	return ec.marshalNPageInfo2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐPageInfo(ctx, field.Selections, res)
+	return ec.marshalNPageInfo2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐPageInfo(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_EntitiesConnection_pageInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1702,7 +1702,7 @@ func (ec *executionContext) _EntitiesEdge_node(ctx context.Context, field graphq
 	}
 	res := resTmp.(*genmodel.EntityNode)
 	fc.Result = res
-	return ec.marshalOEntityNode2ᚖgithubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐEntityNode(ctx, field.Selections, res)
+	return ec.marshalOEntityNode2ᚖgithubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐEntityNode(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_EntitiesEdge_node(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1724,8 +1724,8 @@ func (ec *executionContext) fieldContext_EntitiesEdge_node(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _Entity_findCategoryByID(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Entity_findCategoryByID(ctx, field)
+func (ec *executionContext) _Entity_findVocabularyByID(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Entity_findVocabularyByID(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1738,7 +1738,7 @@ func (ec *executionContext) _Entity_findCategoryByID(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Entity().FindCategoryByID(rctx, fc.Args["id"].(int64))
+		return ec.resolvers.Entity().FindVocabularyByID(rctx, fc.Args["id"].(int64))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1750,12 +1750,12 @@ func (ec *executionContext) _Entity_findCategoryByID(ctx context.Context, field 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.Category)
+	res := resTmp.(model.Vocabulary)
 	fc.Result = res
-	return ec.marshalNCategory2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋmodelᚐCategory(ctx, field.Selections, res)
+	return ec.marshalNVocabulary2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋmodelᚐVocabulary(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Entity_findCategoryByID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Entity_findVocabularyByID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Entity",
 		Field:      field,
@@ -1764,21 +1764,21 @@ func (ec *executionContext) fieldContext_Entity_findCategoryByID(ctx context.Con
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Category_id(ctx, field)
+				return ec.fieldContext_Vocabulary_id(ctx, field)
 			case "name":
-				return ec.fieldContext_Category_name(ctx, field)
+				return ec.fieldContext_Vocabulary_name(ctx, field)
 			case "title":
-				return ec.fieldContext_Category_title(ctx, field)
+				return ec.fieldContext_Vocabulary_title(ctx, field)
 			case "parent":
-				return ec.fieldContext_Category_parent(ctx, field)
+				return ec.fieldContext_Vocabulary_parent(ctx, field)
 			case "children":
-				return ec.fieldContext_Category_children(ctx, field)
-			case "tags":
-				return ec.fieldContext_Category_tags(ctx, field)
+				return ec.fieldContext_Vocabulary_children(ctx, field)
+			case "terms":
+				return ec.fieldContext_Vocabulary_terms(ctx, field)
 			case "description":
-				return ec.fieldContext_Category_description(ctx, field)
+				return ec.fieldContext_Vocabulary_description(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Vocabulary", field.Name)
 		},
 	}
 	defer func() {
@@ -1788,15 +1788,15 @@ func (ec *executionContext) fieldContext_Entity_findCategoryByID(ctx context.Con
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Entity_findCategoryByID_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Entity_findVocabularyByID_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Entity_findTagByID(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Entity_findTagByID(ctx, field)
+func (ec *executionContext) _Entity_findTermByID(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Entity_findTermByID(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1809,7 +1809,7 @@ func (ec *executionContext) _Entity_findTagByID(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Entity().FindTagByID(rctx, fc.Args["id"].(int64))
+		return ec.resolvers.Entity().FindTermByID(rctx, fc.Args["id"].(int64))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1821,12 +1821,12 @@ func (ec *executionContext) _Entity_findTagByID(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.Tag)
+	res := resTmp.(model.Term)
 	fc.Result = res
-	return ec.marshalNTag2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋmodelᚐTag(ctx, field.Selections, res)
+	return ec.marshalNTerm2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋmodelᚐTerm(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Entity_findTagByID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Entity_findTermByID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Entity",
 		Field:      field,
@@ -1835,19 +1835,19 @@ func (ec *executionContext) fieldContext_Entity_findTagByID(ctx context.Context,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Tag_id(ctx, field)
+				return ec.fieldContext_Term_id(ctx, field)
 			case "name":
-				return ec.fieldContext_Tag_name(ctx, field)
+				return ec.fieldContext_Term_name(ctx, field)
 			case "title":
-				return ec.fieldContext_Tag_title(ctx, field)
-			case "category":
-				return ec.fieldContext_Tag_category(ctx, field)
+				return ec.fieldContext_Term_title(ctx, field)
+			case "vocabulary":
+				return ec.fieldContext_Term_vocabulary(ctx, field)
 			case "description":
-				return ec.fieldContext_Tag_description(ctx, field)
+				return ec.fieldContext_Term_description(ctx, field)
 			case "entities":
-				return ec.fieldContext_Tag_entities(ctx, field)
+				return ec.fieldContext_Term_entities(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Tag", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Term", field.Name)
 		},
 	}
 	defer func() {
@@ -1857,7 +1857,7 @@ func (ec *executionContext) fieldContext_Entity_findTagByID(ctx context.Context,
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Entity_findTagByID_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Entity_findTermByID_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -1952,8 +1952,8 @@ func (ec *executionContext) fieldContext_EntityNode_namespace(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createTag(ctx, field)
+func (ec *executionContext) _Mutation_createTerm(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createTerm(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1966,7 +1966,7 @@ func (ec *executionContext) _Mutation_createTag(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateTag(rctx, fc.Args["input"].(genmodel.TagInput))
+		return ec.resolvers.Mutation().CreateTerm(rctx, fc.Args["input"].(genmodel.TermInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1978,12 +1978,12 @@ func (ec *executionContext) _Mutation_createTag(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.Tag)
+	res := resTmp.(model.Term)
 	fc.Result = res
-	return ec.marshalNTag2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋmodelᚐTag(ctx, field.Selections, res)
+	return ec.marshalNTerm2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋmodelᚐTerm(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_createTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_createTerm(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1992,19 +1992,19 @@ func (ec *executionContext) fieldContext_Mutation_createTag(ctx context.Context,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Tag_id(ctx, field)
+				return ec.fieldContext_Term_id(ctx, field)
 			case "name":
-				return ec.fieldContext_Tag_name(ctx, field)
+				return ec.fieldContext_Term_name(ctx, field)
 			case "title":
-				return ec.fieldContext_Tag_title(ctx, field)
-			case "category":
-				return ec.fieldContext_Tag_category(ctx, field)
+				return ec.fieldContext_Term_title(ctx, field)
+			case "vocabulary":
+				return ec.fieldContext_Term_vocabulary(ctx, field)
 			case "description":
-				return ec.fieldContext_Tag_description(ctx, field)
+				return ec.fieldContext_Term_description(ctx, field)
 			case "entities":
-				return ec.fieldContext_Tag_entities(ctx, field)
+				return ec.fieldContext_Term_entities(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Tag", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Term", field.Name)
 		},
 	}
 	defer func() {
@@ -2014,15 +2014,15 @@ func (ec *executionContext) fieldContext_Mutation_createTag(ctx context.Context,
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createTag_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_createTerm_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_updateTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateTag(ctx, field)
+func (ec *executionContext) _Mutation_updateTerm(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateTerm(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2035,7 +2035,7 @@ func (ec *executionContext) _Mutation_updateTag(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateTag(rctx, fc.Args["id"].(int64), fc.Args["input"].(genmodel.TagInput))
+		return ec.resolvers.Mutation().UpdateTerm(rctx, fc.Args["id"].(int64), fc.Args["input"].(genmodel.TermInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2047,12 +2047,12 @@ func (ec *executionContext) _Mutation_updateTag(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.Tag)
+	res := resTmp.(model.Term)
 	fc.Result = res
-	return ec.marshalNTag2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋmodelᚐTag(ctx, field.Selections, res)
+	return ec.marshalNTerm2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋmodelᚐTerm(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_updateTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_updateTerm(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -2061,19 +2061,19 @@ func (ec *executionContext) fieldContext_Mutation_updateTag(ctx context.Context,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Tag_id(ctx, field)
+				return ec.fieldContext_Term_id(ctx, field)
 			case "name":
-				return ec.fieldContext_Tag_name(ctx, field)
+				return ec.fieldContext_Term_name(ctx, field)
 			case "title":
-				return ec.fieldContext_Tag_title(ctx, field)
-			case "category":
-				return ec.fieldContext_Tag_category(ctx, field)
+				return ec.fieldContext_Term_title(ctx, field)
+			case "vocabulary":
+				return ec.fieldContext_Term_vocabulary(ctx, field)
 			case "description":
-				return ec.fieldContext_Tag_description(ctx, field)
+				return ec.fieldContext_Term_description(ctx, field)
 			case "entities":
-				return ec.fieldContext_Tag_entities(ctx, field)
+				return ec.fieldContext_Term_entities(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Tag", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Term", field.Name)
 		},
 	}
 	defer func() {
@@ -2083,7 +2083,7 @@ func (ec *executionContext) fieldContext_Mutation_updateTag(ctx context.Context,
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateTag_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_updateTerm_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -2104,7 +2104,7 @@ func (ec *executionContext) _Mutation_set(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().Set(rctx, fc.Args["tagId"].([]int64), fc.Args["namespace"].(string), fc.Args["entityId"].([]int64))
+		return ec.resolvers.Mutation().Set(rctx, fc.Args["termId"].([]int64), fc.Args["namespace"].(string), fc.Args["entityId"].([]int64))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2156,7 +2156,7 @@ func (ec *executionContext) _Mutation_unset(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().Unset(rctx, fc.Args["tagId"].([]int64), fc.Args["namespace"].(string), fc.Args["entityId"].([]int64))
+		return ec.resolvers.Mutation().Unset(rctx, fc.Args["termId"].([]int64), fc.Args["namespace"].(string), fc.Args["entityId"].([]int64))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2194,8 +2194,8 @@ func (ec *executionContext) fieldContext_Mutation_unset(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createCategory(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createCategory(ctx, field)
+func (ec *executionContext) _Mutation_createVocabulary(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createVocabulary(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2208,7 +2208,7 @@ func (ec *executionContext) _Mutation_createCategory(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateCategory(rctx, fc.Args["input"].(genmodel.CategoryInput))
+		return ec.resolvers.Mutation().CreateVocabulary(rctx, fc.Args["input"].(genmodel.VocabularyInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2220,12 +2220,12 @@ func (ec *executionContext) _Mutation_createCategory(ctx context.Context, field 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.Category)
+	res := resTmp.(model.Vocabulary)
 	fc.Result = res
-	return ec.marshalNCategory2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋmodelᚐCategory(ctx, field.Selections, res)
+	return ec.marshalNVocabulary2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋmodelᚐVocabulary(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_createCategory(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_createVocabulary(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -2234,21 +2234,21 @@ func (ec *executionContext) fieldContext_Mutation_createCategory(ctx context.Con
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Category_id(ctx, field)
+				return ec.fieldContext_Vocabulary_id(ctx, field)
 			case "name":
-				return ec.fieldContext_Category_name(ctx, field)
+				return ec.fieldContext_Vocabulary_name(ctx, field)
 			case "title":
-				return ec.fieldContext_Category_title(ctx, field)
+				return ec.fieldContext_Vocabulary_title(ctx, field)
 			case "parent":
-				return ec.fieldContext_Category_parent(ctx, field)
+				return ec.fieldContext_Vocabulary_parent(ctx, field)
 			case "children":
-				return ec.fieldContext_Category_children(ctx, field)
-			case "tags":
-				return ec.fieldContext_Category_tags(ctx, field)
+				return ec.fieldContext_Vocabulary_children(ctx, field)
+			case "terms":
+				return ec.fieldContext_Vocabulary_terms(ctx, field)
 			case "description":
-				return ec.fieldContext_Category_description(ctx, field)
+				return ec.fieldContext_Vocabulary_description(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Vocabulary", field.Name)
 		},
 	}
 	defer func() {
@@ -2258,15 +2258,15 @@ func (ec *executionContext) fieldContext_Mutation_createCategory(ctx context.Con
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createCategory_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_createVocabulary_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_updateCategory(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateCategory(ctx, field)
+func (ec *executionContext) _Mutation_updateVocabulary(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateVocabulary(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2279,7 +2279,7 @@ func (ec *executionContext) _Mutation_updateCategory(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateCategory(rctx, fc.Args["id"].(int64), fc.Args["input"].(genmodel.CategoryInput))
+		return ec.resolvers.Mutation().UpdateVocabulary(rctx, fc.Args["id"].(int64), fc.Args["input"].(genmodel.VocabularyInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2291,12 +2291,12 @@ func (ec *executionContext) _Mutation_updateCategory(ctx context.Context, field 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.Category)
+	res := resTmp.(model.Vocabulary)
 	fc.Result = res
-	return ec.marshalNCategory2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋmodelᚐCategory(ctx, field.Selections, res)
+	return ec.marshalNVocabulary2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋmodelᚐVocabulary(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_updateCategory(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_updateVocabulary(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -2305,21 +2305,21 @@ func (ec *executionContext) fieldContext_Mutation_updateCategory(ctx context.Con
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Category_id(ctx, field)
+				return ec.fieldContext_Vocabulary_id(ctx, field)
 			case "name":
-				return ec.fieldContext_Category_name(ctx, field)
+				return ec.fieldContext_Vocabulary_name(ctx, field)
 			case "title":
-				return ec.fieldContext_Category_title(ctx, field)
+				return ec.fieldContext_Vocabulary_title(ctx, field)
 			case "parent":
-				return ec.fieldContext_Category_parent(ctx, field)
+				return ec.fieldContext_Vocabulary_parent(ctx, field)
 			case "children":
-				return ec.fieldContext_Category_children(ctx, field)
-			case "tags":
-				return ec.fieldContext_Category_tags(ctx, field)
+				return ec.fieldContext_Vocabulary_children(ctx, field)
+			case "terms":
+				return ec.fieldContext_Vocabulary_terms(ctx, field)
 			case "description":
-				return ec.fieldContext_Category_description(ctx, field)
+				return ec.fieldContext_Vocabulary_description(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Vocabulary", field.Name)
 		},
 	}
 	defer func() {
@@ -2329,7 +2329,7 @@ func (ec *executionContext) fieldContext_Mutation_updateCategory(ctx context.Con
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateCategory_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_updateVocabulary_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -2465,8 +2465,8 @@ func (ec *executionContext) fieldContext_PageInfo_hasNextPage(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_tag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_tag(ctx, field)
+func (ec *executionContext) _Query_term(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_term(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2479,7 +2479,7 @@ func (ec *executionContext) _Query_tag(ctx context.Context, field graphql.Collec
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Tag(rctx, fc.Args["id"].(int64))
+		return ec.resolvers.Query().Term(rctx, fc.Args["id"].(int64))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2491,12 +2491,12 @@ func (ec *executionContext) _Query_tag(ctx context.Context, field graphql.Collec
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.Tag)
+	res := resTmp.(model.Term)
 	fc.Result = res
-	return ec.marshalNTag2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋmodelᚐTag(ctx, field.Selections, res)
+	return ec.marshalNTerm2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋmodelᚐTerm(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_tag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_term(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -2505,19 +2505,19 @@ func (ec *executionContext) fieldContext_Query_tag(ctx context.Context, field gr
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Tag_id(ctx, field)
+				return ec.fieldContext_Term_id(ctx, field)
 			case "name":
-				return ec.fieldContext_Tag_name(ctx, field)
+				return ec.fieldContext_Term_name(ctx, field)
 			case "title":
-				return ec.fieldContext_Tag_title(ctx, field)
-			case "category":
-				return ec.fieldContext_Tag_category(ctx, field)
+				return ec.fieldContext_Term_title(ctx, field)
+			case "vocabulary":
+				return ec.fieldContext_Term_vocabulary(ctx, field)
 			case "description":
-				return ec.fieldContext_Tag_description(ctx, field)
+				return ec.fieldContext_Term_description(ctx, field)
 			case "entities":
-				return ec.fieldContext_Tag_entities(ctx, field)
+				return ec.fieldContext_Term_entities(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Tag", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Term", field.Name)
 		},
 	}
 	defer func() {
@@ -2527,15 +2527,15 @@ func (ec *executionContext) fieldContext_Query_tag(ctx context.Context, field gr
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_tag_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_term_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_tags(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_tags(ctx, field)
+func (ec *executionContext) _Query_terms(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_terms(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2548,7 +2548,7 @@ func (ec *executionContext) _Query_tags(ctx context.Context, field graphql.Colle
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Tags(rctx, fc.Args["categoryId"].(int64), fc.Args["name"].(*string), fc.Args["first"].(int64), fc.Args["after"].(*string))
+		return ec.resolvers.Query().Terms(rctx, fc.Args["vocabularyId"].(int64), fc.Args["name"].(*string), fc.Args["first"].(int64), fc.Args["after"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2557,12 +2557,12 @@ func (ec *executionContext) _Query_tags(ctx context.Context, field graphql.Colle
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*genmodel.TagsConnection)
+	res := resTmp.(*genmodel.TermsConnection)
 	fc.Result = res
-	return ec.marshalOTagsConnection2ᚖgithubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐTagsConnection(ctx, field.Selections, res)
+	return ec.marshalOTermsConnection2ᚖgithubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐTermsConnection(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_tags(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_terms(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -2571,11 +2571,11 @@ func (ec *executionContext) fieldContext_Query_tags(ctx context.Context, field g
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "edges":
-				return ec.fieldContext_TagsConnection_edges(ctx, field)
+				return ec.fieldContext_TermsConnection_edges(ctx, field)
 			case "pageInfo":
-				return ec.fieldContext_TagsConnection_pageInfo(ctx, field)
+				return ec.fieldContext_TermsConnection_pageInfo(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type TagsConnection", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type TermsConnection", field.Name)
 		},
 	}
 	defer func() {
@@ -2585,15 +2585,15 @@ func (ec *executionContext) fieldContext_Query_tags(ctx context.Context, field g
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_tags_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_terms_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_tagsByEntities(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_tagsByEntities(ctx, field)
+func (ec *executionContext) _Query_termsByEntities(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_termsByEntities(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2606,7 +2606,7 @@ func (ec *executionContext) _Query_tagsByEntities(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().TagsByEntities(rctx, fc.Args["namespace"].(string), fc.Args["entityId"].([]int64))
+		return ec.resolvers.Query().TermsByEntities(rctx, fc.Args["namespace"].(string), fc.Args["entityId"].([]int64))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2618,12 +2618,12 @@ func (ec *executionContext) _Query_tagsByEntities(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Tag)
+	res := resTmp.([]*model.Term)
 	fc.Result = res
-	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋmodelᚐTag(ctx, field.Selections, res)
+	return ec.marshalNTerm2ᚕᚖgithubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋmodelᚐTerm(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_tagsByEntities(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_termsByEntities(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -2632,19 +2632,19 @@ func (ec *executionContext) fieldContext_Query_tagsByEntities(ctx context.Contex
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Tag_id(ctx, field)
+				return ec.fieldContext_Term_id(ctx, field)
 			case "name":
-				return ec.fieldContext_Tag_name(ctx, field)
+				return ec.fieldContext_Term_name(ctx, field)
 			case "title":
-				return ec.fieldContext_Tag_title(ctx, field)
-			case "category":
-				return ec.fieldContext_Tag_category(ctx, field)
+				return ec.fieldContext_Term_title(ctx, field)
+			case "vocabulary":
+				return ec.fieldContext_Term_vocabulary(ctx, field)
 			case "description":
-				return ec.fieldContext_Tag_description(ctx, field)
+				return ec.fieldContext_Term_description(ctx, field)
 			case "entities":
-				return ec.fieldContext_Tag_entities(ctx, field)
+				return ec.fieldContext_Term_entities(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Tag", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Term", field.Name)
 		},
 	}
 	defer func() {
@@ -2654,15 +2654,15 @@ func (ec *executionContext) fieldContext_Query_tagsByEntities(ctx context.Contex
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_tagsByEntities_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_termsByEntities_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_category(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_category(ctx, field)
+func (ec *executionContext) _Query_vocabulary(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_vocabulary(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2675,7 +2675,7 @@ func (ec *executionContext) _Query_category(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Category(rctx, fc.Args["id"].(int64))
+		return ec.resolvers.Query().Vocabulary(rctx, fc.Args["id"].(int64))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2687,12 +2687,12 @@ func (ec *executionContext) _Query_category(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.Category)
+	res := resTmp.(model.Vocabulary)
 	fc.Result = res
-	return ec.marshalNCategory2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋmodelᚐCategory(ctx, field.Selections, res)
+	return ec.marshalNVocabulary2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋmodelᚐVocabulary(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_category(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_vocabulary(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -2701,21 +2701,21 @@ func (ec *executionContext) fieldContext_Query_category(ctx context.Context, fie
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Category_id(ctx, field)
+				return ec.fieldContext_Vocabulary_id(ctx, field)
 			case "name":
-				return ec.fieldContext_Category_name(ctx, field)
+				return ec.fieldContext_Vocabulary_name(ctx, field)
 			case "title":
-				return ec.fieldContext_Category_title(ctx, field)
+				return ec.fieldContext_Vocabulary_title(ctx, field)
 			case "parent":
-				return ec.fieldContext_Category_parent(ctx, field)
+				return ec.fieldContext_Vocabulary_parent(ctx, field)
 			case "children":
-				return ec.fieldContext_Category_children(ctx, field)
-			case "tags":
-				return ec.fieldContext_Category_tags(ctx, field)
+				return ec.fieldContext_Vocabulary_children(ctx, field)
+			case "terms":
+				return ec.fieldContext_Vocabulary_terms(ctx, field)
 			case "description":
-				return ec.fieldContext_Category_description(ctx, field)
+				return ec.fieldContext_Vocabulary_description(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Vocabulary", field.Name)
 		},
 	}
 	defer func() {
@@ -2725,7 +2725,7 @@ func (ec *executionContext) fieldContext_Query_category(ctx context.Context, fie
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_category_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_vocabulary_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -2758,9 +2758,9 @@ func (ec *executionContext) _Query_categories(ctx context.Context, field graphql
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Category)
+	res := resTmp.([]*model.Vocabulary)
 	fc.Result = res
-	return ec.marshalNCategory2ᚕᚖgithubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋmodelᚐCategory(ctx, field.Selections, res)
+	return ec.marshalNVocabulary2ᚕᚖgithubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋmodelᚐVocabulary(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_categories(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2772,21 +2772,21 @@ func (ec *executionContext) fieldContext_Query_categories(ctx context.Context, f
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Category_id(ctx, field)
+				return ec.fieldContext_Vocabulary_id(ctx, field)
 			case "name":
-				return ec.fieldContext_Category_name(ctx, field)
+				return ec.fieldContext_Vocabulary_name(ctx, field)
 			case "title":
-				return ec.fieldContext_Category_title(ctx, field)
+				return ec.fieldContext_Vocabulary_title(ctx, field)
 			case "parent":
-				return ec.fieldContext_Category_parent(ctx, field)
+				return ec.fieldContext_Vocabulary_parent(ctx, field)
 			case "children":
-				return ec.fieldContext_Category_children(ctx, field)
-			case "tags":
-				return ec.fieldContext_Category_tags(ctx, field)
+				return ec.fieldContext_Vocabulary_children(ctx, field)
+			case "terms":
+				return ec.fieldContext_Vocabulary_terms(ctx, field)
 			case "description":
-				return ec.fieldContext_Category_description(ctx, field)
+				return ec.fieldContext_Vocabulary_description(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Vocabulary", field.Name)
 		},
 	}
 	defer func() {
@@ -3035,8 +3035,8 @@ func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Tag_id(ctx context.Context, field graphql.CollectedField, obj *model.Tag) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Tag_id(ctx, field)
+func (ec *executionContext) _Term_id(ctx context.Context, field graphql.CollectedField, obj *model.Term) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Term_id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3066,9 +3066,9 @@ func (ec *executionContext) _Tag_id(ctx context.Context, field graphql.Collected
 	return ec.marshalNID2int64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Tag_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Term_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Tag",
+		Object:     "Term",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -3079,8 +3079,8 @@ func (ec *executionContext) fieldContext_Tag_id(ctx context.Context, field graph
 	return fc, nil
 }
 
-func (ec *executionContext) _Tag_name(ctx context.Context, field graphql.CollectedField, obj *model.Tag) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Tag_name(ctx, field)
+func (ec *executionContext) _Term_name(ctx context.Context, field graphql.CollectedField, obj *model.Term) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Term_name(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3110,9 +3110,9 @@ func (ec *executionContext) _Tag_name(ctx context.Context, field graphql.Collect
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Tag_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Term_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Tag",
+		Object:     "Term",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -3123,8 +3123,8 @@ func (ec *executionContext) fieldContext_Tag_name(ctx context.Context, field gra
 	return fc, nil
 }
 
-func (ec *executionContext) _Tag_title(ctx context.Context, field graphql.CollectedField, obj *model.Tag) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Tag_title(ctx, field)
+func (ec *executionContext) _Term_title(ctx context.Context, field graphql.CollectedField, obj *model.Term) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Term_title(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3151,9 +3151,9 @@ func (ec *executionContext) _Tag_title(ctx context.Context, field graphql.Collec
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Tag_title(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Term_title(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Tag",
+		Object:     "Term",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -3164,8 +3164,8 @@ func (ec *executionContext) fieldContext_Tag_title(ctx context.Context, field gr
 	return fc, nil
 }
 
-func (ec *executionContext) _Tag_category(ctx context.Context, field graphql.CollectedField, obj *model.Tag) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Tag_category(ctx, field)
+func (ec *executionContext) _Term_vocabulary(ctx context.Context, field graphql.CollectedField, obj *model.Term) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Term_vocabulary(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3178,7 +3178,7 @@ func (ec *executionContext) _Tag_category(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Tag().Category(rctx, obj)
+		return ec.resolvers.Term().Vocabulary(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3190,42 +3190,42 @@ func (ec *executionContext) _Tag_category(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.Category)
+	res := resTmp.(model.Vocabulary)
 	fc.Result = res
-	return ec.marshalNCategory2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋmodelᚐCategory(ctx, field.Selections, res)
+	return ec.marshalNVocabulary2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋmodelᚐVocabulary(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Tag_category(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Term_vocabulary(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Tag",
+		Object:     "Term",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Category_id(ctx, field)
+				return ec.fieldContext_Vocabulary_id(ctx, field)
 			case "name":
-				return ec.fieldContext_Category_name(ctx, field)
+				return ec.fieldContext_Vocabulary_name(ctx, field)
 			case "title":
-				return ec.fieldContext_Category_title(ctx, field)
+				return ec.fieldContext_Vocabulary_title(ctx, field)
 			case "parent":
-				return ec.fieldContext_Category_parent(ctx, field)
+				return ec.fieldContext_Vocabulary_parent(ctx, field)
 			case "children":
-				return ec.fieldContext_Category_children(ctx, field)
-			case "tags":
-				return ec.fieldContext_Category_tags(ctx, field)
+				return ec.fieldContext_Vocabulary_children(ctx, field)
+			case "terms":
+				return ec.fieldContext_Vocabulary_terms(ctx, field)
 			case "description":
-				return ec.fieldContext_Category_description(ctx, field)
+				return ec.fieldContext_Vocabulary_description(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Vocabulary", field.Name)
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Tag_description(ctx context.Context, field graphql.CollectedField, obj *model.Tag) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Tag_description(ctx, field)
+func (ec *executionContext) _Term_description(ctx context.Context, field graphql.CollectedField, obj *model.Term) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Term_description(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3252,9 +3252,9 @@ func (ec *executionContext) _Tag_description(ctx context.Context, field graphql.
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Tag_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Term_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Tag",
+		Object:     "Term",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -3265,8 +3265,8 @@ func (ec *executionContext) fieldContext_Tag_description(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _Tag_entities(ctx context.Context, field graphql.CollectedField, obj *model.Tag) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Tag_entities(ctx, field)
+func (ec *executionContext) _Term_entities(ctx context.Context, field graphql.CollectedField, obj *model.Term) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Term_entities(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3279,7 +3279,7 @@ func (ec *executionContext) _Tag_entities(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Tag().Entities(rctx, obj, fc.Args["first"].(int64), fc.Args["after"].(*string), fc.Args["namespace"].([]*string))
+		return ec.resolvers.Term().Entities(rctx, obj, fc.Args["first"].(int64), fc.Args["after"].(*string), fc.Args["namespace"].([]*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3290,12 +3290,12 @@ func (ec *executionContext) _Tag_entities(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.(*genmodel.EntitiesConnection)
 	fc.Result = res
-	return ec.marshalOEntitiesConnection2ᚖgithubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐEntitiesConnection(ctx, field.Selections, res)
+	return ec.marshalOEntitiesConnection2ᚖgithubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐEntitiesConnection(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Tag_entities(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Term_entities(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Tag",
+		Object:     "Term",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
@@ -3316,15 +3316,15 @@ func (ec *executionContext) fieldContext_Tag_entities(ctx context.Context, field
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Tag_entities_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Term_entities_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _TagsConnection_edges(ctx context.Context, field graphql.CollectedField, obj *genmodel.TagsConnection) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TagsConnection_edges(ctx, field)
+func (ec *executionContext) _TermsConnection_edges(ctx context.Context, field graphql.CollectedField, obj *genmodel.TermsConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TermsConnection_edges(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3349,32 +3349,32 @@ func (ec *executionContext) _TagsConnection_edges(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]genmodel.TagsEdge)
+	res := resTmp.([]genmodel.TermsEdge)
 	fc.Result = res
-	return ec.marshalNTagsEdge2ᚕgithubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐTagsEdgeᚄ(ctx, field.Selections, res)
+	return ec.marshalNTermsEdge2ᚕgithubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐTermsEdgeᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_TagsConnection_edges(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_TermsConnection_edges(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "TagsConnection",
+		Object:     "TermsConnection",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "cursor":
-				return ec.fieldContext_TagsEdge_cursor(ctx, field)
+				return ec.fieldContext_TermsEdge_cursor(ctx, field)
 			case "node":
-				return ec.fieldContext_TagsEdge_node(ctx, field)
+				return ec.fieldContext_TermsEdge_node(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type TagsEdge", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type TermsEdge", field.Name)
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _TagsConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *genmodel.TagsConnection) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TagsConnection_pageInfo(ctx, field)
+func (ec *executionContext) _TermsConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *genmodel.TermsConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TermsConnection_pageInfo(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3401,12 +3401,12 @@ func (ec *executionContext) _TagsConnection_pageInfo(ctx context.Context, field 
 	}
 	res := resTmp.(genmodel.PageInfo)
 	fc.Result = res
-	return ec.marshalNPageInfo2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐPageInfo(ctx, field.Selections, res)
+	return ec.marshalNPageInfo2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐPageInfo(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_TagsConnection_pageInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_TermsConnection_pageInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "TagsConnection",
+		Object:     "TermsConnection",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -3425,8 +3425,8 @@ func (ec *executionContext) fieldContext_TagsConnection_pageInfo(ctx context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _TagsEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *genmodel.TagsEdge) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TagsEdge_cursor(ctx, field)
+func (ec *executionContext) _TermsEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *genmodel.TermsEdge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TermsEdge_cursor(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3456,9 +3456,9 @@ func (ec *executionContext) _TagsEdge_cursor(ctx context.Context, field graphql.
 	return ec.marshalNCursor2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_TagsEdge_cursor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_TermsEdge_cursor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "TagsEdge",
+		Object:     "TermsEdge",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -3469,8 +3469,8 @@ func (ec *executionContext) fieldContext_TagsEdge_cursor(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _TagsEdge_node(ctx context.Context, field graphql.CollectedField, obj *genmodel.TagsEdge) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TagsEdge_node(ctx, field)
+func (ec *executionContext) _TermsEdge_node(ctx context.Context, field graphql.CollectedField, obj *genmodel.TermsEdge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TermsEdge_node(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3492,33 +3492,33 @@ func (ec *executionContext) _TagsEdge_node(ctx context.Context, field graphql.Co
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Tag)
+	res := resTmp.(*model.Term)
 	fc.Result = res
-	return ec.marshalOTag2ᚖgithubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋmodelᚐTag(ctx, field.Selections, res)
+	return ec.marshalOTerm2ᚖgithubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋmodelᚐTerm(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_TagsEdge_node(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_TermsEdge_node(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "TagsEdge",
+		Object:     "TermsEdge",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Tag_id(ctx, field)
+				return ec.fieldContext_Term_id(ctx, field)
 			case "name":
-				return ec.fieldContext_Tag_name(ctx, field)
+				return ec.fieldContext_Term_name(ctx, field)
 			case "title":
-				return ec.fieldContext_Tag_title(ctx, field)
-			case "category":
-				return ec.fieldContext_Tag_category(ctx, field)
+				return ec.fieldContext_Term_title(ctx, field)
+			case "vocabulary":
+				return ec.fieldContext_Term_vocabulary(ctx, field)
 			case "description":
-				return ec.fieldContext_Tag_description(ctx, field)
+				return ec.fieldContext_Term_description(ctx, field)
 			case "entities":
-				return ec.fieldContext_Tag_entities(ctx, field)
+				return ec.fieldContext_Term_entities(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Tag", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Term", field.Name)
 		},
 	}
 	return fc, nil
@@ -5338,8 +5338,8 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputCategoryInput(ctx context.Context, obj interface{}) (genmodel.CategoryInput, error) {
-	var it genmodel.CategoryInput
+func (ec *executionContext) unmarshalInputVocabularyInput(ctx context.Context, obj interface{}) (genmodel.VocabularyInput, error) {
+	var it genmodel.VocabularyInput
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -5385,8 +5385,8 @@ func (ec *executionContext) unmarshalInputCategoryInput(ctx context.Context, obj
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputTagInput(ctx context.Context, obj interface{}) (genmodel.TagInput, error) {
-	var it genmodel.TagInput
+func (ec *executionContext) unmarshalInputTermInput(ctx context.Context, obj interface{}) (genmodel.TermInput, error) {
+	var it genmodel.TermInput
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -5410,11 +5410,11 @@ func (ec *executionContext) unmarshalInputTagInput(ctx context.Context, obj inte
 			if err != nil {
 				return it, err
 			}
-		case "categoryId":
+		case "vocabularyId":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryId"))
-			it.CategoryID, err = ec.unmarshalNID2int64(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("vocabularyId"))
+			it.VocabularyID, err = ec.unmarshalNID2int64(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5440,20 +5440,20 @@ func (ec *executionContext) __Entity(ctx context.Context, sel ast.SelectionSet, 
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
-	case model.Category:
-		return ec._Category(ctx, sel, &obj)
-	case *model.Category:
+	case model.Vocabulary:
+		return ec._Vocabulary(ctx, sel, &obj)
+	case *model.Vocabulary:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._Category(ctx, sel, obj)
-	case model.Tag:
-		return ec._Tag(ctx, sel, &obj)
-	case *model.Tag:
+		return ec._Vocabulary(ctx, sel, obj)
+	case model.Term:
+		return ec._Term(ctx, sel, &obj)
+	case *model.Term:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._Tag(ctx, sel, obj)
+		return ec._Term(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -5463,33 +5463,33 @@ func (ec *executionContext) __Entity(ctx context.Context, sel ast.SelectionSet, 
 
 // region    **************************** object.gotpl ****************************
 
-var categoryImplementors = []string{"Category", "_Entity"}
+var vocabularyImplementors = []string{"Vocabulary", "_Entity"}
 
-func (ec *executionContext) _Category(ctx context.Context, sel ast.SelectionSet, obj *model.Category) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, categoryImplementors)
+func (ec *executionContext) _Vocabulary(ctx context.Context, sel ast.SelectionSet, obj *model.Vocabulary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, vocabularyImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("Category")
+			out.Values[i] = graphql.MarshalString("Vocabulary")
 		case "id":
 
-			out.Values[i] = ec._Category_id(ctx, field, obj)
+			out.Values[i] = ec._Vocabulary_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 
-			out.Values[i] = ec._Category_name(ctx, field, obj)
+			out.Values[i] = ec._Vocabulary_name(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
 		case "title":
 
-			out.Values[i] = ec._Category_title(ctx, field, obj)
+			out.Values[i] = ec._Vocabulary_title(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
@@ -5503,7 +5503,7 @@ func (ec *executionContext) _Category(ctx context.Context, sel ast.SelectionSet,
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Category_parent(ctx, field, obj)
+				res = ec._Vocabulary_parent(ctx, field, obj)
 				return res
 			}
 
@@ -5520,7 +5520,7 @@ func (ec *executionContext) _Category(ctx context.Context, sel ast.SelectionSet,
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Category_children(ctx, field, obj)
+				res = ec._Vocabulary_children(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -5531,7 +5531,7 @@ func (ec *executionContext) _Category(ctx context.Context, sel ast.SelectionSet,
 				return innerFunc(ctx)
 
 			})
-		case "tags":
+		case "terms":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -5540,7 +5540,7 @@ func (ec *executionContext) _Category(ctx context.Context, sel ast.SelectionSet,
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Category_tags(ctx, field, obj)
+				res = ec._Vocabulary_terms(ctx, field, obj)
 				return res
 			}
 
@@ -5550,7 +5550,7 @@ func (ec *executionContext) _Category(ctx context.Context, sel ast.SelectionSet,
 			})
 		case "description":
 
-			out.Values[i] = ec._Category_description(ctx, field, obj)
+			out.Values[i] = ec._Vocabulary_description(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -5649,7 +5649,7 @@ func (ec *executionContext) _Entity(ctx context.Context, sel ast.SelectionSet) g
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Entity")
-		case "findCategoryByID":
+		case "findVocabularyByID":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -5658,7 +5658,7 @@ func (ec *executionContext) _Entity(ctx context.Context, sel ast.SelectionSet) g
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Entity_findCategoryByID(ctx, field)
+				res = ec._Entity_findVocabularyByID(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -5672,7 +5672,7 @@ func (ec *executionContext) _Entity(ctx context.Context, sel ast.SelectionSet) g
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
-		case "findTagByID":
+		case "findTermByID":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -5681,7 +5681,7 @@ func (ec *executionContext) _Entity(ctx context.Context, sel ast.SelectionSet) g
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Entity_findTagByID(ctx, field)
+				res = ec._Entity_findTermByID(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -5760,19 +5760,19 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "createTag":
+		case "createTerm":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createTag(ctx, field)
+				return ec._Mutation_createTerm(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "updateTag":
+		case "updateTerm":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateTag(ctx, field)
+				return ec._Mutation_updateTerm(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -5790,19 +5790,19 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_unset(ctx, field)
 			})
 
-		case "createCategory":
+		case "createVocabulary":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createCategory(ctx, field)
+				return ec._Mutation_createVocabulary(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "updateCategory":
+		case "updateVocabulary":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateCategory(ctx, field)
+				return ec._Mutation_updateVocabulary(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -5877,7 +5877,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
-		case "tag":
+		case "term":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -5886,7 +5886,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_tag(ctx, field)
+				res = ec._Query_term(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -5900,7 +5900,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
-		case "tags":
+		case "terms":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -5909,7 +5909,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_tags(ctx, field)
+				res = ec._Query_terms(ctx, field)
 				return res
 			}
 
@@ -5920,7 +5920,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
-		case "tagsByEntities":
+		case "termsByEntities":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -5929,7 +5929,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_tagsByEntities(ctx, field)
+				res = ec._Query_termsByEntities(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -5943,7 +5943,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
-		case "category":
+		case "vocabulary":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -5952,7 +5952,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_category(ctx, field)
+				res = ec._Query_vocabulary(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -6058,35 +6058,35 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	return out
 }
 
-var tagImplementors = []string{"Tag", "_Entity"}
+var termImplementors = []string{"Term", "_Entity"}
 
-func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj *model.Tag) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, tagImplementors)
+func (ec *executionContext) _Term(ctx context.Context, sel ast.SelectionSet, obj *model.Term) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, termImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("Tag")
+			out.Values[i] = graphql.MarshalString("Term")
 		case "id":
 
-			out.Values[i] = ec._Tag_id(ctx, field, obj)
+			out.Values[i] = ec._Term_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 
-			out.Values[i] = ec._Tag_name(ctx, field, obj)
+			out.Values[i] = ec._Term_name(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
 		case "title":
 
-			out.Values[i] = ec._Tag_title(ctx, field, obj)
+			out.Values[i] = ec._Term_title(ctx, field, obj)
 
-		case "category":
+		case "vocabulary":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -6095,7 +6095,7 @@ func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj 
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Tag_category(ctx, field, obj)
+				res = ec._Term_vocabulary(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -6108,7 +6108,7 @@ func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj 
 			})
 		case "description":
 
-			out.Values[i] = ec._Tag_description(ctx, field, obj)
+			out.Values[i] = ec._Term_description(ctx, field, obj)
 
 		case "entities":
 			field := field
@@ -6119,7 +6119,7 @@ func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj 
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Tag_entities(ctx, field, obj)
+				res = ec._Term_entities(ctx, field, obj)
 				return res
 			}
 
@@ -6138,26 +6138,26 @@ func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj 
 	return out
 }
 
-var tagsConnectionImplementors = []string{"TagsConnection"}
+var termsConnectionImplementors = []string{"TermsConnection"}
 
-func (ec *executionContext) _TagsConnection(ctx context.Context, sel ast.SelectionSet, obj *genmodel.TagsConnection) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, tagsConnectionImplementors)
+func (ec *executionContext) _TermsConnection(ctx context.Context, sel ast.SelectionSet, obj *genmodel.TermsConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, termsConnectionImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("TagsConnection")
+			out.Values[i] = graphql.MarshalString("TermsConnection")
 		case "edges":
 
-			out.Values[i] = ec._TagsConnection_edges(ctx, field, obj)
+			out.Values[i] = ec._TermsConnection_edges(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "pageInfo":
 
-			out.Values[i] = ec._TagsConnection_pageInfo(ctx, field, obj)
+			out.Values[i] = ec._TermsConnection_pageInfo(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -6173,26 +6173,26 @@ func (ec *executionContext) _TagsConnection(ctx context.Context, sel ast.Selecti
 	return out
 }
 
-var tagsEdgeImplementors = []string{"TagsEdge"}
+var termsEdgeImplementors = []string{"TermsEdge"}
 
-func (ec *executionContext) _TagsEdge(ctx context.Context, sel ast.SelectionSet, obj *genmodel.TagsEdge) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, tagsEdgeImplementors)
+func (ec *executionContext) _TermsEdge(ctx context.Context, sel ast.SelectionSet, obj *genmodel.TermsEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, termsEdgeImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("TagsEdge")
+			out.Values[i] = graphql.MarshalString("TermsEdge")
 		case "cursor":
 
-			out.Values[i] = ec._TagsEdge_cursor(ctx, field, obj)
+			out.Values[i] = ec._TermsEdge_cursor(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "node":
 
-			out.Values[i] = ec._TagsEdge_node(ctx, field, obj)
+			out.Values[i] = ec._TermsEdge_node(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -6563,11 +6563,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNCategory2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v model.Category) graphql.Marshaler {
-	return ec._Category(ctx, sel, &v)
+func (ec *executionContext) marshalNVocabulary2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋmodelᚐVocabulary(ctx context.Context, sel ast.SelectionSet, v model.Vocabulary) graphql.Marshaler {
+	return ec._Vocabulary(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCategory2ᚕᚖgithubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v []*model.Category) graphql.Marshaler {
+func (ec *executionContext) marshalNVocabulary2ᚕᚖgithubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋmodelᚐVocabulary(ctx context.Context, sel ast.SelectionSet, v []*model.Vocabulary) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -6591,7 +6591,7 @@ func (ec *executionContext) marshalNCategory2ᚕᚖgithubᚗcomᚋdmalykhᚋtags
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOCategory2ᚖgithubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋmodelᚐCategory(ctx, sel, v[i])
+			ret[i] = ec.marshalOVocabulary2ᚖgithubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋmodelᚐVocabulary(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -6605,8 +6605,8 @@ func (ec *executionContext) marshalNCategory2ᚕᚖgithubᚗcomᚋdmalykhᚋtags
 	return ret
 }
 
-func (ec *executionContext) unmarshalNCategoryInput2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐCategoryInput(ctx context.Context, v interface{}) (genmodel.CategoryInput, error) {
-	res, err := ec.unmarshalInputCategoryInput(ctx, v)
+func (ec *executionContext) unmarshalNVocabularyInput2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐVocabularyInput(ctx context.Context, v interface{}) (genmodel.VocabularyInput, error) {
+	res, err := ec.unmarshalInputVocabularyInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -6625,11 +6625,11 @@ func (ec *executionContext) marshalNCursor2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) marshalNEntitiesEdge2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐEntitiesEdge(ctx context.Context, sel ast.SelectionSet, v genmodel.EntitiesEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNEntitiesEdge2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐEntitiesEdge(ctx context.Context, sel ast.SelectionSet, v genmodel.EntitiesEdge) graphql.Marshaler {
 	return ec._EntitiesEdge(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNEntitiesEdge2ᚕgithubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐEntitiesEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []genmodel.EntitiesEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNEntitiesEdge2ᚕgithubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐEntitiesEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []genmodel.EntitiesEdge) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -6653,7 +6653,7 @@ func (ec *executionContext) marshalNEntitiesEdge2ᚕgithubᚗcomᚋdmalykhᚋtag
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNEntitiesEdge2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐEntitiesEdge(ctx, sel, v[i])
+			ret[i] = ec.marshalNEntitiesEdge2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐEntitiesEdge(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -6735,7 +6735,7 @@ func (ec *executionContext) marshalNInt2int64(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) marshalNPageInfo2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐPageInfo(ctx context.Context, sel ast.SelectionSet, v genmodel.PageInfo) graphql.Marshaler {
+func (ec *executionContext) marshalNPageInfo2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐPageInfo(ctx context.Context, sel ast.SelectionSet, v genmodel.PageInfo) graphql.Marshaler {
 	return ec._PageInfo(ctx, sel, &v)
 }
 
@@ -6754,11 +6754,11 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) marshalNTag2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v model.Tag) graphql.Marshaler {
-	return ec._Tag(ctx, sel, &v)
+func (ec *executionContext) marshalNTerm2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋmodelᚐTerm(ctx context.Context, sel ast.SelectionSet, v model.Term) graphql.Marshaler {
+	return ec._Term(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTag2ᚕᚖgithubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v []*model.Tag) graphql.Marshaler {
+func (ec *executionContext) marshalNTerm2ᚕᚖgithubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋmodelᚐTerm(ctx context.Context, sel ast.SelectionSet, v []*model.Term) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -6782,7 +6782,7 @@ func (ec *executionContext) marshalNTag2ᚕᚖgithubᚗcomᚋdmalykhᚋtagservic
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOTag2ᚖgithubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋmodelᚐTag(ctx, sel, v[i])
+			ret[i] = ec.marshalOTerm2ᚖgithubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋmodelᚐTerm(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -6796,16 +6796,16 @@ func (ec *executionContext) marshalNTag2ᚕᚖgithubᚗcomᚋdmalykhᚋtagservic
 	return ret
 }
 
-func (ec *executionContext) unmarshalNTagInput2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐTagInput(ctx context.Context, v interface{}) (genmodel.TagInput, error) {
-	res, err := ec.unmarshalInputTagInput(ctx, v)
+func (ec *executionContext) unmarshalNTermInput2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐTermInput(ctx context.Context, v interface{}) (genmodel.TermInput, error) {
+	res, err := ec.unmarshalInputTermInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNTagsEdge2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐTagsEdge(ctx context.Context, sel ast.SelectionSet, v genmodel.TagsEdge) graphql.Marshaler {
-	return ec._TagsEdge(ctx, sel, &v)
+func (ec *executionContext) marshalNTermsEdge2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐTermsEdge(ctx context.Context, sel ast.SelectionSet, v genmodel.TermsEdge) graphql.Marshaler {
+	return ec._TermsEdge(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTagsEdge2ᚕgithubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐTagsEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []genmodel.TagsEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNTermsEdge2ᚕgithubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐTermsEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []genmodel.TermsEdge) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -6829,7 +6829,7 @@ func (ec *executionContext) marshalNTagsEdge2ᚕgithubᚗcomᚋdmalykhᚋtagserv
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNTagsEdge2githubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐTagsEdge(ctx, sel, v[i])
+			ret[i] = ec.marshalNTermsEdge2githubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐTermsEdge(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -7238,11 +7238,11 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) marshalOCategory2ᚖgithubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v *model.Category) graphql.Marshaler {
+func (ec *executionContext) marshalOVocabulary2ᚖgithubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋmodelᚐVocabulary(ctx context.Context, sel ast.SelectionSet, v *model.Vocabulary) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec._Category(ctx, sel, v)
+	return ec._Vocabulary(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOCursor2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
@@ -7261,14 +7261,14 @@ func (ec *executionContext) marshalOCursor2ᚖstring(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) marshalOEntitiesConnection2ᚖgithubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐEntitiesConnection(ctx context.Context, sel ast.SelectionSet, v *genmodel.EntitiesConnection) graphql.Marshaler {
+func (ec *executionContext) marshalOEntitiesConnection2ᚖgithubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐEntitiesConnection(ctx context.Context, sel ast.SelectionSet, v *genmodel.EntitiesConnection) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._EntitiesConnection(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOEntityNode2ᚖgithubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐEntityNode(ctx context.Context, sel ast.SelectionSet, v *genmodel.EntityNode) graphql.Marshaler {
+func (ec *executionContext) marshalOEntityNode2ᚖgithubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐEntityNode(ctx context.Context, sel ast.SelectionSet, v *genmodel.EntityNode) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -7349,18 +7349,18 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) marshalOTag2ᚖgithubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v *model.Tag) graphql.Marshaler {
+func (ec *executionContext) marshalOTerm2ᚖgithubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋmodelᚐTerm(ctx context.Context, sel ast.SelectionSet, v *model.Term) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec._Tag(ctx, sel, v)
+	return ec._Term(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOTagsConnection2ᚖgithubᚗcomᚋdmalykhᚋtagserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐTagsConnection(ctx context.Context, sel ast.SelectionSet, v *genmodel.TagsConnection) graphql.Marshaler {
+func (ec *executionContext) marshalOTermsConnection2ᚖgithubᚗcomᚋdmalykhᚋtermserviceᚋapiᚋgraphqlᚋgeneratedᚋgenmodelᚐTermsConnection(ctx context.Context, sel ast.SelectionSet, v *genmodel.TermsConnection) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec._TagsConnection(ctx, sel, v)
+	return ec._TermsConnection(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO_Entity2githubᚗcomᚋ99designsᚋgqlgenᚋpluginᚋfederationᚋfedruntimeᚐEntity(ctx context.Context, sel ast.SelectionSet, v fedruntime.Entity) graphql.Marshaler {

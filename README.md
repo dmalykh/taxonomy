@@ -1,15 +1,15 @@
-# TagService
+# Taxonomy Service
 ![Coverage](https://img.shields.io/badge/Coverage-40.9%25-yellow)
-TagService is a self-hosted, lightweight and simple (yet functional) full microservice for tags management.
+Taxonomy is a self-hosted, lightweight and simple (yet functional) full microservice for terms management.
 You could use it either independent microservice or embed library.
 
-_**Tagservice is still in development, but it already has stable API and used in production. See TODO section below to learn about planned improvements.**_
+_**Termservice is still in development, but it already has stable API and used in production. See TODO section below to learn about planned improvements.**_
 
 ### Purpose
-> Tags everywhere! I really exhausted to implement tags management services in every project. The core idea of `tagservice`
-is wide usage universal solution for every project where tags needed.
+> Terms everywhere! I really exhausted to implement terms management services in every project. The core idea of `termservice`
+is wide usage universal solution for every project where terms needed.
 > 
-> `Tagservice` could be embeded, has GraphQL and GRPC APIs, also provided powerfull command line interface. 
+> `Termservice` could be embeded, has GraphQL and GRPC APIs, also provided powerfull command line interface. 
 Of course, it's database agnostic and made with clean architecture principles. 
 If you want to modify every layer you should implement its interface.
 
@@ -19,54 +19,54 @@ If you want to modify every layer you should implement its interface.
 - GraphQL server
 
 ## Overview
-Connect every object with tags. Each object relate with tag via _namespace_ and _entity_id_.
+Connect every object with terms. Each object relate with term via _namespace_ and _entity_id_.
 - Namespace 
 
 ### Restrictions
-- Category name and parent id should be unique pair
-- category required for every tag
-- name and category id should be unique pair
+- Vocabulary name and parent id should be unique pair
+- vocabulary required for every term
+- name and vocabulary id should be unique pair
 
-> Maybe you think how to create tag without category.
-I'll try to explain why I made decision to make categories required for every tag.
-What is a tag without category? It's a record in a database where category_id equals NULL.
-And when all tags without category will be requested, query with category_id equeals NULL will executed. 
-In this case NULL is id of category. And it's strange, because NULL isn't convinient value for identifier.
+> Maybe you think how to create term without vocabulary.
+I'll try to explain why I made decision to make categories required for every term.
+What is a term without vocabulary? It's a record in a database where vocabulary_id equals NULL.
+And when all terms without vocabulary will be requested, query with vocabulary_id equeals NULL will executed. 
+In this case NULL is id of vocabulary. And it's strange, because NULL isn't convinient value for identifier.
 
 
 ## Cli interface
 ```shell
 Usage:
-  tagservice [command]
+  internal [command]
 
 Available Commands:
-  category    Operations with categories
+  vocabulary    Operations with categories
   help        Help about any command
   init        Initiate service, create tables in a database
   namespace   CRUD operations with namespaces
-  rel         Work with relations
+  rel         Work with references
   serve       Run API server
-  tag         CRUD operations with tags
+  term         CRUD operations with terms
 
 Flags:
-      --dsn string   Data source name (connection information) (default "sqlite://./tagservice.db?cache=shared&_fk=1")
-  -h, --help         help for tagservice
+      --dsn string   Data source name (connection information) (default "sqlite://./termservice.db?cache=shared&_fk=1")
+  -h, --help         help for internal
   -v, --verbose      Make some output more verbose.
 
-Use "tagservice [command] --help" for more information about a command.
+Use "termservice [command] --help" for more information about a command.
 ```
 
 ## Run GraphQL API in Docker
 Make Dockerfile
 ```dockerfile
-FROM dmalykh/tagservice:latest
+FROM dmalykh/termservice:latest
 EXPOSE 8080
-CMD ["tagservice", "serve", "graphql", "-p", "8080"]
+CMD ["termservice", "serve", "graphql", "-p", "8080"]
 ```
 And run it!
 ```shell
-docker build -t tagservice .
-docker run -it --rm -p 8081:8080 tagservice   
+docker build -t internal .
+docker run -it --rm -p 8081:8080 internal   
 ```
 Open http://127.0.0.1:8081/ to get acquainted with GraphiQL!
 
@@ -79,5 +79,7 @@ Open http://127.0.0.1:8081/ to get acquainted with GraphiQL!
 - [ ] Publish API specification
 - [ ] Nested namespaces
 - [ ] Make default namespace on init
-- [ ] Make default category on init
+- [ ] Make default vocabulary on init
 - [ ] docker-compose
+- [ ] Add telemetry and metrics
+- [ ] https://github.com/rivo/tview

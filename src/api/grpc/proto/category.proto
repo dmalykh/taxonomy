@@ -1,24 +1,24 @@
 syntax = "proto3";
 
 import "common.proto";
-import "tag.proto";
+import "term.proto";
 import "google/protobuf/wrappers.proto";
 
 
-message Category {
+message Vocabulary {
   int64 id = 1;
   string name = 2;
   string title = 3;
   optional string description = 4;
 }
 
-message CategoryCreateRequest {
+message VocabularyCreateRequest {
   string name = 2;
   string title = 3;
   optional string description = 4;
 }
 
-message CategoryUpdateRequest {
+message VocabularyUpdateRequest {
   optional string name = 2;
   optional string title = 3;
   optional string description = 4;
@@ -26,10 +26,10 @@ message CategoryUpdateRequest {
 
 
 
-service CategoryService {
-  rpc Create(CategoryCreateRequest) returns (Category);
-  rpc Update(CategoryUpdateRequest) returns (Category);
-  rpc Delete(IdRequest) returns (Category);
-  rpc GetById(IdRequest) returns (Category);
+service VocabularyService {
+  rpc Create(VocabularyCreateRequest) returns (Vocabulary);
+  rpc Update(VocabularyUpdateRequest) returns (Vocabulary);
+  rpc Delete(IdRequest) returns (Vocabulary);
+  rpc GetById(IdRequest) returns (Vocabulary);
   rpc GetList(Pagination) returns
 }

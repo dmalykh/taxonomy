@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/dmalykh/tagservice/repository/entgo"
+	"github.com/dmalykh/taxonomy/internal/repository/entgo"
 	"github.com/spf13/cobra"
 )
 

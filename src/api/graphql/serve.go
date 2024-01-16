@@ -3,33 +3,34 @@ package graphql
 import (
 	"context"
 	"fmt"
+	"github.com/dmalykh/taxonomy/taxonomy"
 	"log"
 	"net/http"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/dmalykh/tagservice/api/graphql/generated"
-	"github.com/dmalykh/tagservice/api/graphql/service"
-	"github.com/dmalykh/tagservice/tagservice"
+	"github.com/dmalykh/taxonomy/api/graphql/generated"
+	"github.com/dmalykh/taxonomy/api/graphql/service"
 )
 
 type Config struct {
-	Port             string
-	TagService       tagservice.Tag
-	CategoryService  tagservice.Category
-	NamespaceService tagservice.Namespace
-	Verbose          bool
+	Port              string
+	TermService       taxonomy.Term
+	VocabularyService taxonomy.Vocabulary
+	NamespaceService  taxonomy.Namespace
+	Verbose           bool
 }
 
 func Serve(config *Config) error {
 	srv := handler.NewDefaultServer(
 		generated.NewExecutableSchema(
 			generated.Config{
-				Resolvers: service.NewResolver(config.TagService, config.CategoryService, config.NamespaceService),
+				Resolvers: service.NewResolver(config.TermService, config.VocabularyService, config.NamespaceService),
 			},
 		),
 	)
+
 	if config.Verbose {
 		srv.AroundOperations(func(ctx context.Context, next graphql.OperationHandler) graphql.ResponseHandler {
 			oc := graphql.GetOperationContext(ctx)
@@ -39,7 +40,7 @@ func Serve(config *Config) error {
 		})
 	}
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	http.Handle("/", playground.Handler("Taxonomy GraphQL playground", "/query"))
 	http.Handle("/query", srv)
 
 	log.Printf("connect to :%s for GraphQL playground", config.Port)

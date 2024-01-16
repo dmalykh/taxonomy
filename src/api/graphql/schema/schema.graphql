@@ -6,104 +6,24 @@ type PageInfo {
     hasNextPage: Boolean
 }
 
-input CategoryInput {
-    "Category's name"
-    name: String!
-    "Category's title"
-    title: String!
-    "Parent category"
-    parentId: ID
-    "Category's description"
-    description: String
-}
-
-type Category @key(fields: "id") {
-    id: ID!
-    "Category's name"
-    name: String!
-    "Category's title"
-    title: String!
-    "Parent category"
-    parent: Category
-    "Children categories"
-    children: [Category]!
-    "Tags in category"
-    tags(first: Int! = 20, after: Cursor): TagsConnection
-    "Category's description"
-    description: String
-}
-type TagsConnection {
-    edges: [TagsEdge!]!
-    pageInfo: PageInfo!
-}
-
-type TagsEdge {
-    cursor: Cursor!
-    node: Tag
-}
-
-
-input TagInput {
-    "Tag's name"
-    name: String!
-    "Tag's title"
-    title: String!
-    "Tag's category"
-    categoryId: ID!
-    "Description"
-    description: String
-}
-
-type Tag @key(fields: "id") {
-    id: ID!
-    "Tag's name"
-    name: String!
-    "Tag's title"
-    title: String
-    "Tag's category"
-    category: Category!
-    "Description"
-    description: String
-    "Entities related with tag"
-    entities(first: Int! = 20, after: Cursor, namespace: [String]): EntitiesConnection
-}
-
-type EntitiesConnection {
-    edges: [EntitiesEdge!]!
-    pageInfo: PageInfo!
-}
-
-type EntitiesEdge {
-    cursor: Cursor!
-    node: EntityNode
-}
-
-type EntityNode {
-    id: ID!  @external
-    namespace: String!
-}
-
 type Query {
-    tag(id:ID!): Tag!
+    term(id:ID!): Term!
 
-    "Returns all tags"
-    tags(categoryId:ID!, name: String, first: Int! = 20, after: Cursor): TagsConnection
+    "Returns all terms"
+    terms(filter: TermFilter, first: Int! = 20, after: Cursor): TermsConnection
 
-    "Returns all tags related to specified namespace and entities' id"
-    tagsByEntities(namespace: String!, entityId: [ID!]!): [Tag]!
+    vocabulary(id:ID!): Vocabulary!
 
-    category(id:ID!): Category!
-
-    "Returns all categories"
-    categories(parentId:ID, name:String):[Category]!
+    "Returns all vocabularies"
+    vocabularies(filter: VocabularyFilter, first: Int! = 20, after: Cursor ):VocabularyConnection
 }
 
 type Mutation {
-    createTag(input: TagInput!) : Tag!
-    updateTag(id:ID!, input: TagInput!) : Tag!
-    set(tagId:[ID!]!, namespace: String!, entityId: [ID!]!): Boolean
-    unset(tagId:[ID!]!, namespace: String!, entityId: [ID!]!): Boolean
+    createTerm(input: TermInput!) : Term!
+    updateTerm(id:ID!, input: TermInput!) : Term!
+    set(termId:[ID!]!, namespace: String!, entityId: [ID!]!): Boolean
+    unset(termId:[ID!]!, namespace: String!, entityId: [ID!]!): Boolean
 
-    createCategory(input: CategoryInput!) : Category!
-    updateCategory(id:ID!, input: CategoryInput!) : Category!
+    createVocabulary(input: VocabularyInput!) : Vocabulary!
+    updateVocabulary(id:ID!, input: VocabularyInput!) : Vocabulary!
 }

@@ -3,32 +3,31 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/dmalykh/taxonomy/taxonomy"
+	model2 "github.com/dmalykh/taxonomy/taxonomy/model"
 	"unsafe"
 
-	"github.com/dmalykh/tagservice/api/graphql/generated/genmodel"
-	apimodel "github.com/dmalykh/tagservice/api/graphql/model"
-	"github.com/dmalykh/tagservice/api/graphql/service/cursor"
-	"github.com/dmalykh/tagservice/tagservice"
-	"github.com/dmalykh/tagservice/tagservice/model"
+	"github.com/dmalykh/taxonomy/api/graphql/generated/genmodel"
+	apimodel "github.com/dmalykh/taxonomy/api/graphql/model"
+	"github.com/dmalykh/taxonomy/api/graphql/service/cursor"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
-//goland:noinspection GoUnnecessarilyExportedIdentifiers
 type Query struct {
-	tagService      tagservice.Tag
-	categoryService tagservice.Category
+	termService       taxonomy.Term
+	vocabularyService taxonomy.Vocabulary
 }
 
-func (q *Query) Tag(ctx context.Context, id int64) (apimodel.Tag, error) {
-	tag, err := q.tagService.GetByID(ctx, uint(id))
+func (q *Query) Term(ctx context.Context, id int64) (apimodel.Term, error) {
+	term, err := q.termService.GetByID(ctx, uint(id))
 	if err != nil {
-		return apimodel.Tag{}, fmt.Errorf(`error %w to get tag %d: %s`, tagservice.ErrTagNotFound, id, err.Error())
+		return apimodel.Term{}, fmt.Errorf(`error %w to get term %d: %s`, taxonomy.ErrTermNotFound, id, err.Error())
 	}
 
-	return tag2gen(tag), nil
+	return term2gen(term), nil
 }
 
-func (q *Query) Tags(ctx context.Context, categoryID int64, name *string, first int64, after *string) (*genmodel.TagsConnection, error) {
+func (q *Query) Terms(ctx context.Context, vocabularyID int64, name *string, first int64, after *string) (*genmodel.TermsConnection, error) {
 	var afterID uint
 	if after != nil {
 		if err := cursor.Unmarshal(*after, &afterID); err != nil {
@@ -36,45 +35,45 @@ func (q *Query) Tags(ctx context.Context, categoryID int64, name *string, first 
 		}
 	}
 
-	tags, err := q.tagService.GetList(ctx, &model.TagFilter{
-		CategoryID: []uint{uint(categoryID)},
-		Limit:      uint(first + 1), // dirty hack to obtain HasNextPage
-		AfterID:    &afterID,
-		Name:       name,
+	terms, err := q.termService.Get(ctx, &model2.TermFilter{
+		VocabularyID: []uint{uint(vocabularyID)},
+		Limit:        uint(first + 1), // dirty hack to obtain HasNextPage
+		AfterID:      &afterID,
+		Name:         name,
 	})
 	if err != nil {
 		return nil, fmt.Errorf(`error to get list %w`, err)
 	}
 
-	return tagsConnection(tags, int(first)), nil
+	return termsConnection(terms, int(first)), nil
 }
 
-func (q *Query) TagsByEntities(ctx context.Context, namespace string, entityID []int64) ([]*apimodel.Tag, error) {
-	tags, err := q.tagService.GetTagsByEntities(ctx, namespace, int64stoUints(entityID)...)
+func (q *Query) TermsByEntities(ctx context.Context, namespace string, entityID []int64) ([]*apimodel.Term, error) {
+	terms, err := q.termService.GetTermsByEntities(ctx, namespace, int64stoUints(entityID)...)
 	if err != nil {
-		return nil, gqlerror.Errorf(`error to get tags by entities %s`, err.Error())
+		return nil, gqlerror.Errorf(`error to get terms by entities %s`, err.Error())
 	}
 
-	return func(tags []model.Tag) []*apimodel.Tag {
-		apitags := make([]*apimodel.Tag, len(tags))
+	return func(terms []model2.Term) []*apimodel.Term {
+		apiterms := make([]*apimodel.Term, len(terms))
 
-		for i, tag := range tags {
-			tag := tag2gen(tag)
-			apitags[i] = &tag
+		for i, term := range terms {
+			term := term2gen(term)
+			apiterms[i] = &term
 		}
 
-		return apitags
-	}(tags), nil
+		return apiterms
+	}(terms), nil
 }
 
-func (q *Query) Category(ctx context.Context, id int64) (apimodel.Category, error) {
-	category, err := q.categoryService.GetByID(ctx, uint(id))
+func (q *Query) Vocabulary(ctx context.Context, id int64) (apimodel.Vocabulary, error) {
+	vocabulary, err := q.vocabularyService.GetByID(ctx, uint(id))
 
-	return category2gen(category), err
+	return vocabulary2gen(vocabulary), err
 }
 
-func (q *Query) Categories(ctx context.Context, parentID *int64, name *string) ([]*apimodel.Category, error) {
-	categorys, err := q.categoryService.GetList(ctx, &model.CategoryFilter{
+func (q *Query) Categories(ctx context.Context, parentID *int64, name *string) ([]*apimodel.Vocabulary, error) {
+	vocabularys, err := q.vocabularyService.Get(ctx, &model2.VocabularyFilter{
 		ParentID: (*uint)(unsafe.Pointer(parentID)),
 		Name:     name,
 	})
@@ -82,14 +81,14 @@ func (q *Query) Categories(ctx context.Context, parentID *int64, name *string) (
 		return nil, gqlerror.Errorf(`error to get categories by filter %s`, err.Error())
 	}
 
-	return func(categorys []model.Category) []*apimodel.Category {
-		apicategorys := make([]*apimodel.Category, len(categorys))
+	return func(vocabularys []model2.Vocabulary) []*apimodel.Vocabulary {
+		apivocabularys := make([]*apimodel.Vocabulary, len(vocabularys))
 
-		for i, category := range categorys {
-			category := category2gen(category)
-			apicategorys[i] = &category
+		for i, vocabulary := range vocabularys {
+			vocabulary := vocabulary2gen(vocabulary)
+			apivocabularys[i] = &vocabulary
 		}
 
-		return apicategorys
-	}(categorys), nil
+		return apivocabularys
+	}(vocabularys), nil
 }

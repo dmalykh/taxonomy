@@ -3,7 +3,7 @@ package cmd
 import (
 	"strconv"
 
-	"github.com/dmalykh/tagservice/api/graphql"
+	"github.com/dmalykh/taxonomy/api/graphql"
 	"github.com/spf13/cobra"
 )
 
@@ -14,7 +14,7 @@ func serveCommand() *cobra.Command {
 		Short: `Run API server`,
 	}
 
-	serveCmd.PersistentFlags().IntP(`port`, `p`, 8080, `port on which the github.com/dmalykh/tagservice will listen`) //nolint:gomnd
+	serveCmd.PersistentFlags().IntP(`port`, `p`, 8080, `port on which the github.com/dmalykh/internal will listen`) //nolint:gomnd
 
 	serveCmd.AddCommand(&cobra.Command{
 		Use:   `graphql`,
@@ -29,11 +29,11 @@ func serveCommand() *cobra.Command {
 			// Run service
 			s := service(cmd)
 			CheckErr(graphql.Serve(&graphql.Config{
-				Port:             strconv.Itoa(port),
-				TagService:       s.Tag,
-				CategoryService:  s.Category,
-				NamespaceService: s.Namespace,
-				Verbose:          verbose,
+				Port:              strconv.Itoa(port),
+				TermService:       s.Term,
+				VocabularyService: s.Vocabulary,
+				NamespaceService:  s.Namespace,
+				Verbose:           verbose,
 			}))
 		},
 	})

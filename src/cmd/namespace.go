@@ -1,10 +1,10 @@
 package cmd
 
 import (
+	"github.com/dmalykh/taxonomy/taxonomy/model"
 	"math"
 	"strconv"
 
-	"github.com/dmalykh/tagservice/tagservice/model"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
@@ -34,9 +34,9 @@ func namespaceCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		Short: "Update namespace (name must be unique)",
 		Run: func(cmd *cobra.Command, args []string) {
-			id, err := strconv.ParseUint(args[0], 10, 32)
+			id, err := strconv.ParseUint(args[0], 10, 64)
 			CheckErr(err)
-			_, err = service(cmd).Namespace.Update(cmd.Context(), uint(id), args[1])
+			_, err = service(cmd).Namespace.Update(cmd.Context(), id, args[1])
 			CheckErr(err)
 		},
 	}
@@ -46,9 +46,9 @@ func namespaceCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Short: "Delete namespace",
 		Run: func(cmd *cobra.Command, args []string) {
-			id, err := strconv.ParseUint(args[0], 10, 32)
+			id, err := strconv.ParseUint(args[0], 10, 64)
 			CheckErr(err)
-			CheckErr(service(cmd).Namespace.Delete(cmd.Context(), uint(id)))
+			CheckErr(service(cmd).Namespace.Delete(cmd.Context(), id))
 		},
 	}
 
@@ -57,7 +57,7 @@ func namespaceCommand() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Short: "Show all namespaces",
 		Run: func(cmd *cobra.Command, args []string) {
-			namespaces, err := service(cmd).Namespace.GetList(cmd.Context(), math.MaxUint, 0)
+			namespaces, err := service(cmd).Namespace.Get(cmd.Context(), math.MaxUint, 0)
 			CheckErr(err)
 
 			table := tablewriter.NewWriter(cmd.OutOrStdout())

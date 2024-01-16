@@ -4,24 +4,24 @@ import "namespace.proto";
 import "common.proto";
 import "google/protobuf/wrappers.proto";
 
-message Tag {
+message Term {
   int64 id = 1;
   string name = 2;
   string title = 3;
   optional string description = 4;
-  int64 category_id = 5;
+  int64 vocabulary_id = 5;
   google.protobuf.BoolValue active = 9;
 
 }
 
-message TagCreateRequest {
+message TermCreateRequest {
   string name = 2;
   string title = 3;
   optional string description = 4;
   optional google.protobuf.BoolValue active = 9;
 }
 
-message TagUpdateRequest {
+message TermUpdateRequest {
   int64 id = 1;
   optional string name = 2;
   optional string title = 3;
@@ -30,59 +30,59 @@ message TagUpdateRequest {
 }
 
 
-message TagNameRequest {
+message TermNameRequest {
   string name = 1;
 }
 
 message SetRequest {
-  repeated int64 tags_id = 1;
+  repeated int64 terms_id = 1;
   int64 namespace_id = 2;
   repeated int64 entity_id = 3;
 }
 
 message Set {
-  int64 tag_id = 1;
+  int64 term_id = 1;
   Namespace namespace = 2;
   int64 entity_id = 3;
 }
 
-message GetRelationRequest {
-  optional int64 tag_id = 1;
+message GetReferenceRequest {
+  optional int64 term_id = 1;
   optional Namespace namespace = 2;
   optional int64 entity_id = 3;
   Pagination pagination = 20;
 }
 
 //
-message RelationResponse {
-  repeated Set relations = 1;
+message ReferenceResponse {
+  repeated Set references = 1;
 
 }
 
-//Response with tags and information about pagination
-message TagsResponse {
-  repeated Tag tags = 1;
+//Response with terms and information about pagination
+message TermsResponse {
+  repeated Term terms = 1;
   PageInfo pagination = 9;
 }
 
-message GetByCategoryRequest {
-  int64 category_id = 1;
+message GetByVocabularyRequest {
+  int64 vocabulary_id = 1;
   Pagination pagination = 20;
 }
 
-service TagService {
-  rpc Create(TagCreateRequest) returns (Tag);
-  rpc Update(TagUpdateRequest) returns (Tag);
+service TermService {
+  rpc Create(TermCreateRequest) returns (Term);
+  rpc Update(TermUpdateRequest) returns (Term);
   rpc Delete(IdRequest) returns (google.protobuf.BoolValue);
-  rpc GetById(IdRequest) returns (Tag);
-  // GetByName returns tag by it's name
-  rpc GetByName(TagNameRequest) returns (Tag);
-  // Set relation between all specified tags and all entities.
+  rpc GetById(IdRequest) returns (Term);
+  // GetByName returns term by it's name
+  rpc GetByName(TermNameRequest) returns (Term);
+  // Set reference between all specified terms and all entities.
   rpc Set(SetRequest) returns (google.protobuf.BoolValue);
-  // GetRelation returns all relations for specified request.
-  rpc GetRelation(GetRelationRequest) returns (RelationResponse);
-  // GetByCategoryId returns tags by category id
-  rpc GetByCategory(GetByCategoryRequest) returns (TagsResponse);
-  // GetList returns list of all tags
-  rpc GetList(Pagination) returns (TagsResponse);
+  // GetReference returns all references for specified request.
+  rpc GetReference(GetReferenceRequest) returns (ReferenceResponse);
+  // GetByVocabularyId returns terms by vocabulary id
+  rpc GetByVocabulary(GetByVocabularyRequest) returns (TermsResponse);
+  // GetList returns list of all terms
+  rpc GetList(Pagination) returns (TermsResponse);
 }

@@ -3,17 +3,17 @@
 package genmodel
 
 import (
-	"github.com/dmalykh/tagservice/api/graphql/model"
+	"github.com/dmalykh/taxonomy/api/graphql/model"
 )
 
-type CategoryInput struct {
-	// Category's name
+type VocabularyInput struct {
+	// Vocabulary's name
 	Name string `json:"name"`
-	// Category's title
+	// Vocabulary's title
 	Title string `json:"title"`
-	// Parent category
+	// Parent vocabulary
 	ParentID *int64 `json:"parentId"`
-	// Category's description
+	// Vocabulary's description
 	Description *string `json:"description"`
 }
 
@@ -38,23 +38,23 @@ type PageInfo struct {
 	HasNextPage *bool  `json:"hasNextPage"`
 }
 
-type TagInput struct {
-	// Tag's name
+type TermInput struct {
+	// Term's name
 	Name string `json:"name"`
-	// Tag's title
+	// Term's title
 	Title string `json:"title"`
-	// Tag's category
-	CategoryID int64 `json:"categoryId"`
+	// Term's vocabulary
+	VocabularyID int64 `json:"vocabularyId"`
 	// Description
 	Description *string `json:"description"`
 }
 
-type TagsConnection struct {
-	Edges    []TagsEdge `json:"edges"`
-	PageInfo PageInfo   `json:"pageInfo"`
+type TermsConnection struct {
+	Edges    []TermsEdge `json:"edges"`
+	PageInfo PageInfo    `json:"pageInfo"`
 }
 
-type TagsEdge struct {
-	Cursor string     `json:"cursor"`
-	Node   *model.Tag `json:"node"`
+type TermsEdge struct {
+	Cursor string      `json:"cursor"`
+	Node   *model.Term `json:"node"`
 }

@@ -1,12 +1,12 @@
 ---
-name: "Build TagService"
+name: "Build Taxonomy Service"
 
 on:
   workflow_dispatch:
   push:
     branches:
       - 'master'
-    tags:
+    terms:
       - 'v[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
@@ -14,6 +14,7 @@ jobs:
     defaults:
       run:
         working-directory: src
+
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -21,6 +22,16 @@ jobs:
         with:
           fetch-depth: 0
           ref: master
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          # Required:  the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
+          version: v1.49
+          # Optional: golangci-lint command line arguments.
+          # args: --timeout=20m
+          # Optional: show only new issues if it's a pull request. The default value is `false`.
+          only-new-issues: true
 
       - name: Setup Go
         uses: actions/setup-go@v4
@@ -47,6 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       packages: write
+
     steps:
       - name: Log in to the Container registry (with PAT)
         uses: docker/login-action@v2
@@ -67,7 +79,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository }}:latest
+          terms: ghcr.io/${{ github.repository }}:latest
           secrets: |
             GIT_AUTH_TOKEN=${{ github.token }}
 

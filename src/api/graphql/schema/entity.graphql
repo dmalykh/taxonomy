@@ -1,0 +1,15 @@
+
+type EntitiesConnection {
+    edges: [EntitiesEdge!]!
+    pageInfo: PageInfo!
+}
+
+type EntitiesEdge {
+    cursor: Cursor!
+    node: EntityNode
+}
+
+type EntityNode {
+    id: ID!  @external
+    namespace: String!
+}

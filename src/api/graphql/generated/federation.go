@@ -80,41 +80,41 @@ func (ec *executionContext) __resolve_entities(ctx context.Context, representati
 		}()
 
 		switch typeName {
-		case "Category":
-			resolverName, err := entityResolverNameForCategory(ctx, rep)
+		case "Vocabulary":
+			resolverName, err := entityResolverNameForVocabulary(ctx, rep)
 			if err != nil {
-				return fmt.Errorf(`finding resolver for Entity "Category": %w`, err)
+				return fmt.Errorf(`finding resolver for Entity "Vocabulary": %w`, err)
 			}
 			switch resolverName {
 
-			case "findCategoryByID":
+			case "findVocabularyByID":
 				id0, err := ec.unmarshalNID2int64(ctx, rep["id"])
 				if err != nil {
-					return fmt.Errorf(`unmarshalling param 0 for findCategoryByID(): %w`, err)
+					return fmt.Errorf(`unmarshalling param 0 for findVocabularyByID(): %w`, err)
 				}
-				entity, err := ec.resolvers.Entity().FindCategoryByID(ctx, id0)
+				entity, err := ec.resolvers.Entity().FindVocabularyByID(ctx, id0)
 				if err != nil {
-					return fmt.Errorf(`resolving Entity "Category": %w`, err)
+					return fmt.Errorf(`resolving Entity "Vocabulary": %w`, err)
 				}
 
 				list[idx[i]] = entity
 				return nil
 			}
-		case "Tag":
-			resolverName, err := entityResolverNameForTag(ctx, rep)
+		case "Term":
+			resolverName, err := entityResolverNameForTerm(ctx, rep)
 			if err != nil {
-				return fmt.Errorf(`finding resolver for Entity "Tag": %w`, err)
+				return fmt.Errorf(`finding resolver for Entity "Term": %w`, err)
 			}
 			switch resolverName {
 
-			case "findTagByID":
+			case "findTermByID":
 				id0, err := ec.unmarshalNID2int64(ctx, rep["id"])
 				if err != nil {
-					return fmt.Errorf(`unmarshalling param 0 for findTagByID(): %w`, err)
+					return fmt.Errorf(`unmarshalling param 0 for findTermByID(): %w`, err)
 				}
-				entity, err := ec.resolvers.Entity().FindTagByID(ctx, id0)
+				entity, err := ec.resolvers.Entity().FindTermByID(ctx, id0)
 				if err != nil {
-					return fmt.Errorf(`resolving Entity "Tag": %w`, err)
+					return fmt.Errorf(`resolving Entity "Term": %w`, err)
 				}
 
 				list[idx[i]] = entity
@@ -189,7 +189,7 @@ func (ec *executionContext) __resolve_entities(ctx context.Context, representati
 	}
 }
 
-func entityResolverNameForCategory(ctx context.Context, rep map[string]interface{}) (string, error) {
+func entityResolverNameForVocabulary(ctx context.Context, rep map[string]interface{}) (string, error) {
 	for {
 		var (
 			m   map[string]interface{}
@@ -201,12 +201,12 @@ func entityResolverNameForCategory(ctx context.Context, rep map[string]interface
 		if _, ok = m["id"]; !ok {
 			break
 		}
-		return "findCategoryByID", nil
+		return "findVocabularyByID", nil
 	}
-	return "", fmt.Errorf("%w for Category", ErrTypeNotFound)
+	return "", fmt.Errorf("%w for Vocabulary", ErrTypeNotFound)
 }
 
-func entityResolverNameForTag(ctx context.Context, rep map[string]interface{}) (string, error) {
+func entityResolverNameForTerm(ctx context.Context, rep map[string]interface{}) (string, error) {
 	for {
 		var (
 			m   map[string]interface{}
@@ -218,7 +218,7 @@ func entityResolverNameForTag(ctx context.Context, rep map[string]interface{}) (
 		if _, ok = m["id"]; !ok {
 			break
 		}
-		return "findTagByID", nil
+		return "findTermByID", nil
 	}
-	return "", fmt.Errorf("%w for Tag", ErrTypeNotFound)
+	return "", fmt.Errorf("%w for Term", ErrTypeNotFound)
 }

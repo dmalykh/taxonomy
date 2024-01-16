@@ -3,20 +3,20 @@ package loader
 import (
 	"context"
 	"fmt"
+	"github.com/dmalykh/taxonomy/internal/repository/entgo"
+	repository2 "github.com/dmalykh/taxonomy/internal/repository/entgo/repository"
+	"github.com/dmalykh/taxonomy/taxonomy"
 
-	"github.com/dmalykh/tagservice/repository/entgo"
-	"github.com/dmalykh/tagservice/repository/entgo/repository"
-	"github.com/dmalykh/tagservice/tagservice"
-	"github.com/dmalykh/tagservice/tagservice/service/category"
-	"github.com/dmalykh/tagservice/tagservice/service/namespace"
-	"github.com/dmalykh/tagservice/tagservice/service/tag"
+	"github.com/dmalykh/taxonomy/internal/service/namespace"
+	"github.com/dmalykh/taxonomy/internal/service/term"
+	"github.com/dmalykh/taxonomy/internal/service/vocabulary"
 	"go.uber.org/zap"
 )
 
 type Service struct {
-	Namespace tagservice.Namespace
-	Tag       tagservice.Tag
-	Category  tagservice.Category
+	Namespace  taxonomy.Namespace
+	Term       taxonomy.Term
+	Vocabulary taxonomy.Vocabulary
 }
 
 func Load(ctx context.Context, dsn string, verbose bool) (*Service, error) {
@@ -63,28 +63,26 @@ func Load(ctx context.Context, dsn string, verbose bool) (*Service, error) {
 	// Construct service
 	var service Service
 
-	transaction := entgo.Transactioner(client)
-
 	service.Namespace = namespace.New(&namespace.Config{
 		Transaction:         transaction,
-		NamespaceRepository: repository.NewNamespace(client.Namespace),
-		RelationRepository:  repository.NewRelation(client.Relation),
+		NamespaceRepository: repository2.NewNamespace(client.Namespace),
+		ReferenceRepository: repository2.NewReference(client.Reference),
 		Logger:              logger,
 	})
 
-	service.Tag = tag.New(&tag.Config{
-		Transaction:        transaction,
-		TagRepository:      repository.NewTag(client.Tag),
-		CategoryRepository: repository.NewCategory(client.Category),
-		RelationRepository: repository.NewRelation(client.Relation),
-		NamespaceService:   service.Namespace,
-		Logger:             logger,
+	service.Term = term.New(&term.Config{
+		Transaction:         transaction,
+		TermRepository:      repository2.NewTerm(client.Term),
+		VocabularyService:   repository2.NewVocabulary(client.Vocabulary),
+		ReferenceRepository: repository2.NewReference(client.Reference),
+		NamespaceService:    service.Namespace,
+		Logger:              logger,
 	})
 
-	service.Category = category.New(&category.Config{
-		CategoryRepository: repository.NewCategory(client.Category),
-		TagService:         service.Tag,
-		Logger:             logger,
+	service.Vocabulary = vocabulary.New(&vocabulary.Config{
+		VocabularyRepository: repository2.NewVocabulary(client.Vocabulary),
+		TermService:          service.Term,
+		Logger:               logger,
 	})
 
 	return &service, nil
