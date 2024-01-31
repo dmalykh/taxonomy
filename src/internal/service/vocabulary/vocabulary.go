@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/dmalykh/taxonomy/internal/helper"
 	"github.com/dmalykh/taxonomy/taxonomy"
 	"github.com/dmalykh/taxonomy/taxonomy/model"
 	"github.com/dmalykh/taxonomy/taxonomy/repository"
@@ -155,8 +156,8 @@ func (c *VocabularyService) Get(ctx context.Context, filter *model.VocabularyFil
 	logger := c.log.With(zap.String(`method`, `Get`), zap.Any(`filter`, filter))
 
 	list, err := c.vocabularyRepository.Get(ctx, &repository.VocabularyFilter{
-		Name:     valToSlice[string](filter.Name),
-		ParentID: valToSlice[uint64](filter.ParentID),
+		Name:     helper.ValToSlice[string](filter.Name),
+		ParentID: helper.ValToSlice[uint64](filter.ParentID),
 	})
 	logger.Debug(`get list`, zap.Error(err))
 
@@ -203,11 +204,4 @@ func (c *VocabularyService) exists(ctx context.Context, id uint64) (bool, error)
 	}
 
 	return true, nil
-}
-
-func valToSlice[T any](input *T) []T {
-	if input != nil {
-		return []T{*input}
-	}
-	return []T{}
 }

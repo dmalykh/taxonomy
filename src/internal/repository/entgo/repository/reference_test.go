@@ -35,7 +35,7 @@ func (suite *ReferenceTestSuite) TearDownTest() {
 
 func (suite *ReferenceTestSuite) mockTerm(ctx context.Context, vocabularyID uint64) *ent.Term {
 	return suite.client.Term.Create().
-		SetName(suite.faker.RandomStringWithLength(suite.faker.IntBetween(1, 9999))).
+		SetName(suite.faker.RandomStringWithLength(suite.faker.IntBetween(10, 30))).
 		SetTitle(suite.faker.Beer().Name()).
 		AddVocabularyIDs(vocabularyID).
 		SaveX(ctx)
@@ -43,7 +43,7 @@ func (suite *ReferenceTestSuite) mockTerm(ctx context.Context, vocabularyID uint
 
 func (suite *ReferenceTestSuite) mockVocabulary(ctx context.Context, parentID *uint64) *ent.Vocabulary {
 	return suite.client.Vocabulary.Create().
-		SetName(suite.faker.RandomStringWithLength(suite.faker.IntBetween(1, 9999))).
+		SetName(suite.faker.RandomStringWithLength(suite.faker.IntBetween(10, 30))).
 		SetTitle(suite.faker.Company().Name()).
 		SetNillableParentID(parentID).
 		SaveX(ctx)
@@ -51,7 +51,7 @@ func (suite *ReferenceTestSuite) mockVocabulary(ctx context.Context, parentID *u
 
 func (suite *ReferenceTestSuite) mockNamespace(ctx context.Context) *ent.Namespace {
 	return suite.client.Namespace.Create().
-		SetName(suite.faker.RandomStringWithLength(suite.faker.IntBetween(1, 9999))).
+		SetName(suite.faker.RandomStringWithLength(suite.faker.IntBetween(10, 30))).
 		SaveX(ctx)
 }
 
@@ -169,7 +169,7 @@ func (suite *ReferenceTestSuite) TestCreate() {
 			want: 2,
 		},
 		{
-			name: `duplicate records error`,
+			name: `duplicate records no error`,
 			references: func(ctx context.Context, client *ent.Client) []*repository.ReferenceModel {
 				vocabulary := client.Vocabulary.Create().SetName(suite.faker.Company().Suffix()).
 					SetTitle(suite.faker.Company().Name()).SaveX(ctx)
@@ -185,12 +185,27 @@ func (suite *ReferenceTestSuite) TestCreate() {
 					{
 						TermID:      term.ID,
 						NamespaceID: namespace.ID,
+						EntityID:    `333`,
+					},
+					{
+						TermID:      term.ID,
+						NamespaceID: namespace.ID,
 						EntityID:    `222`,
+					},
+					{
+						TermID:      term.ID,
+						NamespaceID: namespace.ID,
+						EntityID:    `222`,
+					},
+					{
+						TermID:      term.ID,
+						NamespaceID: namespace.ID,
+						EntityID:    `333`,
 					},
 				}
 			},
-			err:  repository.ErrCreateReference,
-			want: 0,
+			err:  nil,
+			want: 2,
 		},
 	}
 
@@ -201,7 +216,7 @@ func (suite *ReferenceTestSuite) TestCreate() {
 			ctx := context.TODO()
 			{
 				rel := repo.NewReference(suite.client.Reference)
-				err := rel.Create(ctx, tt.references(ctx, suite.client)...)
+				err := rel.Set(ctx, tt.references(ctx, suite.client)...)
 				assert.ErrorIs(suite.T(), err, tt.err)
 			}
 			{
@@ -289,7 +304,7 @@ func (suite *ReferenceTestSuite) TestGet() {
 	tests := []struct {
 		name  string
 		get   func() ([][]uint64, []uint64, []model.EntityID)
-		check func(references []repository.ReferenceModel)
+		check func(references []*repository.ReferenceModel)
 		err   func(error, ...interface{}) bool
 	}{
 		{
@@ -299,7 +314,7 @@ func (suite *ReferenceTestSuite) TestGet() {
 
 				return nil, ns, nil
 			},
-			func(references []repository.ReferenceModel) {
+			func(references []*repository.ReferenceModel) {
 				suite.Len(references, 100)
 			},
 			func(err error, i ...interface{}) bool {
@@ -311,7 +326,7 @@ func (suite *ReferenceTestSuite) TestGet() {
 			func() ([][]uint64, []uint64, []model.EntityID) {
 				return nil, nil, []model.EntityID{`22`, `33`}
 			},
-			func(references []repository.ReferenceModel) {
+			func(references []*repository.ReferenceModel) {
 				suite.Empty(references)
 			},
 			func(err error, i ...interface{}) bool {
@@ -355,10 +370,10 @@ func (suite *ReferenceTestSuite) TestGet() {
 				// ALl laptops with 256 RAM and OLED or IPS matrix
 				return [][]uint64{{t256.ID}, {tOLED.ID, tIPS.ID}}, []uint64{ns.ID}, nil
 			},
-			func(references []repository.ReferenceModel) {
+			func(references []*repository.ReferenceModel) {
 				// Should be dellM and asusX (4 terms
 				suite.Len(references, 4)
-				suite.Len(lo.Filter[repository.ReferenceModel](references, func(item repository.ReferenceModel, index int) bool {
+				suite.Len(lo.Filter[*repository.ReferenceModel](references, func(item *repository.ReferenceModel, index int) bool {
 					return item.EntityID != `dellM` && item.EntityID != `asusX`
 				}), 0)
 			},
@@ -373,7 +388,7 @@ func (suite *ReferenceTestSuite) TestGet() {
 
 				return nil, namespaces[:50], nil
 			},
-			func(references []repository.ReferenceModel) {
+			func(references []*repository.ReferenceModel) {
 				suite.Len(references, 50)
 			},
 			func(err error, i ...interface{}) bool {
@@ -387,7 +402,7 @@ func (suite *ReferenceTestSuite) TestGet() {
 
 				return nil, namespaces, entities[:50]
 			},
-			func(references []repository.ReferenceModel) {
+			func(references []*repository.ReferenceModel) {
 				suite.Len(references, 50)
 			},
 			func(err error, i ...interface{}) bool {

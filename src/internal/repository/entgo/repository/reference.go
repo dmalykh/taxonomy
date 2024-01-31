@@ -23,25 +23,26 @@ func NewReference(client *ent.ReferenceClient) repository.Reference {
 	}
 }
 
-func (r *Reference) Create(ctx context.Context, reference ...*repository.ReferenceModel) error {
-	added, err := r.client.CreateBulk(func() []*ent.ReferenceCreate {
+func (r *Reference) Set(ctx context.Context, reference ...*repository.ReferenceModel) error {
+	err := r.client.CreateBulk(func() []*ent.ReferenceCreate {
 		create := make([]*ent.ReferenceCreate, 0, len(reference))
 
 		for _, rel := range reference {
 			create = append(create, r.client.Create().
 				SetTermID(rel.TermID).
 				SetNamespaceID(rel.NamespaceID).
-				SetEntityID(string(rel.EntityID)))
+				SetEntityID(string(rel.EntityID)),
+			)
 		}
 
 		return create
-	}()...).Save(ctx)
+	}()...).
+		OnConflict(
+			sql.ConflictColumns(`term_id`, `namespace_id`, `entity_id`),
+			sql.ResolveWithNewValues(),
+		).Exec(ctx)
 	if err != nil {
 		return fmt.Errorf(`%w: %s`, repository.ErrCreateReference, err.Error())
-	}
-
-	if len(added) != len(reference) {
-		return fmt.Errorf(`%w: internal error`, repository.ErrCreateReference)
 	}
 
 	return nil
@@ -115,7 +116,7 @@ func (r *Reference) Delete(ctx context.Context, filter *repository.ReferenceFilt
 	return nil
 }
 
-func (r *Reference) Get(ctx context.Context, filter *repository.ReferenceFilter) ([]repository.ReferenceModel, error) {
+func (r *Reference) Get(ctx context.Context, filter *repository.ReferenceFilter) ([]*repository.ReferenceModel, error) {
 	if len(filter.NamespaceID) == 0 {
 		return nil, repository.ErrWithoutNamespace
 	}
@@ -127,9 +128,9 @@ func (r *Reference) Get(ctx context.Context, filter *repository.ReferenceFilter)
 		return nil, errors.Join(repository.ErrGetReference, err)
 	}
 
-	references := make([]repository.ReferenceModel, 0, len(entreferences))
+	references := make([]*repository.ReferenceModel, 0, len(entreferences))
 	for _, rel := range entreferences {
-		references = append(references, repository.ReferenceModel{
+		references = append(references, &repository.ReferenceModel{
 			ID:          rel.ID,
 			TermID:      rel.TermID,
 			NamespaceID: rel.NamespaceID,

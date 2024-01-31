@@ -34,18 +34,18 @@ type TermService struct {
 	log               *zap.Logger
 }
 
-func (t *TermService) Create(ctx context.Context, data *model.TermData) (model.Term, error) {
+func (t *TermService) Create(ctx context.Context, data *model.TermData) (*model.Term, error) {
 	logger := t.log.With(zap.String(`method`, `Create`), zap.Any(`data`, *data))
 
 	if err := t.checkVocabularies(ctx, data.VocabularyID); err != nil {
-		return model.Term{}, err
+		return nil, err
 	}
 
 	term, err := t.termRepository.Create(ctx, data)
 	logger.Debug(`term created`, zap.Any(`term`, term), zap.Error(err))
 
 	if err != nil {
-		return model.Term{}, fmt.Errorf(`%w %s`, taxonomy.ErrTermNotCreated, err.Error())
+		return nil, fmt.Errorf(`%w %s`, taxonomy.ErrTermNotCreated, err.Error())
 	}
 
 	return term, nil
@@ -125,7 +125,7 @@ func (t *TermService) Delete(ctx context.Context, id uint64) error {
 	logger := t.log.With(zap.String(`method`, `Delete`), zap.Uint64("id", id))
 
 	// Check term exists
-	term, err := t.termRepository.GetByID(ctx, id)
+	terms, err := t.termRepository.Get(ctx, &repository.TermFilter{ID: []uint64{id}})
 	if err != nil {
 		logger.Error(`get term by id`, zap.Error(err))
 
@@ -135,6 +135,8 @@ func (t *TermService) Delete(ctx context.Context, id uint64) error {
 
 		return fmt.Errorf(`unknown error %w`, err)
 	}
+
+	var term = terms[0]
 
 	// Reference exists check
 	logger.Debug(`check references`, zap.Uint64(`id`, term.ID))
@@ -147,13 +149,13 @@ func (t *TermService) Delete(ctx context.Context, id uint64) error {
 	}
 
 	if len(ref) > 0 {
-		return fmt.Errorf(`can't remove term %q: %d %w`, term.ID, len(ref), taxonomy.ErrTermReferenceExists)
+		return fmt.Errorf(`can't remove term %q: %d %w`, term.ID, len(ref), taxonomy.ErrReferenceExists)
 	}
 
 	// Delete term
 	logger.Debug(`delete term by id`, zap.Uint64(`id`, term.ID))
 
-	if err := t.termRepository.DeleteByID(ctx, term.ID); err != nil {
+	if err := t.termRepository.Delete(ctx, &repository.TermFilter{ID: []uint64{term.ID}}); err != nil {
 		logger.Error(`delete term by id error`, zap.Uint64(`term_id`, term.ID), zap.Error(err))
 
 		return fmt.Errorf(`can't remove term %w`, err)
@@ -162,27 +164,66 @@ func (t *TermService) Delete(ctx context.Context, id uint64) error {
 	return nil
 }
 
-func (t *TermService) GetByID(ctx context.Context, id uint64) (model.Term, error) {
+//	if ok, err := t.exists(ctx, id); !ok || err != nil {
+//		if err != nil {
+//			return nil, fmt.Errorf(`%w, get parent id  %d error: %w`,
+//				taxonomy.ErrTermNotFound, id, err)
+//		}
+//
+//		return nil, fmt.Errorf(`id %d %w`, id, taxonomy.ErrTermNotFound)
+//	}
+func (c *TermService) exists(ctx context.Context, id uint64) (bool, error) {
+	terms, err := c.termRepository.Get(ctx, &repository.TermFilter{ID: []uint64{id}})
+	if err != nil {
+		if errors.Is(err, repository.ErrFindTerm) {
+			return false, nil
+		}
+
+		return false, fmt.Errorf(`unknown parent id error %w`, err)
+	}
+
+	if len(terms) != 1 {
+		return false, fmt.Errorf(`%w, got %d results`, taxonomy.ErrVocabularyNotFound, len(terms))
+	}
+
+	return true, nil
+}
+
+func (t *TermService) GetByID(ctx context.Context, id uint64) (*model.Term, error) {
 	logger := t.log.With(zap.String(`method`, `GetByID`), zap.Uint64("id", id))
 
-	term, err := t.termRepository.GetByID(ctx, id)
+	terms, err := t.termRepository.Get(ctx, &repository.TermFilter{ID: []uint64{id}})
 	if err != nil {
 		logger.Error(`get term by id`, zap.Error(err))
 
 		if errors.Is(err, repository.ErrFindTerm) {
-			return term, fmt.Errorf(`%w %d`, taxonomy.ErrTermNotFound, id)
+			return nil, fmt.Errorf(`%w %d`, taxonomy.ErrTermNotFound, id)
 		}
 
-		return term, fmt.Errorf(`unknown error %w`, err)
+		return nil, fmt.Errorf(`unknown error %w`, err)
 	}
 
-	return term, nil
+	if len(terms) != 1 {
+		return nil, fmt.Errorf(`%w, got %d results`, taxonomy.ErrVocabularyNotFound, len(terms))
+	}
+
+	logger.Debug(`term is got`, zap.Any(`term`, terms[0]))
+
+	return terms[0], nil
 }
 
-func (t *TermService) Get(ctx context.Context, filter *model.TermFilter) ([]model.Term, error) {
+func (t *TermService) Get(ctx context.Context, filter *model.TermFilter) ([]*model.Term, error) {
 	logger := t.log.With(zap.String(`method`, `Get`), zap.Any(`filter`, filter))
 
-	terms, err := t.termRepository.GetList(ctx, filter)
+	terms, err := t.termRepository.Get(ctx, &repository.TermFilter{
+		VocabularyID: filter.VocabularyID,
+		SuperID:      filter.SuperID,
+		SubID:        filter.SubID,
+		Name:         filter.Name,
+		AfterID:      filter.AfterID,
+		Limit:        filter.Limit,
+		Offset:       filter.Offset,
+	})
 	logger.Debug(`got terms`, zap.Any(`terms`, terms), zap.Error(err))
 
 	if err != nil {

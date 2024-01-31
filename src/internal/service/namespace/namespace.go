@@ -111,7 +111,7 @@ func (n *NamespaceService) Delete(ctx context.Context, id uint64) error {
 	}
 
 	if len(ref) > 0 {
-		return errors.Join(taxonomy.ErrTermReferenceExists, fmt.Errorf(`%d has %d references`, id, len(ref)))
+		return errors.Join(taxonomy.ErrReferenceExists, fmt.Errorf(`%d has %d references`, id, len(ref)))
 	}
 
 	// Delete namespace

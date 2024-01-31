@@ -153,7 +153,7 @@ func TestNamespaceService_Delete(t *testing.T) {
 					NamespaceRepository: namespacerepo,
 				})
 			},
-			err: taxonomy.ErrTermReferenceExists,
+			err: taxonomy.ErrReferenceExists,
 		},
 		{
 			name: `error delete namespace`,

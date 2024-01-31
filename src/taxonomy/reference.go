@@ -2,7 +2,14 @@ package taxonomy
 
 import (
 	"context"
+	"errors"
 	"github.com/dmalykh/taxonomy/taxonomy/model"
+)
+
+var (
+	ErrReferenceExists     = errors.New(`references exists`)
+	ErrReferenceNotCreated = errors.New(`term's reference had not created`)
+	ErrReferenceNotRemoved = errors.New(`term's reference had not removed`)
 )
 
 type Reference interface {

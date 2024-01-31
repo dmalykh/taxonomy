@@ -2,7 +2,6 @@ package vocabulary
 
 import (
 	"context"
-	"errors"
 	"github.com/dmalykh/taxonomy/taxonomy/model"
 	"github.com/dmalykh/taxonomy/taxonomy/repository"
 	"github.com/ovechkin-dm/mockio/mock"
@@ -14,40 +13,29 @@ import (
 func TestVocabularyService_Create(t *testing.T) {
 	tests := []struct {
 		name             string
-		mockData         *model.VocabularyData
-		expectedResult   *model.Vocabulary
-		expectedError    error
+		data             *model.VocabularyData
+		assert           func(t *testing.T, voc *model.Vocabulary, err error)
 		repositoryReturn func() (*model.Vocabulary, error)
 	}{
 		{
-			name:     "Create Vocabulary Successfully",
-			mockData: &model.VocabularyData{
-				// provide necessary data
+			name: "Create Vocabulary Successfully",
+			data: &model.VocabularyData{
+				Name: `XXX`,
 			},
-			expectedResult: &model.Vocabulary{
-				// provide necessary data
+			assert: func(t *testing.T, voc *model.Vocabulary, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, uint64(121), voc.ID)
+				assert.Equal(t, `XXX`, voc.Data.Name)
 			},
 			repositoryReturn: func() (*model.Vocabulary, error) {
-
+				return &model.Vocabulary{ID: 121, Data: model.VocabularyData{Name: `XXX`}}, nil
 			},
 		},
-		{
-			name:     "Error Creating Vocabulary",
-			mockData: &model.VocabularyData{
-				// provide necessary data
-			},
-			expectedResult: nil,
-			expectedError:  errors.New("some error"),
-			repositoryReturn: func() (*model.Vocabulary, error) {
-
-			},
-		},
-		// Add more test cases as needed
+		// Add more test cases @TODO
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Arrange
 			mock.SetUp(t)
 			var ctx = context.Background()
 			vocabularyRepository := mock.Mock[repository.Vocabulary]()
@@ -56,18 +44,14 @@ func TestVocabularyService_Create(t *testing.T) {
 				vocabularyRepository: vocabularyRepository,
 			}
 
-			mock.When(vocabularyRepository.Create(mock.Exact[context.Context](ctx), tt.mockData)).
+			mock.When(vocabularyRepository.Create(mock.Exact[context.Context](ctx), mock.Any[*model.VocabularyData]())).
 				ThenAnswer(func(args []any) []any {
 					voc, err := tt.repositoryReturn()
 					return []any{voc, err}
 				})
 
-			// Act
-			result, err := service.Create(context.Background(), tt.mockData)
-
-			// Assert
-			assert.Equal(t, tt.expectedResult, result)
-			assert.Equal(t, tt.expectedError, err)
+			result, err := service.Create(ctx, tt.data)
+			tt.assert(t, result, err)
 		})
 	}
 }

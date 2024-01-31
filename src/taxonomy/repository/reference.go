@@ -14,9 +14,9 @@ var (
 )
 
 type Reference interface {
-	Create(ctx context.Context, reference ...*ReferenceModel) error
+	Set(ctx context.Context, reference ...*ReferenceModel) error
 	Delete(ctx context.Context, filter *ReferenceFilter) error
-	Get(ctx context.Context, filter *ReferenceFilter) ([]ReferenceModel, error)
+	Get(ctx context.Context, filter *ReferenceFilter) ([]*ReferenceModel, error)
 }
 
 // ReferenceFilter used for requests to repository.
@@ -26,7 +26,7 @@ type ReferenceFilter struct {
 	NamespaceID []uint64   // Required!
 	EntityID    []model.EntityID
 	AfterID     *uint64
-	Limit       uint
+	Limit       *uint
 }
 
 type ReferenceModel struct {

@@ -7,12 +7,14 @@ import (
 	"github.com/dmalykh/taxonomy/taxonomy"
 	"github.com/dmalykh/taxonomy/taxonomy/model"
 	"github.com/dmalykh/taxonomy/taxonomy/repository"
+	"github.com/samber/lo"
 	"go.uber.org/zap"
 )
 
 type Config struct {
 	NamespaceService    taxonomy.Namespace
-	referenceRepository repository.Reference
+	ReferenceRepository repository.Reference
+	TermService         taxonomy.Term
 	Logger              *zap.Logger
 }
 
@@ -24,7 +26,12 @@ type Service struct {
 }
 
 func New(config *Config) taxonomy.Reference {
-	return &Service{}
+	return &Service{
+		namespaceService:    config.NamespaceService,
+		termService:         config.TermService,
+		referenceRepository: config.ReferenceRepository,
+		log:                 config.Logger,
+	}
 }
 
 func (r *Service) Create(ctx context.Context, termID uint64, namespace string, entitiesID ...model.EntityID) error {
@@ -33,7 +40,7 @@ func (r *Service) Create(ctx context.Context, termID uint64, namespace string, e
 
 	ns, err := r.namespaceService.GetByName(ctx, namespace)
 	if err != nil {
-		return fmt.Errorf(`%w %s`, taxonomy.ErrTermNamespaceNotFound, err.Error())
+		return fmt.Errorf(`namespace %s get error: %w: %w`, namespace, taxonomy.ErrNamespaceNotFound, err)
 	}
 
 	// Check term exists
@@ -44,7 +51,7 @@ func (r *Service) Create(ctx context.Context, termID uint64, namespace string, e
 			return fmt.Errorf(`%w %d`, taxonomy.ErrTermNotFound, termID)
 		}
 
-		return fmt.Errorf(`unknown term error %w`, err)
+		return fmt.Errorf(`unknown term %d error %w`, termID, err)
 	}
 
 	// Prepare references without duplicates
@@ -66,105 +73,94 @@ func (r *Service) Create(ctx context.Context, termID uint64, namespace string, e
 		seen[entityID] = struct{}{}
 	}
 
-	// Delete exists and insert prepared
-	if err := r.referenceRepository.Delete(ctx, []uint64{termID}, []uint64{ns.ID}, entitiesID); err != nil {
-		return fmt.Errorf(`can't remove reference %w: %s`, taxonomy.ErrTermReferenceNotRemoved, err.Error())
-	}
-
-	if err := r.referenceRepository.Create(ctx, references...); err != nil {
-		return fmt.Errorf(`can't create reference %w: %s`, taxonomy.ErrTermReferenceNotCreated, err.Error())
+	// Upsert prepared
+	if err := r.referenceRepository.Set(ctx, references...); err != nil {
+		return fmt.Errorf(`can't create reference %w: %w`, taxonomy.ErrReferenceNotCreated, err)
 	}
 
 	return nil
 }
 
 func (r *Service) Delete(ctx context.Context, termID uint64, namespace string, entitiesID ...model.EntityID) error {
-	logger := r.log.With(zap.String(`method`, `UnsetReference`), zap.Uint64(`termID`, termID),
-		zap.String("namespace", namespace), zap.Any(`entitiesID`, entitiesID))
+	r.log.With(zap.String(`method`, `Delete`), zap.Uint64(`termID`, termID),
+		zap.String("namespace", namespace), zap.Any(`entitiesID`, entitiesID)).Info(`delete reference`)
 
 	ns, err := r.namespaceService.GetByName(ctx, namespace)
 	if err != nil {
-		return fmt.Errorf(`%w %s`, taxonomy.ErrTermNamespaceNotFound, err.Error())
+		return fmt.Errorf(`namespace %s get error: %w: %w`, namespace, taxonomy.ErrNamespaceNotFound, err)
 	}
 
-	// Check term exists
-	if _, err := r.termService.GetByID(ctx, termID); err != nil {
-		logger.Error(`get term by id`, zap.Error(err), zap.Uint64(`termID`, termID))
-
-		if errors.Is(err, repository.ErrFindTerm) {
-			return fmt.Errorf(`%w %d`, taxonomy.ErrTermNotFound, termID)
-		}
-
-		return fmt.Errorf(`unknown term error %w`, err)
-	}
 	// Remove references
-	if err := r.referenceRepository.Delete(ctx, []uint64{termID}, []uint64{ns.ID}, entitiesID); err != nil {
-		return fmt.Errorf(`can't remove reference %w: %s`, taxonomy.ErrTermReferenceNotRemoved, err.Error())
+	if err := r.referenceRepository.Delete(ctx, &repository.ReferenceFilter{
+		TermID:      [][]uint64{{termID}},
+		NamespaceID: []uint64{ns.ID},
+		EntityID:    entitiesID,
+	}); err != nil {
+		return fmt.Errorf(`can't remove reference %w: %w`, taxonomy.ErrReferenceNotRemoved, err)
 	}
 
 	return nil
 }
 
-func (t *Service) GetTermsByEntities(ctx context.Context, namespace string, entities ...model.EntityID) ([]model.Term, error) {
-	logger := t.log.With(zap.String(`method`, `GetTermsByEntities`),
-		zap.String(`namespace`, namespace), zap.Any(`entities`, entities))
-
-	ns, err := t.namespaceService.GetByName(ctx, namespace)
-	logger.Debug(`got namespace`, zap.Any(`namespace`, namespace), zap.Error(err))
-
-	if err != nil {
-		return nil, taxonomy.ErrTermNamespaceNotFound
-	}
-
-	references, err := t.referenceRepository.Get(ctx, &repository.ReferenceFilter{
-		NamespaceID: []uint64{ns.ID},
-		EntityID:    entities,
-	})
-	logger.Debug(`got references`, zap.Any(`references`, references), zap.Error(err))
-
-	if err != nil {
-		return nil, fmt.Errorf(`unknown error %w`, err)
-	}
-
-	terms := make([]model.Term, 0, len(references))
-
-	for _, reference := range references {
-		// Change for one request if there is a lot of reference will be found
-		term, err := t.termService.GetByID(ctx, reference.TermID)
-		logger.Debug(`got term`, zap.Uint64(`id`, reference.TermID), zap.Any(`term`, term), zap.Error(err))
-
-		if err != nil {
-			logger.DPanic(`unknown term in reference`, zap.Error(err))
-
-			continue
-		}
-
-		terms = append(terms, term)
-	}
-
-	return terms, nil
-}
+// Todo: Do we need this method?
+//func (t *Service) GetTerms(ctx context.Context, namespace string, entities ...model.EntityID) ([]model.Term, error) {
+//	logger := t.log.With(zap.String(`method`, `GetTerms`),
+//		zap.String(`namespace`, namespace), zap.Any(`entities`, entities))
+//
+//	ns, err := t.namespaceService.GetByName(ctx, namespace)
+//	if err != nil {
+//		return nil, taxonomy.ErrNamespaceNotFound
+//	}
+//
+//	references, err := t.referenceRepository.Get(ctx, &repository.ReferenceFilter{
+//		NamespaceID: []uint64{ns.ID},
+//		EntityID:    entities,
+//	})
+//	logger.Debug(`got references`, zap.Any(`references`, references), zap.Error(err))
+//
+//	if err != nil {
+//		return nil, fmt.Errorf(`unknown error %w`, err)
+//	}
+//
+//	terms := make([]model.Term, 0, len(references))
+//
+//	for _, reference := range references {
+//		// Change for one request if there is a lot of reference will be found
+//		term, err := t.termService.GetByID(ctx, reference.TermID)
+//		logger.Debug(`got term`, zap.Uint64(`id`, reference.TermID), zap.Any(`term`, term), zap.Error(err))
+//
+//		if err != nil {
+//			logger.DPanic(`unknown term in reference`, zap.Error(err))
+//
+//			continue
+//		}
+//
+//		//terms = append(terms, term)
+//	}
+//
+//	return terms, nil
+//}
 
 func (t *Service) Get(ctx context.Context, filter *model.ReferenceFilter) ([]*model.Reference, error) {
 	logger := t.log.With(zap.String(`method`, `GetReferences`), zap.Any(`filter`, filter))
 
 	// Get ids of references
-	namespacesID := make([]uint64, 0, len(filter.Namespace))
+	namespaces := make(map[uint64]*model.Namespace, len(filter.Namespace))
 
 	for _, ns := range filter.Namespace {
-		namespace, err := t.namespaceService.GetByName(ctx, ns)
+		ns, err := t.namespaceService.GetByName(ctx, ns)
 		if err != nil {
-			return nil, taxonomy.ErrTermNamespaceNotFound
+			return nil, fmt.Errorf(`%w: %w`, taxonomy.ErrNamespaceNotFound, err)
 		}
 
-		namespacesID = append(namespacesID, namespace.ID)
+		namespaces[ns.ID] = ns
 	}
 
 	// Get references
 	references, err := t.referenceRepository.Get(ctx, &repository.ReferenceFilter{
 		TermID:      filter.TermID,
 		EntityID:    filter.EntityID,
-		NamespaceID: namespacesID,
+		NamespaceID: lo.Keys[uint64, *model.Namespace](namespaces),
 		AfterID:     filter.AfterID,
 		Limit:       filter.Limit,
 	})
@@ -174,7 +170,17 @@ func (t *Service) Get(ctx context.Context, filter *model.ReferenceFilter) ([]*mo
 		return nil, fmt.Errorf(`unknown error %w`, err)
 	}
 
-	return func() []*model.Reference {
-		return nil
-	}(), nil
+	return func(references []*repository.ReferenceModel) []*model.Reference {
+		var models = make([]*model.Reference, 0, len(references))
+		for _, ref := range references {
+			models = append(models, &model.Reference{
+				ID:        ref.ID,
+				TermID:    ref.TermID,
+				Namespace: namespaces[ref.NamespaceID].Data.Name,
+				EntityID:  ref.EntityID,
+			})
+		}
+
+		return models
+	}(references), nil
 }
