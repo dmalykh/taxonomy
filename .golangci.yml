@@ -68,7 +68,7 @@ linters:
     - predeclared
     - promlinter
     - revive
-    - termliatelle
+    - tagliatelle
     - tenv
     - testpackage
     - typecheck
