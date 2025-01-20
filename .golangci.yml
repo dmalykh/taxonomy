@@ -14,69 +14,42 @@ output:
 linters:
   disable-all: true
   enable:
-    - asciicheck
-    - bidichk
-    - containedctx
-    - cyclop
-    - deadcode
-    - decorder
+    - bodyclose
+    - copyloopvar
     - depguard
     - dogsled
     - dupl
-    - durationcheck
     - errcheck
-    - errchkjson
-    - errname
     - errorlint
-    - exhaustive
-    - exportloopref
-    - forbidigo
-    - forcetypeassert
-    - gci
-    - gochecknoglobals
+    - funlen
+    - gocheckcompilerdirectives
     - gochecknoinits
-    - gocognit
     - goconst
     - gocritic
     - gocyclo
-    - godot
     - godox
     - gofmt
-    - gofumpt
-    - goheader
     - goimports
-    - gomnd
-    - gomoddirectives
-    - gomodguard
+    - mnd
     - goprintffuncname
     - gosec
+    - gosimple
     - govet
-    - grouper
-    - ifshort
-    - importas
+    - intrange
     - ineffassign
     - lll
-    - maintidx
-    - makezero
     - misspell
     - nakedret
-    - nestif
-    - nilnil
-    - nlreturn
+    - noctx
     - nolintlint
-    - prealloc
-    - predeclared
-    - promlinter
     - revive
-    - tagliatelle
-    - tenv
-    - testpackage
-    - typecheck
+    - staticcheck
+    - stylecheck
+    - testifylint
     - unconvert
-    - varcheck
+    - unparam
+    - unused
     - whitespace
-    - wrapcheck
-    - wsl
 
 linters-settings:
   lll:
