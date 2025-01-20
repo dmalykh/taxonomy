@@ -3,7 +3,7 @@ run:
   tests: true
   skip-dirs:
     - src/mocks
-  go: '1.18'
+  go: '1.23'
 
 output:
   print-linter-name: true
